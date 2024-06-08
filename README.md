@@ -6,6 +6,13 @@ This group project is about creating a website for the mighty Pong contest! 🏓
 - When creating a pull request, mention everyone and assign one person to review
 
 
+## 8.6.2024 meeting
+First priority:
+- Create board (linh)
+- Create docker setup
+- Create prototype (lera)
+- Create dummy project (database, devops, back, front)
+
 ## Features plan C:
 - Web:
     - YES 1 Major module: Use a Framework as backend
