@@ -80,6 +80,31 @@ MAYBE:
 - 2 AI opponent + more devops + bootstrap
 - + 4 Remote auth + remote playing + server-side + 1 DevOps module else than microservices
 
+June 8th plan:
+Web
+- Major module: Use a Framework as backend (1)
+- Minor module: Use a database for the backend (0.5)
+- 
+User Management
+Major module: Implementing a remote authentication (1)
+
+Gameplay and user experience
+- Major module: Remote players (1)
+  
+AI-Algo
+- Major module: Introduce an AI Opponent (1)
+  
+Accessibility
+- Minor module: Expanding Browser Compatibility (0.5)
+- Minor module: Multiple language supports (0.5)
+  
+Server-Side Pong
+- Major module: Replacing Basic Pong with Server-Side Pong and Implementing an API (1)
+  
+Dev-op: to be decided (1)
+
+Sum: 7.5
+
 ## Resources
 __Inspiration__
 - [Agile and Documentation in ft_transcendence](https://medium.com/@glukas94/ft-transcendence-semana-1-3b641e683339)
