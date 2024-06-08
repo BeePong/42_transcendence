@@ -1,45 +1,10 @@
 # ft_transcendence
 This group project is about creating a website for the mighty Pong contest! 🏓
 
-## Features plan A:
-- Web:
-    - Major module: Use a Framework as backend
-    - Minor module: Use a front-end framework or toolkit
-    - Minor module: Use a database for the backend
+## Ways of working:
+- Commit messages in this format: `issue_number commit message according to [the standard](https://discord.com/channels/@me/1240304451965943918/1249014458731331594)`
+- When creating a pull request, mention everyone and assign one person to review
 
-- Gameplay and user experience:
-    - Major module: Remote players
-    - Major module: Multiplayers (more than 2 in the same game)
-
-- Graphics
-    - Major module: Use of advanced 3D techniques.
-
-- Accessibility
-    - Minor module: Expanding Browser Compatibility.
-    - Minor module: Multiple language supports.
-
-- Server-Side Pong
-    - Major module: Replacing Basic Pong with Server-Side Pong and Implementing an API
- 
-## Features plan B:
-- Web:
-    - Major module: Use a Framework as backend
-    - Minor module: Use a front-end framework or toolkit
-    - Minor module: Use a database for the backend
-
-- Devops
-    - Major module: Infrastructure Setup for Log Management
-    - Major module: Designing the Backend as Microservices
-
-- Graphics
-    - Major module: Use of advanced 3D techniques.
-
-- Accessibility
-    - Minor module: Expanding Browser Compatibility.
-    - Minor module: Multiple language supports.
-
-- Server-Side Pong
-    - Major module: Replacing Basic Pong with Server-Side Pong and Implementing an API
 
 ## Features plan C:
 - Web:
