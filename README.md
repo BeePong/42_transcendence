@@ -1,4 +1,4 @@
-# ft_transcendence
+# Bee pong!
 This group project is about creating a website for the mighty Pong contest! 🏓
 
 ## Ways of working:
