@@ -1,5 +1,5 @@
 # ft_transcendence
-This group project is about creating a website for the mighty Pong contest!🏓
+This group project is about creating a website for the mighty Pong contest! 🏓
 
 ## Features plan A:
 - Web:
