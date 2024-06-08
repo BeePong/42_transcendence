@@ -2,7 +2,7 @@
 This group project is about creating a website for the mighty Pong contest! 🏓
 
 ## Ways of working:
-- Commit messages in this format: `issue_number commit message according to [the standard](https://discord.com/channels/@me/1240304451965943918/1249014458731331594)`
+- Commit messages chould be in this format: `issue_number commit_message`, where commit_message follows [Conventional Commits standard](https://www.conventionalcommits.org/en/v1.0.0/)
 - When creating a pull request, mention everyone and assign one person to review
 
 
