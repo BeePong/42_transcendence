@@ -1,6 +1,9 @@
 # 🐝 Bee pong!
 This group project is about creating a website for the mighty Pong contest! 🏓
 
+![BeePong design vision](BeePong_vision_240615.png)
+
+
 ## Ways of working:
 - Commit messages chould be in this format: `issue_number commit_message`, where commit_message follows [Conventional Commits standard](https://www.conventionalcommits.org/en/v1.0.0/)
 - When creating a pull request, mention everyone and assign one person to review
