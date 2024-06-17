@@ -1,0 +1,11 @@
+# version: "3.9"
+services:
+  learning_logs:
+    container_name: learning_logs
+    build: .
+    ports:
+      - 127.0.0.1:8000:8000
+    # command: python manage.py runserver
+    volumes:
+      - ./learning_logs:/learning_logs/app
+      # - ./tests:/code/tests
