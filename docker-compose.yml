@@ -1,10 +1,24 @@
 services:
-  bpong:
-    container_name: bpong
-    build: .
+  backend_dummy:
+    container_name: backendDummy
+    build:
+      context: ./srcs/backend
     ports:
       - 127.0.0.1:8000:8000
     # command: python manage.py runserver
-    volumes:
-      - ./bpong:/bpong/app
+    # volumes:
+    #   - .srcs/backend/beePong:/beePong/app
       # - ./tests:/code/tests
+  # nginx: 
+  #   container_name: nginx
+  #   depends_on:
+  #     - backendDummy
+  #   build:
+  #     context: ./srcs/nginx
+  #   env_file:
+  #     - .env
+  #   volumes:
+  #     - .srcs/backend/beePong:/beePong/app
+  #   ports:
+  #     - 127.0.0.1:8000:8000
+  #   restart: on-failure

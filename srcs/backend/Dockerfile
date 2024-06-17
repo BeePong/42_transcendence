@@ -1,13 +1,13 @@
 FROM python
 
-WORKDIR /bpong
+WORKDIR /beePong
 
 # Copy the requirements.txt file and install the Python dependencies
-COPY requirements.txt /bpong/
+COPY requirements.txt /beePong/
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application code
-COPY . /bpong/
+COPY . /beePong/
 
 # Expose the port the Django application will run on
 EXPOSE 8000
