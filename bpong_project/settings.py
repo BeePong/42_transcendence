@@ -129,3 +129,10 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# My settings
+# Tells Django which URL to redirect to after a successful login attempt.
+LOGIN_REDIRECT_URL = 'beePong:index'
+# Tells Django to redirect logged-out users back to the home page
+LOGOUT_REDIRECT_URL = 'beePong:index'
+LOGIN_URL = 'accounts:login'
