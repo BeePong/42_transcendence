@@ -1,10 +1,10 @@
 services:
-  dummy_pong:
-    container_name: dummy_pong
+  bpong:
+    container_name: bpong
     build: .
     ports:
       - 127.0.0.1:8000:8000
     # command: python manage.py runserver
     volumes:
-      - ./dummy_pong:/dummy_pong/app
+      - ./bpong:/bpong/app
       # - ./tests:/code/tests
