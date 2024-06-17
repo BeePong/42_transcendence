@@ -1,13 +1,13 @@
 FROM python
 
-WORKDIR /learning_log
+WORKDIR /dummy_pong
 
 # Copy the requirements.txt file and install the Python dependencies
-COPY requirements.txt /learning_log/
+COPY requirements.txt /dummy_pong/
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the application code
-COPY . /learning_log/
+COPY . /dummy_pong/
 
 # Expose the port the Django application will run on
 EXPOSE 8000

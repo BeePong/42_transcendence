@@ -1,11 +1,10 @@
-# version: "3.9"
 services:
-  learning_logs:
-    container_name: learning_logs
+  dummy_pong:
+    container_name: dummy_pong
     build: .
     ports:
       - 127.0.0.1:8000:8000
     # command: python manage.py runserver
     volumes:
-      - ./learning_logs:/learning_logs/app
+      - ./dummy_pong:/dummy_pong/app
       # - ./tests:/code/tests
