@@ -4,11 +4,15 @@ services:
     build:
       context: ./srcs/backend
     ports:
-      - 127.0.0.1:8000:8000
+      - 8000:8000
     # command: python manage.py runserver
-    # volumes:
-    #   - .srcs/backend/beePong:/beePong/app
+    volumes:
+      - ./srcs/backend/beePong:/usr/src/backend/beePong
       # - ./tests:/code/tests
+  # db:
+  #   image: postgres:16
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data/
   # nginx: 
   #   container_name: nginx
   #   depends_on:
