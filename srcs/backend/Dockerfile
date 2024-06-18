@@ -1,4 +1,4 @@
-FROM python
+FROM python:3.12.3-alpine
 
 WORKDIR /beePong
 
@@ -13,6 +13,7 @@ COPY . /beePong/
 EXPOSE 8000
 
 # Set the command to start the Django development server
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+RUN chmod +x /beePong/init_beePong.sh
+ENTRYPOINT ["/beePong/init_beePong.sh"]
 
 ENV PYTHONUNBUFFERED=1
