@@ -1,0 +1,5 @@
+Django==5.0.6
+django-bootstrap5==23.3
+httpx==0.26.0
+pytest==7.4.4
+uvicorn==0.25.0
