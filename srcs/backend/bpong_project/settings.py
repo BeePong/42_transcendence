@@ -136,3 +136,7 @@ LOGIN_REDIRECT_URL = 'beePong:index'
 # Tells Django to redirect logged-out users back to the home page
 LOGOUT_REDIRECT_URL = 'beePong:index'
 LOGIN_URL = 'accounts:login'
+
+# List of trusted origins for CSRF protection
+# Requests from these origins will be allowed to bypass the CSRF protection
+CSRF_TRUSTED_ORIGINS = ['https://localhost']
