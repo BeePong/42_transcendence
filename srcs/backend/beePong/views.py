@@ -7,10 +7,19 @@ from django.http import JsonResponse
 # Create your views here.
 
 
-def index(request):
-    """The home page for BeePong."""
-    return render(request, 'beePong/index.html')
 
 def test(request):
     data = {"test": "This is a test JSON"}
     return JsonResponse(data)
+
+def home(request):
+    """The home page for BeePong."""
+    return render(request, 'beePong/home.html')
+
+def about(request):
+    """The about page for BeePong."""
+    return render(request, 'beePong/about.html')
+
+def custom_404(request, exception):
+    """The 404 page for BeePong."""
+    return render(request, 'beePong/404.html', status=404)

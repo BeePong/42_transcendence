@@ -3,7 +3,7 @@ from . import views
 
 app_name = 'beePong'
 urlpatterns = [
-    # Home page
-    path('', views.index, name='index'),
     path('api/', views.test, name='apiTest'),
+    path('page/home/', views.home, name='home'),
+    path('page/about/', views.about, name='about'),
 ]
