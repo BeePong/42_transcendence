@@ -99,46 +99,45 @@
         }
 
         async function handleFormSubmit(event) {
-            event.preventDefault();
-            const form = event.target;
-            const formData = new FormData(form);
-            const csrftoken = getCookie('csrftoken');
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+    const csrftoken = getCookie('csrftoken');
 
-            const data = {};
-            formData.forEach((value, key) => {
-                data[key] = value;
-            });
+    // Creating a URLSearchParams object to properly format the data
+    const data = new URLSearchParams();
+    formData.forEach((value, key) => {
+        data.append(key, value);
+    });
 
-            try {
-                console.log('here');
-                const response = await fetch('/accounts/register/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': csrftoken
-                    },
-                    body: JSON.stringify(data)
-                });
-                console.log('here1');
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                console.log('here2');
-                const result = await response.json();
-                console.log('here3');
-                // Handle the JSON response
-                if (result.success) {
-                    // Reload the home page content after successful registration
-                    loadPage('/home');
-                } else {
-                    // Handle errors, possibly display them on the form
-                    console.error('Form submission error:', result.errors);
-                }
-                console.log('here4');
-            } catch (error) {
-                console.error('There was a problem with the fetch operation:', error);
-            }
+    try {
+        const response = await fetch('/register/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': csrftoken
+            },
+            body: data.toString() // Converting URLSearchParams object to string
+        });
+
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
         }
+
+        const result = await response.json();
+
+        // Handle the JSON response
+        if (result.success) {
+            // Reload the home page content after successful registration
+            navigate('/home');
+        } else {
+            // Handle errors, possibly display them on the form
+            console.error('Form submission error:', result.errors);
+        }
+    } catch (error) {
+        console.error('There was a problem with the fetch operation:', error);
+    }
+}
     </script>
 </head>
 
