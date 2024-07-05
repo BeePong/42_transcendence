@@ -10,12 +10,13 @@
             '/': 'home',
             '/home': 'home',
             '/about': 'about',
+            '/accounts/register': 'accounts/register'
         };
 
         // Load content based on the route
         async function loadPage(route) {
             let path = route.endsWith('/') && route !== '/' ? route.slice(0, -1) : route;
-            const page = routes[path] || window.location.pathname;
+            const page = routes[path] || window.location.pathname.slice(1);
             try {
                 const response = await fetch(`/page/${page}/`);
                 if (!response.ok) {
@@ -30,9 +31,18 @@
         }
 
         // Handle navigation
-        function navigate(event) {
-            event.preventDefault();
-            const path = event.target.getAttribute('href');
+        function navigate(eventOrPath) {
+            let path;
+            if (typeof eventOrPath === 'string') {
+                path = eventOrPath;
+            } else {
+                eventOrPath.preventDefault();
+                path = eventOrPath.target.getAttribute('href');
+            }
+
+            if (window.location.pathname === path)
+                return;
+
             history.pushState(null, null, path);
             loadPage(path);
         }
@@ -86,6 +96,48 @@
                 const response = await fetch('/api/');
                 const data = await response.text(); // or response.json() if the API returns JSON
                 document.getElementById('test').innerHTML = data;
+        }
+
+        async function handleFormSubmit(event) {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+            const csrftoken = getCookie('csrftoken');
+
+            const data = {};
+            formData.forEach((value, key) => {
+                data[key] = value;
+            });
+
+            try {
+                console.log('here');
+                const response = await fetch('/accounts/register/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrftoken
+                    },
+                    body: JSON.stringify(data)
+                });
+                console.log('here1');
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                console.log('here2');
+                const result = await response.json();
+                console.log('here3');
+                // Handle the JSON response
+                if (result.success) {
+                    // Reload the home page content after successful registration
+                    loadPage('/home');
+                } else {
+                    // Handle errors, possibly display them on the form
+                    console.error('Form submission error:', result.errors);
+                }
+                console.log('here4');
+            } catch (error) {
+                console.error('There was a problem with the fetch operation:', error);
+            }
         }
     </script>
 </head>

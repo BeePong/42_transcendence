@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login
 from django.contrib.auth.forms import UserCreationForm
+from django.http import JsonResponse
 
 # Create your views here.
 
@@ -25,7 +26,9 @@ def register(request):
             information is saved, we log them in by calling the login() function with 
             the request and new_user objects, which creates a valid session for the new user """
             login(request, new_user)
-            return redirect('beePong:index')
+            return JsonResponse({'success': True, 'username': new_user.username}, status=201)
+        else:
+            return JsonResponse({'success': False, 'errors': form.errors}, status=400)
     # Display a blank or invalid form.
     context = {'form': form}
     return render(request, 'registration/register.html', context)
