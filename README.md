@@ -2,6 +2,7 @@
 This group project is about creating a website for the mighty Pong contest! 🏓
 
 ![BeePong design vision](BeePong_vision_240615.png)
+[Figma](https://www.figma.com/design/42yVXZOi6yLRxybTmu8lhG/BEE-PONG?node-id=0-1&t=JObdYVC2Pk32AxSm-1)
 
 
 ## Ways of working:
@@ -48,7 +49,9 @@ This group project is about creating a website for the mighty Pong contest! 🏓
 - GET /tournament - Get all
 - GET /tournament/{id} - Get one
 - POST /tournament - Create
-- PUT /tournament/{id}/join Join
+  - Payload: user id (or maybe none bc we have cookie?)
+  - Returns: created tournament whole object
+- PUT /tournament/{id}/join Join (also starts the tournament when it's full)
   - Payload: user id (or maybe none bc we have cookie?)
   - Returns: created tournament id (or whole object?)
 - PUT /tournament/{id}/leave - Leave
