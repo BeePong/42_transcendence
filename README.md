@@ -21,7 +21,7 @@ This group project is about creating a website for the mighty Pong contest! 🏓
 - winner player
 - timestamp(s)
 #### Actions for Game:
-- GET
+- GET page
 - POST /games/ - Create game
     - Payload: {player1 id, player2 id}
 - PUT /games/{gameId}/update - Update game
@@ -64,12 +64,12 @@ This group project is about creating a website for the mighty Pong contest! 🏓
 - ? auth info ?
 - current tournament (link to Tournament)
 #### Actions for Player:
-- GET /player - get all
-- GET /player/{id} - get one
-- POST /player - create
+- GET /user - get your profile
+- POST /register - create
   - Payload: user info
   - Returns: created user (or just id)
-- PUT /player/{id}/alias - update alias
+- POST /login
+- PUT /user/{id}/alias - update alias
   - Payload: new alias
   - Returns: updated user (or just id)
 
