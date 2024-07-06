@@ -8,6 +8,48 @@ This group project is about creating a website for the mighty Pong contest! 🏓
 - Commit messages chould be in this format: `issue_number commit_message`, where commit_message follows [Conventional Commits standard](https://www.conventionalcommits.org/en/v1.0.0/)
 - When creating a pull request, mention everyone and assign one person to review
 
+## Architecture
+### Game
+- player1
+  - id
+  - score
+- player2
+  - id
+  - score
+- state (PENDING, ONGOING, FINISHED)
+- winner player
+- timestamp(s)
+#### Actions for Game:
+- GET
+- POST Create game
+    - Payload: {player1 id, player2 id}
+- PUT Update game
+    - Payload: {player1 score, player2 score}
+- PUT Finish game
+
+### Tournament
+- quarter1 (link to Game)
+- quarter2
+- quarter3
+- quarter4
+- semi1
+- semi2
+- final
+- name
+- description
+- state (PENDING, ONGOING, FINISHED)
+- num_players (2,4,8)
+- players (links to players)
+- winner player
+- timestamp(s)
+#### Actions for Tournament:
+- GET
+- POST Create
+- PUT Join
+  - Payload: user id
+- PUT Leave
+  - Payload: user id
+- Refresh tournament (when one of the games is finished, would probably be done from a websocket function but unsure)
 
 ## 8.6.2024 meeting
 First priority:
