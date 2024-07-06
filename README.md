@@ -24,9 +24,9 @@ This group project is about creating a website for the mighty Pong contest! 🏓
 - GET
 - POST /games/ - Create game
     - Payload: {player1 id, player2 id}
-- PUT /games/{gameId} - Update game
+- PUT /games/{gameId}/update - Update game
     - Payload: {player1 score, player2 score}
-- PUT /games/{gameId} - Finish game
+- PUT /games/{gameId}/finish - Finish game
 
 ### Tournament
 - id
@@ -45,11 +45,13 @@ This group project is about creating a website for the mighty Pong contest! 🏓
 - winner player
 - timestamp(s)
 #### Actions for Tournament:
-- GET
+- GET /tournament - Get all
+- GET /tournament/{id} - Get one
 - POST /tournament - Create
-- PUT /tournament/join Join
+- PUT /tournament/{id}/join Join
   - Payload: user id (or maybe none bc we have cookie?)
-- PUT /tournament/leave Leave
+  - Returns: created tournament id (or whole object?)
+- PUT /tournament/{id}/leave - Leave
   - Payload: user id
 - Refresh tournament (when one of the games is finished, would probably be done from a websocket function but unsure)
 
@@ -61,6 +63,15 @@ This group project is about creating a website for the mighty Pong contest! 🏓
 - is_online ?
 - ? auth info ?
 - current tournament (link to Tournament)
+#### Actions for Player:
+- GET /player - get all
+- GET /player/{id} - get one
+- POST /player - create
+  - Payload: user info
+  - Returns: created user (or just id)
+- PUT /player/{id}/alias - update alias
+  - Payload: new alias
+  - Returns: updated user (or just id)
 
 ## 6.6.2024 meeting
 - games - simultaneous or consequtive?
