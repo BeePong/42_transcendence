@@ -10,6 +10,7 @@ This group project is about creating a website for the mighty Pong contest! 🏓
 
 ## Architecture
 ### Game
+- id
 - player1
   - id
   - score
@@ -21,13 +22,14 @@ This group project is about creating a website for the mighty Pong contest! 🏓
 - timestamp(s)
 #### Actions for Game:
 - GET
-- POST Create game
+- POST /games/ - Create game
     - Payload: {player1 id, player2 id}
-- PUT Update game
+- PUT /games/{gameId} - Update game
     - Payload: {player1 score, player2 score}
-- PUT Finish game
+- PUT /games/{gameId} - Finish game
 
 ### Tournament
+- id
 - quarter1 (link to Game)
 - quarter2
 - quarter3
@@ -44,12 +46,24 @@ This group project is about creating a website for the mighty Pong contest! 🏓
 - timestamp(s)
 #### Actions for Tournament:
 - GET
-- POST Create
-- PUT Join
-  - Payload: user id
-- PUT Leave
+- POST /tournament - Create
+- PUT /tournament/join Join
+  - Payload: user id (or maybe none bc we have cookie?)
+- PUT /tournament/leave Leave
   - Payload: user id
 - Refresh tournament (when one of the games is finished, would probably be done from a websocket function but unsure)
+
+### Player
+- id
+- username
+- alias
+- is_registered
+- is_online ?
+- ? auth info ?
+- current tournament (link to Tournament)
+
+## 6.6.2024 meeting
+- games - simultaneous or consequtive?
 
 ## 8.6.2024 meeting
 First priority:
