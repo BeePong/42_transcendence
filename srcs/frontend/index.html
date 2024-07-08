@@ -10,7 +10,8 @@
             '/': 'home',
             '/home': 'home',
             '/about': 'about',
-            '/accounts/register': 'accounts/register'
+            '/accounts/register': 'accounts/register',
+            '/accounts/login' : 'accounts/login'
         };
 
         // Load content based on the route
@@ -110,8 +111,10 @@
         data.append(key, value);
     });
 
+    const actionUrl = form.action;
+
     try {
-        const response = await fetch('/register/', {
+        const response = await fetch(actionUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',

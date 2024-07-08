@@ -1,21 +1,6 @@
-{% extends 'beePong/base.html' %}
-
-{% load django_bootstrap5 %}
-
-{% block page_header %}
-<h2>Log in to your account.</h2>
-{% endblock page_header %}
-
-{% block content %}
-
-<!-- We want the login view to process the form, so we set the action argument as the URL of the 
-    login page. The login view sends a form object to the template, and it’s up to us to display the 
-    form and add a submit button -->
-<form action="{% url 'accounts:login' %}" method='post'>
+<form id="loginForm" onsubmit=handleFormSubmit(event) action="/login/">
     {% csrf_token %}
-    <!-- This template tag inserts Bootstrap style rules into the form’s individual elements as the form is rendered -->
-    {% bootstrap_form form %}
-    {% bootstrap_button button_type="submit" content="Log in" %}
-</form>
+    {{ form.as_div }}
 
-{% endblock content %}
+    <button type="submit">Login</button>   
+</form>
