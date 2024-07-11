@@ -12,6 +12,10 @@ def test(request):
     data = {"test": "This is a test JSON"}
     return JsonResponse(data)
 
+def navbar(request):
+    """The navbar for BeePong."""
+    return render(request, 'beePong/navbar.html')
+
 def home(request):
     """The home page for BeePong."""
     return render(request, 'beePong/home.html')

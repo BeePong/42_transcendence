@@ -1,6 +1,5 @@
 <form id="registerForm" onsubmit=handleFormSubmit(event) action="/register/">
     {% csrf_token %}
     {{ form.as_div }}
-
     <button type="submit">Register</button>
 </form>

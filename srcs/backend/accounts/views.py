@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import login
+from django.contrib.auth import login, logout
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.http import JsonResponse
 
@@ -30,11 +30,12 @@ def register(request):
         else:
             return JsonResponse({'success': False, 'errors': form.errors}, status=400)
     # Display a blank or invalid form.
-    context = {'form': form}
-    return render(request, 'registration/register.html', context)
+    return render(request, 'registration/register.html', {'form': form})
 
 def custom_login(request):
-    if request.method == 'POST':
+    if request.method != 'POST':
+        form = AuthenticationForm()
+    else:
         form = AuthenticationForm(data=request.POST)
         if form.is_valid():
             user = form.get_user()
@@ -42,6 +43,14 @@ def custom_login(request):
             return JsonResponse({'success': True, 'username': user.username}, status=201)
         else:
             return JsonResponse({'success': False, 'errors': form.errors}, status=400)
-    else:
-        form = AuthenticationForm()
+    # Display a blank or invalid form.
     return render(request, 'registration/login.html', {'form': form})
+
+def custom_logout(request):
+    if request.method == 'POST':
+        if request.user.is_authenticated:
+            logout(request)
+            return JsonResponse({'success': True})
+        else:
+            return JsonResponse({'success': False, 'error': 'User not authenticated'}, status=401)
+    return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=405)
