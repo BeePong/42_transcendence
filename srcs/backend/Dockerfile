@@ -1,18 +1,19 @@
-# Use an official Python runtime as a parent image
-FROM python:3.10-slim
+FROM python:3.11-slim-buster
 
-# Set the working directory in the container
-WORKDIR /app
+WORKDIR /beePong
 
-# Copy the current directory contents into the container at /app
-COPY . /app
-
-# Install any needed packages specified in requirements.txt
+# Copy the requirements.txt file and install the Python dependencies
+COPY requirements.txt /beePong/
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Make port 8000 available to the world outside this container
+# Copy the rest of the application code
+COPY . /beePong/
+
+# Expose the port the Django application will run on
 EXPOSE 8000
 
-# Run the shell script to initialize the Django app
-CMD ["sh", "init_beePong.sh"]
+# Set the command to start the Django development server
+RUN chmod +x /beePong/init_beePong.sh
+ENTRYPOINT ["/beePong/init_beePong.sh"]
 
+ENV PYTHONUNBUFFERED=1

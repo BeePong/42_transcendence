@@ -1,36 +1,40 @@
 services:
   db:
-    image: postgres:latest
+    image: postgres:16
+    container_name: postgres_db
     environment:
-      POSTGRES_DB: bee_pong_db
-      POSTGRES_USER: bee_pong_user
-      POSTGRES_PASSWORD: your_password
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-  web:
-    build:
-      context: ./src/backend
-    command: sh init_beePong.sh
-    volumes:
-      - ./src/backend:/app
+      - postgres_data:/var/lib/postgresql/data/
     ports:
-      - "8000:8000"
+      - "5432:5432"
+    env_file:
+      - .env
+  
+  backend_dummy:
+    container_name: backendDummy
+    build:
+      context: ./srcs/backend
+    volumes:
+      - ./srcs/backend/beePong:/usr/src/backend/beePong
+    env_file:
+      - .env
     depends_on:
       - db
-    environment:
-      - DATABASE_URL=postgres://bee_pong_user:your_password@db:5432/bee_pong_db
-
+  
   nginx:
-    build:
-      context: ./src/nginx
-    volumes:
-      - ./src/frontend:/usr/share/nginx/html
-      - ./src/nginx/nginx.conf:/etc/nginx/nginx.conf
-    ports:
-      - "80:80"
+    container_name: nginx
     depends_on:
-      - web
+      - backend_dummy
+    build:
+      context: ./srcs/nginx
+    volumes:
+      - ./srcs/frontend:/var/www/html
+    ports:
+      - 443:443
+    restart: on-failure
 
 volumes:
   postgres_data:

@@ -1,6 +1,0 @@
-<form action="{% url 'accounts:register' %}" method='post'>
-    {% csrf_token %}
-    {{ form.as_div }}
-
-    <button type="submit">Register</button>
-</form>

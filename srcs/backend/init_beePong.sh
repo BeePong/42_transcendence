@@ -1,12 +1,9 @@
 #!/bin/sh
 
-# Wait for PostgreSQL to start
-sleep 10
-
 # Modify the database so it can store the data associated with any new models we’ve defined.
 python manage.py makemigrations beePong
-
 # Apply the migration (if any) and have Django modify the database for us accordingly.
+python manage.py migrate auth
 python manage.py migrate
 
 # Set the command to start the Django development server
