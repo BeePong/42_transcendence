@@ -151,7 +151,9 @@ Dev-op: to be decided (1)
 Sum: 7.5
 
 ## Memo
-- To run psql in a docker container: docker exec -it *container_id* psql -U *my_user* -d *my_db* --password
+
+### To run psql in a docker container
+docker exec -it *container_id* psql -U *my_user* -d *my_db* --password
 
 ## Resources
 __Inspiration__
