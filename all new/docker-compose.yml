@@ -10,10 +10,10 @@ services:
 
   web:
     build:
-      context: ./src/backend
+      context: ./srcs/backend
     command: sh init_beePong.sh
     volumes:
-      - ./src/backend:/app
+      - ./srcs/backend:/app
     ports:
       - "8000:8000"
     depends_on:
@@ -23,10 +23,10 @@ services:
 
   nginx:
     build:
-      context: ./src/nginx
+      context: ./srcs/nginx
     volumes:
-      - ./src/frontend:/usr/share/nginx/html
-      - ./src/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./srcs/frontend:/usr/share/nginx/html
+      - ./srcs/nginx/nginx.conf:/etc/nginx/nginx.conf
     ports:
       - "80:80"
     depends_on:
