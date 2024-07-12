@@ -24,10 +24,10 @@ function navigate(eventOrPath) {
 	loadPage(path);
 }
 
-// Load content based on the route
-async function loadPage(route) {
-	let path = route.endsWith('/') && route !== '/' ? route.slice(0, -1) : route;
-	const page = routes[path] || window.location.pathname.slice(1);
+// Load content based on the path
+async function loadPage(path) {
+	let route = path.endsWith('/') && path!== '/' ? path.slice(0, -1) : path;
+	const page = routes[route] || window.location.pathname.slice(1);
 	try {
 			const response = await fetch(`/page/${page}/`);
 			if (!response.ok) {
@@ -44,7 +44,7 @@ async function loadPage(route) {
 // Load navbar
 async function loadNavBar() {
 	try {
-			const response = await fetch(`/page/navbar/`);
+			const response = await fetch('/page/navbar/');
 			if (!response.ok) {
 				throw new Error('Network response was not ok');
 			}
@@ -55,7 +55,6 @@ async function loadNavBar() {
 	}
 }
 
-
 // Listen to popstate events for back/forward navigation
 window.addEventListener('popstate', () => {
 	loadPage(window.location.pathname);
@@ -63,6 +62,6 @@ window.addEventListener('popstate', () => {
 
 // Initial page load
 document.addEventListener('DOMContentLoaded', () => {
-	loadPage(window.location.pathname);
 	loadNavBar();
+	loadPage(window.location.pathname);
 });

@@ -1,4 +1,4 @@
-<form id="loginForm" onsubmit=handleFormSubmit(event) action="/login/">
+<form id="loginForm" onsubmit=handleFormSubmit(event) action="{% url 'accounts:login' %}">
     {% csrf_token %}
     {{ form.as_div }}
     <button type="submit">Login</button>   

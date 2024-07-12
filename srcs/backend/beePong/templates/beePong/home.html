@@ -1,8 +1,6 @@
 <section>
-	<button onclick="navigate('/accounts/register')">Register</button>
-	<div id="register"></div>
-	<button onclick="navigate('/accounts/login')">Login</button>
-	<div id="login"></div>
+	<button onclick="navigate(`{% url 'accounts:register' %}`)">Register</button>
+	<button onclick="navigate(`{% url 'accounts:login' %}`)">Login</button>
 	<button onclick="fetchTestData()">test</button>
 	<div id="test"></div>
 	<div>Users:</div>

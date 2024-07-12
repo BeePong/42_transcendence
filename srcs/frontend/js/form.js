@@ -8,10 +8,11 @@ async function handleFormSubmit(event) {
 		data.append(key, value);
 	});
 
-	const url = form.action
+	const url = new URL(form.action);
+	const relativePath = url.pathname + url.search;
 
 	try {
-		const response = await fetch(url, {
+		const response = await fetch(`/form${relativePath}`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/x-www-form-urlencoded'
@@ -27,10 +28,7 @@ async function handleFormSubmit(event) {
 
 		if (result.success) {
 				navigate('/home');
-				const baseUrl = window.location.origin;
-				if (url === `${baseUrl}/login/` || url === `${baseUrl}/accounts/logout/`) {
-						loadNavBar();
-				}
+				loadNavBar();
 		} else {
 				console.error('Form submission error:', result.errors);
 		}
