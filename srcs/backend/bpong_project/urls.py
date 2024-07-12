@@ -18,8 +18,15 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+from django.urls import re_path
+from . import consumers
+
 urlpatterns = [
     path("admin/", admin.site.urls),
     path('accounts/', include('accounts.urls')),
     path('', include('beePong.urls')),
+]
+
+websocket_urlpatterns = [
+    re_path(r'ws/pong/$', consumers.PongConsumer.as_asgi()),
 ]

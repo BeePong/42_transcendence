@@ -37,6 +37,7 @@ INSTALLED_APPS = [
 
     # Third-party apps
     'django_bootstrap5',
+    'channels',
 
     # Django apps
     "django.contrib.admin",
@@ -77,6 +78,13 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "bpong_project.wsgi.application"
 
+ASGI_APPLICATION = 'bpong_project.asgi.application'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    },
+}
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases

@@ -6,4 +6,5 @@ urlpatterns = [
     # Home page
     path('', views.index, name='index'),
     path('api/', views.test, name='apiTest'),
+    path('pong/', views.pong, name='pong'),
 ]

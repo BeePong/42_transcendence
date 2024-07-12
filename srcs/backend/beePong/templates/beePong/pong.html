@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Pong Game</title>
+</head>
+<body>
+    <h1>Pong Game</h1>
+    <script>
+        var socket = new WebSocket('ws://' + window.location.host + '/ws/pong/');
+
+        socket.onmessage = function(e) {
+            var data = JSON.parse(e.data);
+            console.log(data);
+            // Update your game field here with data.paddle_x, data.paddle_y, data.ball_x, data.ball_y
+        };
+
+        socket.onopen = function(e) {
+            console.log('WebSocket connection opened');
+        };
+
+        socket.onclose = function(e) {
+            console.log('WebSocket connection closed');
+        };
+
+        function sendGameData(paddle_x, paddle_y, ball_x, ball_y) {
+            socket.send(JSON.stringify({
+                'paddle_x': paddle_x,
+                'paddle_y': paddle_y,
+                'ball_x': ball_x,
+                'ball_y': ball_y,
+            }));
+        }
+
+        // Example of sending data to the server
+        setInterval(function() {
+            // Replace these with actual game coordinates
+            var paddle_x = Math.random() * 100;
+            var paddle_y = Math.random() * 100;
+            var ball_x = Math.random() * 100;
+            var ball_y = Math.random() * 100;
+            sendGameData(paddle_x, paddle_y, ball_x, ball_y);
+        }, 1000);
+    </script>
+</body>
+</html>
