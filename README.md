@@ -9,6 +9,13 @@ This group project is about creating a website for the mighty Pong contest! 🏓
 - Commit messages chould be in this format: `issue_number commit_message`, where commit_message follows [Conventional Commits standard](https://www.conventionalcommits.org/en/v1.0.0/)
 - When creating a pull request, mention everyone and assign one person to review
 
+## 13.6.2024 meeting
+- Wing: continue front-end
+- Lionel: 
+- Lera: Figma error messages for form
+- Linh: 
+- Diego: Will meet Linh on Tuesday
+
 ## Architecture
 ### Game
 - id
@@ -76,8 +83,7 @@ This group project is about creating a website for the mighty Pong contest! 🏓
   - Payload: new alias
   - Returns: updated user (or just id)
 
-## 6.6.2024 meeting
-- games - simultaneous or consequtive?
+
 
 ## 8.6.2024 meeting
 First priority:
