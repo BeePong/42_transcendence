@@ -1,12 +1,3 @@
- // Define routes
- const routes = {
-	'/': 'home',
-	'/home': 'home',
-	'/about': 'about',
-	'/accounts/register': 'accounts/register',
-	'/accounts/login' : 'accounts/login'
-};
-
 // Handle navigation
 function navigate(eventOrPath) {
 	let path;
@@ -26,10 +17,9 @@ function navigate(eventOrPath) {
 
 // Load content based on the path
 async function loadPage(path) {
-	let route = path.endsWith('/') && path!== '/' ? path.slice(0, -1) : path;
-	const page = routes[route] || window.location.pathname.slice(1);
+	const page = path === '/' ? '/home' : path.replace(/\/$/, '');
 	try {
-			const response = await fetch(`/page/${page}/`);
+			const response = await fetch(`/page${page}/`);
 			if (!response.ok) {
 					if (response.status !== 404)
 							throw new Error('Network response was not ok');

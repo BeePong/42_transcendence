@@ -15,6 +15,4 @@ urlpatterns = [
     path('register/', views.register, name='register'),
     path('login/', views.custom_login, name='login'),
     path('logout/', views.custom_logout, name='logout'),
-    # Include default auth urls, but override specific ones as needed.
-    path('', include('django.contrib.auth.urls')),
 ]
