@@ -1,11 +1,11 @@
-// Handle navigation
+// Handle navigation based on path or event
 function navigate(eventOrPath) {
 	let path;
 	if (typeof eventOrPath === 'string') {
 			path = eventOrPath;
 	} else {
 			eventOrPath.preventDefault();
-			path = eventOrPath.target.getAttribute('href');
+			path = eventOrPath.currentTarget.getAttribute('href');
 	}
 
 	if (window.location.pathname === path)
@@ -39,7 +39,7 @@ async function loadNavBar() {
 				throw new Error('Network response was not ok');
 			}
 			const data = await response.text();
-			document.getElementById('navbar').innerHTML = data;
+			document.getElementById('navbar-content').innerHTML = data;
 	} catch (error) {
 			console.error('There was a problem with the fetch operation:', error);
 	}

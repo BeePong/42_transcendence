@@ -1,3 +1,4 @@
+//handle form submit for register, login and logout
 async function handleFormSubmit(event) {
 	event.preventDefault();
 	const form = event.target;

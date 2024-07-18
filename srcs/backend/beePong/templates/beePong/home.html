@@ -1,7 +1,22 @@
 <section>
 	<button onclick="navigate(`{% url 'accounts:register' %}`)">Register</button>
 	<button onclick="navigate(`{% url 'accounts:login' %}`)">Login</button>
-	<button onclick="fetchTestData()">test</button>
-	<div id="test"></div>
-	<div>Users:</div>
+	<div class="card">
+		<div class="card__content">
+			<h2 class="card__title">WHAT'S THIS?</h2>
+			<div class="card__text font--alt font-size--sm">
+				<p>The mighty Pong contest!*</p>
+				<p>Play solo against our vicious AI or gather friends and let the tournament decide who's the queen bee 🐝</p>
+			</div>
+			<button class="button--primary button--with-icon button--full-width">
+				<span class="button__text">TOURNAMENT</span>
+				<img src="/img/arrow.svg" alt="arrow" class="arrow-icon">
+			</button>
+			<button class="button--secondary button--with-icon button--full-width">
+				<span class="button__text">SOLO GAME</span>
+				<img src="/img/arrow.svg" alt="arrow" class="arrow-icon">
+			</button>
+		</div>
+	</div>
+	<p class="font--alt font-size--sm" style="width: 300px;">*created by 5 ultra talanted Hive Helsinki students. Tech stuff here -></p>
 </section>

@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.forms import UserCreationForm
+from .forms import CustomAuthenticationForm, CustomUserCreationForm
 from django.http import JsonResponse
 
 # Create your views here.
@@ -12,11 +13,11 @@ def register(request):
         # Display blank registration form.
         # If we’re not responding to a POST request, we make an instance of
         # UserCreationForm with no initial data
-        form = UserCreationForm()
+        form = CustomUserCreationForm()
     else:
         # Process completed form.
         # Make an instance of UserCreationForm based on the submitted data
-        form = UserCreationForm(data=request.POST)
+        form = CustomUserCreationForm(data=request.POST)
         if form.is_valid():
             """ If the submitted data is valid, we call the form's save() 
             method to save the username and the hash of the password to the database """
@@ -34,9 +35,9 @@ def register(request):
 
 def custom_login(request):
     if request.method != 'POST':
-        form = AuthenticationForm()
+        form = CustomAuthenticationForm()
     else:
-        form = AuthenticationForm(data=request.POST)
+        form = CustomAuthenticationForm(data=request.POST)
         if form.is_valid():
             user = form.get_user()
             login(request, user)
