@@ -1,6 +1,5 @@
-<form action="{% url 'accounts:register' %}" method='post'>
+<form id="registerForm" onsubmit=handleFormSubmit(event) action="{% url 'accounts:register' %}">
     {% csrf_token %}
     {{ form.as_div }}
-
     <button type="submit">Register</button>
 </form>
