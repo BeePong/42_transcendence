@@ -22,6 +22,7 @@ async function handleFormSubmit(event) {
 		});
 
 		if (!response.ok) {
+			if (response.status !== 400)
 				throw new Error('Network response was not ok');
 		}
 
@@ -31,7 +32,28 @@ async function handleFormSubmit(event) {
 				navigate('/home');
 				loadNavBar();
 		} else {
-				console.error('Form submission error:', result.errors);
+				// Select the error message container
+				const errorContainer = document.querySelector('.form-error-message');
+	
+				// Clear any previous errors
+				errorContainer.innerHTML = '';
+		
+				// Display the error message(s)
+				if (result.errors) {
+
+						// Show the error container
+						errorContainer.style.display = 'block';
+
+						for (const key in result.errors) {
+								if (result.errors.hasOwnProperty(key)) {
+										result.errors[key].forEach(error => {
+												const errorElement = document.createElement('p');
+												errorElement.textContent = error;
+												errorContainer.appendChild(errorElement);
+										});
+								}
+						}
+				}
 		}
 	} catch (error) {
 			console.error('There was a problem with the fetch operation:', error);

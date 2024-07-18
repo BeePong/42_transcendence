@@ -1,25 +1,29 @@
 <section>
-    <div class="card">
-        <div class="card__content">
-            <h2 class="card__title">LOGIN TO PLAY TOURNAMENTS</h2>
-            <form id="loginForm" onsubmit=handleFormSubmit(event) action="{% url 'accounts:login' %}">
-                {% csrf_token %}
-                {{ form.as_div }}
-                <div class="form-actions">
-                    <button type="submit" class="button--primary">LOGIN</button>
-                    <a class="font-size--xs">OR REGISTER</a>
-                </div>
-            </form>   
+    <div class="card__container">
+        <div class="card">
+            <div class="card__content">
+                <h2 class="card__title">LOGIN TO PLAY TOURNAMENTS</h2>
+                <form id="loginForm" onsubmit=handleFormSubmit(event) action="{% url 'accounts:login' %}">
+                    {% csrf_token %}
+                    {{ form.as_div }}
+                    <div class="form-actions">
+                        <button type="submit" class="button--primary">LOGIN</button>
+                        <a class="font-size--xs">OR REGISTER</a>
+                    </div>
+                </form>   
+            </div>
         </div>
-    </div>
-    <div class="button-group--horizontal">
-        <button class="button--secondary button--with-icon">
-            <span class="font-size--xl">G</span>
-            LOGIN
-        </button>
-        <button class="button--secondary button--with-icon">
-            <img src="/img/42.png" alt="42 logo" class="fortytwo-icon" width="30" height="30">
-            <span>LOGIN</span>
-        </button>
+        <div class="form-error-message">
+        </div>
+        <div class="button-group--horizontal">
+            <button class="button--secondary button--with-icon">
+                <span class="font-size--xl">G</span>
+                LOGIN
+            </button>
+            <button class="button--secondary button--with-icon">
+                <img src="/img/42.png" alt="42 logo" class="fortytwo-icon" width="30" height="30">
+                <span>LOGIN</span>
+            </button>
+        </div>
     </div>
 </section>

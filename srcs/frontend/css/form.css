@@ -23,3 +23,13 @@ form label {
 	gap: 10px;
 	flex-direction: column;
 }
+
+.form-error-message {
+	display: none;
+	background-color: var(--color-secondary);
+	color: var(--text-color-alt);
+	padding: 2em 3em;
+	margin-bottom: 2em;
+	font-family: var(--font-family-alt);
+	font-size: var(--font-size-sm);
+}
