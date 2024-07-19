@@ -21,13 +21,36 @@ async function loadPage(path) {
 	try {
 			const response = await fetch(`/page${page}/`);
 			if (!response.ok) {
-					if (response.status !== 404)
+					if (!(response.status === 401 || response.status === 404))
 							throw new Error('Network response was not ok');
 			}
-			const data = await response.text();
-			document.getElementById('content').innerHTML = data;
+			// Redirect to login page if the user is not login
+			if (response.headers.get('Content-Type')?.includes('application/json')) {
+				const data = await response.json();
+				if (data.authenticated === false) {
+					loadLoginPage();
+				}
+			} else {
+				const data = await response.text();
+				document.getElementById('content').innerHTML = data;
+			}
 	} catch (error) {
 			console.error('There was a problem with the fetch operation:', error);
+	}
+}
+
+// Load login page
+async function loadLoginPage() {
+	try {
+		const response = await fetch('/page/accounts/login/');
+		if (!response.ok) {
+				throw new Error('Network response was not ok');
+		}
+		const data = await response.text();
+		document.getElementById('content').innerHTML = data;
+	}
+	catch (error) {
+		console.error('There was a problem with the fetch operation:', error);
 	}
 }
 
