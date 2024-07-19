@@ -12,11 +12,11 @@ def register(request):
     if request.method != 'POST':
         # Display blank registration form.
         # If we’re not responding to a POST request, we make an instance of
-        # UserCreationForm with no initial data
+        # CustomUserCreationForm with no initial data
         form = CustomUserCreationForm()
     else:
         # Process completed form.
-        # Make an instance of UserCreationForm based on the submitted data
+        # Make an instance of CustomUserCreationForm based on the submitted data
         form = CustomUserCreationForm(data=request.POST)
         if form.is_valid():
             """ If the submitted data is valid, we call the form's save() 
@@ -27,7 +27,10 @@ def register(request):
             information is saved, we log them in by calling the login() function with 
             the request and new_user objects, which creates a valid session for the new user """
             login(request, new_user)
-            return JsonResponse({'success': True, 'username': new_user.username}, status=201)
+            # Assign the value of 'redirect_url' from POST data to the variable 'redirect_url'.
+            # If 'redirect_url' does not exist in POST data, use '/' as the default value.
+            redirect_url = request.POST.get('redirect_url', '/')
+            return JsonResponse({'success': True, 'redirect': redirect_url, 'username': new_user.username}, status=201)
         else:
             return JsonResponse({'success': False, 'errors': form.errors}, status=400)
     # Display a blank or invalid form.
@@ -41,7 +44,8 @@ def custom_login(request):
         if form.is_valid():
             user = form.get_user()
             login(request, user)
-            return JsonResponse({'success': True, 'username': user.username}, status=201)
+            redirect_url = request.POST.get('redirect_url', '/')
+            return JsonResponse({'success': True, 'redirect': redirect_url, 'username': user.username}, status=201)
         else:
             return JsonResponse({'success': False, 'errors': form.errors}, status=400)
     # Display a blank or invalid form.

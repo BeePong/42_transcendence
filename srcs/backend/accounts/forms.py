@@ -1,6 +1,7 @@
 """
-A custom authentication form that extends Django's built-in AuthenticationForm.
-This form adds placeholders and custom CSS classes to the username and password fields.
+This module contains custom authentication and user creation forms that extend
+Django's built-in AuthenticationForm and UserCreationForm. These custom forms 
+add placeholders and custom CSS classes to the username and password fields.
 """
 
 from django import forms

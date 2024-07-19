@@ -6,9 +6,10 @@
                 <form id="loginForm" onsubmit=handleFormSubmit(event) action="{% url 'accounts:login' %}">
                     {% csrf_token %}
                     {{ form.as_div }}
+                    <input type="hidden" id="redirectUrl" name="redirect_url" value="/"/>
                     <div class="form-actions">
                         <button type="submit" class="button--primary">LOGIN</button>
-                        <a class="font-size--xs">OR REGISTER</a>
+                        <a href="{% url 'accounts:register' %}" class="font-size--xs" onclick="navigate(event, document.getElementById('redirectUrl').value)">OR REGISTER</a>
                     </div>
                 </form>   
             </div>
