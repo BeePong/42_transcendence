@@ -2,6 +2,7 @@
 	<button onclick="navigate(`{% url 'accounts:register' %}`)">Register</button>
 	<button onclick="navigate(`{% url 'accounts:login' %}`)">Login</button>
 	<button onclick="fetchTestData()">test</button>
+	<button onclick="authNavigate(`{% url 'accounts:oauth_token' %}`)">42Login</button>
 	<div id="test"></div>
 	<div>Users:</div>
 </section>
