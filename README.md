@@ -9,6 +9,13 @@ This group project is about creating a website for the mighty Pong contest! 🏓
 - Commit messages chould be in this format: `issue_number commit_message`, where commit_message follows [Conventional Commits standard](https://www.conventionalcommits.org/en/v1.0.0/)
 - When creating a pull request, mention everyone and assign one person to review
 
+## 13.6.2024 meeting
+- Wing: continue front-end
+- Lionel: 
+- Lera: Figma error messages for form
+- Linh: 
+- Diego: Will meet Linh on Tuesday
+
 ## Architecture
 ### Game
 - id
@@ -76,8 +83,7 @@ This group project is about creating a website for the mighty Pong contest! 🏓
   - Payload: new alias
   - Returns: updated user (or just id)
 
-## 6.6.2024 meeting
-- games - simultaneous or consequtive?
+
 
 ## 8.6.2024 meeting
 First priority:
@@ -150,6 +156,11 @@ Dev-op: to be decided (1)
 
 Sum: 7.5
 
+## Memo
+
+### To run psql in a docker container
+docker exec -it *container_id* psql -U *my_user* -d *my_db* --password
+
 ## Resources
 __Inspiration__
 - [Agile and Documentation in ft_transcendence](https://medium.com/@glukas94/ft-transcendence-semana-1-3b641e683339)
@@ -157,3 +168,4 @@ __Inspiration__
 - [How the Django-Docker-Frontend system can be connected](https://medium.com/@bekojix0660/42-ft-transcendence-0d952c94ea05)
 - [Architecture & database diagram](https://github.com/zwzone/ft_transcendence)
 - [42 API](https://api.intra.42.fr/apidoc) | Documentation to build an application with 42 API. | `Intra` |
+- [PostgreSQL commands and flags](https://hasura.io/blog/top-psql-commands-and-flags-you-need-to-know-postgresql)

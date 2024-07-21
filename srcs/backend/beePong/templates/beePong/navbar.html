@@ -1,0 +1,19 @@
+<ul>
+	<li><a href="{% url 'beePong:home' %}" onclick="navigate(event)">Home</a></li>
+	<li><a href="{% url 'beePong:about' %}" onclick="navigate(event)">About</a></li>
+	{% if user.is_authenticated %}
+	<li>
+		<span>Hello, {{ user.username }}</span>
+	</li>
+	<li>
+		<form action="{% url 'accounts:logout' %}" onsubmit=handleFormSubmit(event)>
+			{% csrf_token %}
+			<button type="submit">Log out</button>
+		</form>
+	</li>
+	{% else %}
+	<li>
+		<button onclick="navigate('/accounts/login')">Login</button>
+	</li>
+	{% endif %}
+</ul>

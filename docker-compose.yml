@@ -1,16 +1,29 @@
 services:
+  db:
+    image: postgres:16
+    container_name: postgres_db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env
+  
   backend_dummy:
     container_name: backendDummy
     build:
       context: ./srcs/backend
-    # command: python manage.py runserver
     volumes:
       - ./srcs/backend/beePong:/usr/src/backend/beePong
-      # - ./tests:/code/tests
-  # db:
-  #   image: postgres:16
-  #   volumes:
-  #     - postgres_data:/var/lib/postgresql/data/
+    env_file:
+      - .env
+    depends_on:
+      - db
+  
   nginx:
     container_name: nginx
     depends_on:
@@ -22,3 +35,6 @@ services:
     ports:
       - 443:443
     restart: on-failure
+
+volumes:
+  postgres_data:

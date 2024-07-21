@@ -4,57 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dummy BeePong</title>
-    <script>
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    // Does this cookie string begin with the name we want?
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
-        }
-
-        async function fetchRegisterPage() {
-            const csrftoken = getCookie('csrftoken');
-            try {
-                const response = await fetch('/accounts/register/', {
-                    method: 'GET',
-                    headers: {
-                        'X-CSRFToken': csrftoken
-                    }
-                });
-                if (!response.ok) {
-                    throw new Error('Network response was not ok ' + response.statusText);
-                }
-                const data = await response.text(); // or response.json() if the API returns JSON
-                document.getElementById('register').innerHTML = data;
-            } catch (error) {
-                console.error('There was a problem with the fetch operation:', error);
-                document.getElementById('register').innerHTML = '<p>Failed to load the registration page. Please try again later.</p>';
-            }
-        }
-        async function fetchTestData() {
-            const response = await fetch('/api/');
-            const data = await response.text(); // or response.json() if the API returns JSON
-            document.getElementById('test').innerHTML = data;
-        }
-    </script>
+    <script src="/js/form.js"></script>
+    <script src="/js/route.js"></script>
+    <script src="/js/test.js"></script>
 </head>
 
 <body>
-    <div>
-        <button onclick="fetchRegisterPage()">Register</button>
-        <div id="register"></div>
-        <button onclick="fetchTestData()">test</button>
-        <div id="test"></div>
-    </div>
+    <nav id="navbar"></nav>
+    <main id="content"></main>
 </body>
-
 </html>
+
