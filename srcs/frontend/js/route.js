@@ -17,6 +17,7 @@ function navigate(eventOrPath) {
 
 // Load content based on the path
 async function loadPage(path) {
+	console.log("loadPage:", path);
 	const page = path === '/' ? '/home' : path.replace(/\/$/, '');
 	try {
 			const response = await fetch(`/page${page}/`);
@@ -26,6 +27,7 @@ async function loadPage(path) {
 			}
 			const data = await response.text();
 			document.getElementById('content').innerHTML = data;
+			AuthLogin();
 	} catch (error) {
 			console.error('There was a problem with the fetch operation:', error);
 	}
@@ -55,6 +57,12 @@ document.addEventListener('DOMContentLoaded', () => {
 	loadNavBar();
 	loadPage(window.location.pathname);
 });
+
+/* window.onload = function() {
+    const contentHtml = document.getElementById('content');
+	console.log("CONTENT:", contentHtml.innerHTML);
+	AuthLogin();
+}; */
 
 async function authNavigate(authUrl) {
 	fetch(`/page${authUrl}`, {
@@ -100,5 +108,22 @@ function redirAuthPage() {
     const url = base_url + query_string;
     window.location.href = url;
 }
+
+function AuthLogin() {
+    const params = {
+        'client_id': "u-s4t2ud-9829b259f513f68a8560685f649592ce78967cbbf74808fc41d7921213795d41",
+        'redirect_uri': "https://localhost/home",
+        'response_type': "code",
+        'scope': "public",
+        'state': "qwerty",
+    };
+    const base_url = 'https://api.intra.42.fr/oauth/authorize?';
+    const query_string = new URLSearchParams(params).toString();
+    const url = base_url + query_string;
+    document.getElementById('your_login_button_id').innerHTML = `<a href="${url}">42Login</a>`;
+}
+
+
+
 
 // document.getElementById('your_login_button_id').addEventListener('click', redirectToAuthorizationPage);
