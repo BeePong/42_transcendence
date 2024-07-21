@@ -12,10 +12,9 @@ def test(request):
     data = {"test": "This is a test JSON"}
     return JsonResponse(data)
 
-<<<<<<< HEAD
 def pong(request):
     return render(request, 'beePong/pong.html')
-=======
+
 def navbar(request):
     """The navbar for BeePong."""
     return render(request, 'beePong/navbar.html')
@@ -31,4 +30,3 @@ def about(request):
 def custom_404(request, exception):
     """The 404 page for BeePong."""
     return render(request, 'beePong/404.html', status=404)
->>>>>>> main

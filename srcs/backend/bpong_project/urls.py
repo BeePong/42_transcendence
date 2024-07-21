@@ -28,10 +28,8 @@ urlpatterns = [
     path('', include('beePong.urls')),
 ]
 
-<<<<<<< HEAD
 websocket_urlpatterns = [
     re_path(r'ws/pong/$', consumers.PongConsumer.as_asgi()),
 ]
-=======
+
 handler404 = 'beePong.views.custom_404'
->>>>>>> main

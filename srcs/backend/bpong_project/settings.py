@@ -72,7 +72,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "bpong_project.wsgi.application"
 
-<<<<<<< HEAD
 ASGI_APPLICATION = 'bpong_project.asgi.application'
 
 CHANNEL_LAYERS = {
@@ -81,8 +80,6 @@ CHANNEL_LAYERS = {
     },
 }
 
-=======
->>>>>>> main
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
