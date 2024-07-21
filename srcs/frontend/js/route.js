@@ -86,3 +86,19 @@ function getCookie(name) {
   }
   return cookieValue;
 }
+
+function redirAuthPage() {
+    const params = {
+        'client_id': 'your_client_id',
+        'redirect_uri': 'https://localhost/home',
+        'response_type': 'code',
+        'scope': 'public',
+        'state': 'qwerty',
+    };
+    const base_url = 'https://api.intra.42.fr/oauth/authorize?';
+    const query_string = new URLSearchParams(params).toString();
+    const url = base_url + query_string;
+    window.location.href = url;
+}
+
+// document.getElementById('your_login_button_id').addEventListener('click', redirectToAuthorizationPage);

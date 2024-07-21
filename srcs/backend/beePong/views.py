@@ -1,11 +1,10 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import Http404
-
+import os
 from django.http import JsonResponse
 
 # Create your views here.
-
 
 
 def test(request):
@@ -18,7 +17,15 @@ def navbar(request):
 
 def home(request):
     """The home page for BeePong."""
-    return render(request, 'beePong/home.html')
+    context = {
+        'client_id': os.getenv('FTAPI_UID'),
+        'redirect_uri': 'https://localhost/home',
+        'response_type': 'code',
+        'scope': 'public',
+        'state': 'qwerty',
+    }
+    return render(request, 'beePong/home.html', context)
+    # return render(request, 'beePong/home.html')
 
 def about(request):
     """The about page for BeePong."""

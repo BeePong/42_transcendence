@@ -1,8 +1,33 @@
 <section>
-	<button onclick="navigate(`{% url 'accounts:register' %}`)">Register</button>
-	<button onclick="navigate(`{% url 'accounts:login' %}`)">Login</button>
-	<button onclick="fetchTestData()">test</button>
-	<button onclick="authNavigate(`{% url 'accounts:oauth_token' %}`)">42Login</button>
-	<div id="test"></div>
-	<div>Users:</div>
+    <button onclick="navigate(`{% url 'accounts:register' %}`)">Register</button>
+    <button onclick="navigate(`{% url 'accounts:login' %}`)">Login</button>
+    <button onclick="fetchTestData()">test</button>
+    <a href="#" onclick="authSite();" >42Login</a>
+
+    <div id="test"></div>
+    <div>Users:</div>
 </section>
+
+<script type="text/javascript">
+    // Get the context data from Django
+    var clientId = "{{ client_id }}";
+    var redirectUri = "{{ redirect_uri }}";
+    var responseType = "{{ response_type }}";
+    var scope = "{{ scope }}";
+    var state = "{{ state }}";
+
+    // Base URL for 42 API OAuth
+    var baseUrl = 'https://api.intra.42.fr/oauth/authorize?';
+
+    // Function to redirect to 42 login page
+    function authSite() {
+        // Construct the full URL with query parameters
+        var loginUrl = baseUrl +
+                        'client_id=' + encodeURIComponent(clientId) + '&' +
+                        'redirect_uri=' + encodeURIComponent(redirectUri) + '&' +
+                        'response_type=' + encodeURIComponent(responseType) + '&' +
+                        'scope=' + encodeURIComponent(scope) + '&' +
+                        'state=' + encodeURIComponent(state);
+        location.href = loginUrl;
+    }
+</script>
