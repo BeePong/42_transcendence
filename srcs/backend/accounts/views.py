@@ -34,7 +34,15 @@ def register(request):
         else:
             return JsonResponse({'success': False, 'errors': form.errors}, status=400)
     # Display a blank or invalid form.
-    return render(request, 'registration/register.html', {'form': form})
+    context = {
+        'form': form,
+        'form_title': 'REGISTER',
+        'form_action': '/accounts/register/',
+        'form_button_text': 'REGISTER',
+        'alt_action': 'OR LOGIN',
+        'alt_action_url': '/accounts/login/',
+    }
+    return render(request, 'registration/form.html', context)
 
 def custom_login(request):
     if request.method != 'POST':
@@ -45,11 +53,19 @@ def custom_login(request):
             user = form.get_user()
             login(request, user)
             redirect_url = request.POST.get('redirect_url', '/')
-            return JsonResponse({'success': True, 'redirect': redirect_url, 'username': user.username}, status=201)
+            return JsonResponse({'success': True, 'redirect': redirect_url, 'username': user.username})
         else:
             return JsonResponse({'success': False, 'errors': form.errors}, status=400)
     # Display a blank or invalid form.
-    return render(request, 'registration/login.html', {'form': form})
+    context = {
+        'form': form,
+        'form_title': 'LOGIN TO PLAY TOURNAMENTS',
+        'form_action': '/accounts/login/',
+        'form_button_text': 'LOGIN',
+        'alt_action': 'OR REGISTER',
+        'alt_action_url': '/accounts/register/',
+    }
+    return render(request, 'registration/form.html', context)
 
 def custom_logout(request):
     if request.method == 'POST':
