@@ -66,7 +66,6 @@ async function redirectToLoginPage(redirectUrl) {
 		}
 		const data = await response.text();
 		document.getElementById('content').innerHTML = data;
-		const redirectInput = document.getElementById('redirectUrl');
 		document.getElementById('redirectUrl').value = redirectUrl;
 	}
 	catch (error) {
