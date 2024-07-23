@@ -1,43 +1,9 @@
-<!-- <script>
-    const params = {
-        'client_id': "{{ client_id }}",
-        'redirect_uri': "{{ redirect_uri }}",
-        'response_type': "{{ response_type }}",
-        'scope': "{{ scope }}",
-        'state': "{{ state }}",
-    };
-    const base_url = 'https://api.intra.42.fr/oauth/authorize?';
-    const query_string = new URLSearchParams(params).toString();
-    const url = base_url + query_string;
-
-    document.getElementById('your_login_button_id').innerHTML = `<a href="${url}">42Login</a>`;
-
-    
-</script> -->
 <section>
     <button onclick="navigate(`{% url 'accounts:register' %}`)">Register</button>
     <button onclick="navigate(`{% url 'accounts:login' %}`)">Login</button>
     <button onclick="fetchTestData()">test</button>
-    <!-- <a href id="your_login_button_id">42Login</a> -->
-    <div id="your_login_button_id"></div>
+    <a href="{{ login_url }}">42Login</a>
 
     <div id="test"></div>
     <div>Users:</div>
 </section>
-
-<!-- <script>
-    const params = {
-        'client_id': "{{ client_id }}",
-        'redirect_uri': "{{ redirect_uri }}",
-        'response_type': "{{ response_type }}",
-        'scope': "{{ scope }}",
-        'state': "{{ state }}",
-    };
-    const base_url = 'https://api.intra.42.fr/oauth/authorize?';
-    const query_string = new URLSearchParams(params).toString();
-    const url = base_url + query_string;
-
-    document.getElementById('your_login_button_id').innerHTML = `<a href="${url}">42Login</a>`;
-
-    
-</script> -->
