@@ -1,0 +1,111 @@
+:root {
+  --color-primary: #F3FF6F;
+  --color-secondary: #FF5151;
+	--color-tertiary: #FFFFFF;
+	--text-color-main: #FFFFFF;
+	--text-color-alt: #000000;
+  --background-color: #1F1F1F;
+  --font-family-main: "Krona One", sans-serif;
+  --font-family-alt: "Kumbh Sans", sans-serif;
+  --font-size-base: 16px;
+  --font-size-xl: 1.5rem;
+  --font-size-md: 0.875rem;
+  --font-size-sm: 0.75rem;
+  --font-size-xs: 0.625rem;
+	--breakpoint-xs: 400px;
+  --breakpoint-sm: 600px;
+	--breakpoint-md: 900px;
+	--breakpoint-lg: 1280px;
+	--breakpoint-xl: 1440px;
+	--breakpoint-xxl: 1920px;
+}
+
+* {
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background-color: inherit;
+  color: inherit;
+  font-family: inherit;
+  font-size: inherit;
+  box-sizing: border-box;
+}
+
+/* Ensure html and body take up the full height of the viewport */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+body {
+  font-family: var(--font-family-main);
+	font-weight: 400;
+  font-style: normal;
+  font-size: var(--font-size-base);
+  background-color: var(--background-color);
+  color: var(--text-color-main);
+}
+
+main {
+  flex: 1;
+  max-width: 1100px;
+  width: 90%;
+  margin: 5em auto;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+}
+
+a {
+  text-decoration: none;
+}
+
+input, textarea, select {
+  outline: 1px solid var(--text-color-main);
+}
+
+footer {
+  font-size: var(--font-size-md);
+  text-align: center;
+  padding: 10px 0;
+  margin-bottom: 10px;
+}
+
+.font--alt {
+  font-family: var(--font-family-alt);
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+  font-variation-settings: "YOPQ" 300;
+}
+
+.font-size--xl {
+  font-size: var(--font-size-xl);
+}
+
+.font-size--md {
+  font-size: var(--font-size-md);
+}
+
+.font-size--sm {
+  font-size: var(--font-size-sm);
+}
+
+.font-size--xs {
+  font-size: var(--font-size-xs);
+}
+
+@media (max-width: var(--breakpoint-md)) {
+  html {
+    font-size: 80%;
+  }
+}
+
+@media (max-width: var(--breakpoint-sm)) {
+  html {
+    font-size: 62.5%;
+  }
+}

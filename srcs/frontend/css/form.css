@@ -1,0 +1,35 @@
+form label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+  white-space: nowrap;
+}
+
+.form-input {
+	font-size: var(--font-size-xs);
+	padding: 1em;
+	margin-bottom: 1em;
+	width: 100%;
+}
+
+.form-actions {
+	display: flex;
+	align-items: flex-end;
+	gap: 10px;
+	flex-direction: column;
+}
+
+.form-error-message {
+	display: none;
+	background-color: var(--color-secondary);
+	color: var(--text-color-alt);
+	padding: 2em 3em;
+	margin-bottom: 2em;
+	font-family: var(--font-family-alt);
+	font-size: var(--font-size-sm);
+}

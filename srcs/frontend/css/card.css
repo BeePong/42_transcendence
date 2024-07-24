@@ -1,0 +1,28 @@
+.card__container {
+  width: 350px;
+}
+
+.card__container > div {
+  width: 100%;
+}
+
+.card {
+	outline: 1px solid var(--text-color-main);
+	box-shadow: -10px -10px var(--color-primary);
+  overflow: hidden;
+  margin: 20px;
+  transform: translateX(-15px);
+}
+
+.card__content {
+  padding: 40px;
+}
+
+.card__title {
+  margin: 0 0 10px;
+}
+
+.card__text {
+  margin: 0 0 10px;
+	font-size: var(--font-size-sm);
+}

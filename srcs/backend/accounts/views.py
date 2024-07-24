@@ -1,6 +1,6 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib.auth import login, logout, get_user_model
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from .forms import CustomAuthenticationForm, CustomUserCreationForm
 from django.http import JsonResponse
 import os
 import requests
@@ -15,12 +15,12 @@ def register(request):
     if request.method != 'POST':
         # Display blank registration form.
         # If we’re not responding to a POST request, we make an instance of
-        # UserCreationForm with no initial data
-        form = UserCreationForm()
+        # CustomUserCreationForm with no initial data
+        form = CustomUserCreationForm()
     else:
         # Process completed form.
-        # Make an instance of UserCreationForm based on the submitted data
-        form = UserCreationForm(data=request.POST)
+        # Make an instance of CustomUserCreationForm based on the submitted data
+        form = CustomUserCreationForm(data=request.POST)
         if form.is_valid():
             """ If the submitted data is valid, we call the form's save() 
             method to save the username and the hash of the password to the database """
@@ -30,25 +30,45 @@ def register(request):
             information is saved, we log them in by calling the login() function with 
             the request and new_user objects, which creates a valid session for the new user """
             login(request, new_user)
-            return JsonResponse({'success': True, 'username': new_user.username}, status=201)
+            # Assign the value of 'redirect_url' from POST data to the variable 'redirect_url'.
+            # If 'redirect_url' does not exist in POST data, use '/' as the default value.
+            redirect_url = request.POST.get('redirect_url', '/')
+            return JsonResponse({'success': True, 'redirect': redirect_url, 'username': new_user.username}, status=201)
         else:
             return JsonResponse({'success': False, 'errors': form.errors}, status=400)
     # Display a blank or invalid form.
-    return render(request, 'registration/register.html', {'form': form})
+    context = {
+        'form': form,
+        'form_title': 'REGISTER',
+        'form_action': '/accounts/register/',
+        'form_button_text': 'REGISTER',
+        'alt_action': 'OR LOGIN',
+        'alt_action_url': '/accounts/login/',
+    }
+    return render(request, 'registration/form.html', context)
 
 def custom_login(request):
     if request.method != 'POST':
-        form = AuthenticationForm()
+        form = CustomAuthenticationForm()
     else:
-        form = AuthenticationForm(data=request.POST)
+        form = CustomAuthenticationForm(data=request.POST)
         if form.is_valid():
             user = form.get_user()
             login(request, user)
-            return JsonResponse({'success': True, 'username': user.username}, status=201)
+            redirect_url = request.POST.get('redirect_url', '/')
+            return JsonResponse({'success': True, 'redirect': redirect_url, 'username': user.username})
         else:
             return JsonResponse({'success': False, 'errors': form.errors}, status=400)
     # Display a blank or invalid form.
-    return render(request, 'registration/login.html', {'form': form})
+    context = {
+        'form': form,
+        'form_title': 'LOGIN TO PLAY TOURNAMENTS',
+        'form_action': '/accounts/login/',
+        'form_button_text': 'LOGIN',
+        'alt_action': 'OR REGISTER',
+        'alt_action_url': '/accounts/register/',
+    }
+    return render(request, 'registration/form.html', context)
 
 def custom_logout(request):
     if request.method == 'POST':
