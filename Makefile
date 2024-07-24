@@ -1,4 +1,4 @@
-.PHONY: build up 
+.PHONY: build up backend
 
 # Create directories for mounting volumes
 
@@ -11,6 +11,11 @@ build:
 # Start the services
 up: build	
 	docker compose -f docker-compose.yml up -d
+
+# Rebuild and restart the backend service
+backend:
+	docker compose -f docker-compose.yml build backend_dummy
+	docker compose -f docker-compose.yml up -d backend_dummy
 
 # Stop the services
 clean:
