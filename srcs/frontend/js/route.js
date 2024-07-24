@@ -17,7 +17,6 @@ function navigate(eventOrPath) {
 
 // Load content based on the path
 async function loadPage(path) {
-	console.log("loadPage:", path);
 	const page = path === '/' ? '/home' : path.replace(/\/$/, '');
 	try {
 			const response = await fetch(`/page${page}/`);
