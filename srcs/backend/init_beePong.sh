@@ -6,8 +6,5 @@ python manage.py makemigrations beePong
 python manage.py migrate auth
 python manage.py migrate
 
-# Apply the migration for Python Social Auth models
-python manage.py migrate social_django
-
 # Set the command to start the Django development server
 exec python manage.py runserver 0.0.0.0:8000

@@ -1,7 +1,7 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render
 from django.contrib.auth import login, logout, get_user_model
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from django.http import JsonResponse, HttpResponseBadRequest, HttpResponseRedirect
+from django.http import JsonResponse
 import os
 import requests
 import json

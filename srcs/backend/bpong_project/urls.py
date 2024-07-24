@@ -23,10 +23,6 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path('accounts/', include('accounts.urls')),
     path('', include('beePong.urls')),
-    path(
-        'social-auth/',
-        include('social_django.urls', namespace='social')
-    ),
 ]
 
 handler404 = 'beePong.views.custom_404'
