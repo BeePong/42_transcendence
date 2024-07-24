@@ -1,11 +1,24 @@
 filebeat.inputs:
 - type: filestream
-  id: default-filestream
+  id: nginx-access-logs
   paths:
-    - ingest_data/*.log
     - /usr/share/filebeat/nginx_logs/access.log
+
+- type: filestream
+  id: nginx-error-logs
+  paths:
     - /usr/share/filebeat/nginx_logs/error.log
-      
+
+- type: filestream
+  id: app-logs
+  paths:
+    - /usr/share/filebeat/app_logs/app.log
+
+- type: filestream
+  id: sys-logs
+  paths:
+    - /var/log/syslog
+
 filebeat.autodiscover:
   providers:
     - type: docker
@@ -17,13 +30,8 @@ processors:
 setup.kibana:
   host: ${KIBANA_HOSTS}
   username: ${ELASTIC_USER}
-  password: ${ELASTIC_PASSWORD} 
-
-output.elasticsearch:
-  hosts: ${ELASTIC_HOSTS}
-  username: ${ELASTIC_USER}
   password: ${ELASTIC_PASSWORD}
-  ssl:
-    enabled: true
-    certificate_authorities: ${CA_CERT}
+
+output.logstash:
+  hosts: ["logstash01:5044"]
 

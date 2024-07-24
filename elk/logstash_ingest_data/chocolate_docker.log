@@ -1,6 +1,0 @@
-time="2024-07-15T14:45:35.333872906+03:00" level=debug msg="attach: stderr: begin"
-time="2024-07-15T14:45:35.334318180+03:00" level=debug msg="Calling GET /v1.43/containers/483cf264d98e8774b52277d1b83e7377b3c1a1b31de2e23cfb74f5b78d50d6a7/json - CHOCOLATE"
-time="2024-07-15T14:45:35.334845597+03:00" level=debug msg="event forwarded" ns=moby topic=/tasks/exec-added type=containerd.events.TaskExecAdded
-time="2024-07-15T14:45:35.335031556+03:00" level=debug msg=event module=libcontainerd namespace=moby topic=/tasks/exec-added
-time="2024-07-15T14:45:35.504235917+03:00" level=debug msg="event forwarded" ns=moby topic=/tasks/exec-started type=containerd.events.TaskExecStarted
-time="2024-07-15T14:45:35.504235917+03:00" level=debug msg="event forwarded" ns=moby topic=/tasks/exec-started type=containerd.events.TaskExecStarted PASTIS

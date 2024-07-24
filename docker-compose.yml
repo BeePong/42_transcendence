@@ -14,7 +14,11 @@ volumes:
   logstashdata01:
     driver: local
   postgres_data:
-  nginx_logs:  # New volume for Nginx logs
+    driver: local
+  nginx_logs:
+    driver: local
+  app_logs:  # New volume for application logs
+    driver: local
 
 networks:
   default:
@@ -22,7 +26,6 @@ networks:
     external: false
 
 services:
-  # BeePong Services
   db:
     image: postgres:16
     container_name: postgres_db
@@ -43,6 +46,7 @@ services:
       context: ./srcs/backend
     volumes:
       - ./srcs/backend/beePong:/usr/src/backend/beePong
+      - app_logs:/beePong/logs  # Mount application logs volume
     env_file:
       - .env
     depends_on:
@@ -61,7 +65,6 @@ services:
       - 443:443
     restart: on-failure
 
-  # ELK Stack Services
   setup:
     image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
     volumes:
@@ -243,6 +246,7 @@ services:
       - "/var/lib/docker/containers:/var/lib/docker/containers:ro"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - nginx_logs:/usr/share/filebeat/nginx_logs  # Mount the nginx_logs volume
+      - app_logs:/usr/share/filebeat/app_logs  # Mount the application logs volume
     environment:
       - ELASTIC_USER=elastic
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
