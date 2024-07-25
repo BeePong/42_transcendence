@@ -27,7 +27,7 @@ mock_tournaments = [
         name='WORLD CUP', 
         description='The mighty Pong contest for the best of the bestest in the world bees!', 
         state='NEW', 
-        num_players=2,
+        num_players=4,
         players=['overripe_banana', 'bald_potato'],
         winner=None
     ),

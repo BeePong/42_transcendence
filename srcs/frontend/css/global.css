@@ -74,12 +74,6 @@ footer {
   margin-bottom: 10px;
 }
 
-.font--main {
-  font-family: var(--font-family-main);
-	font-weight: 400;
-  font-style: normal;
-}
-
 .font--alt {
   font-family: var(--font-family-alt);
   font-optical-sizing: auto;
@@ -106,6 +100,10 @@ footer {
 
 .font-size--xs {
   font-size: var(--font-size-xs);
+}
+
+h1 {
+  font-size: var(--font-size-xl);
 }
 
 @media (max-width: var(--breakpoint-md)) {

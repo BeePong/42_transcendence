@@ -1,23 +1,56 @@
-<h1>TOURNAMENTS</h1>
-<button class="button--primary" onclick="navigate('/tournament/create/')">+ NEW</button>
-<ul class="list-group border-bottom pb-2 mb-4">
-	{% for tournament in tournaments %}
-	<div class="card__container">
-		<div class="card">
-			<div class="card__content">
-				<h2 class="card__title">{{ tournament.name }}</h2>
-				<p>{{ tournament.state }}</p>
-				<div class="card__text font--alt font-size--sm">
-					<p>{{ tournament.description }}</p>
-					<p>{{ tournament.players|length }}/{{ tournament.num_players }}</p>
-					{% for player in tournament.players %}
-					<p>{{ player }}</p>
-					{% endfor %}
+<section>
+	<div class="tournament__container">
+		<h1>TOURNAMENTS</h1>
+		<button class="button--primary" onclick="navigate('/tournament/create/')">+ NEW</button>
+	</div>
+
+	<div class="tournament__grid">
+		{% for tournament in tournaments %}
+		<div class="card__container">
+			<div class="
+				{% if tournament.state == 'NEW' %}
+				 card
+				{% else %}
+					card--inactive
+				{% endif %}">
+				<div class="card__content">
+					<div class="card__title tournament__container">
+						<h2>{{ tournament.name }}</h2>
+						<div class="tournament__state
+							{% if tournament.state == 'NEW' %}
+								tournament__state--new
+							{% elif tournament.state == 'PLAYING' %}
+								tournament__state--playing
+							{% else %}
+								tournament__state--finished
+							{% endif %}">
+							{{ tournament.state }}
+						</div>
+					</div>
+					<div class="card__text font--alt font-size--sm">
+						<p>{{ tournament.description }}</p>
+						<p class="tournament__num_players">{{ tournament.players|length }}/{{ tournament.num_players }}</p>
+						{% for player in tournament.players %}
+							<p>
+								{{ player }}
+								{% if player == tournament.winner %}
+										<span>👑</span>
+								{% endif %}
+							</p>
+						{% endfor %}
+					</div>
+					{% if tournament.state == 'NEW' %}
+						<input type="text" />
+						<button class="button--primary button--with-icon" onclick="navigate(`{% url 'beePong:game' %}`)">
+							<span class="button__text">JOIN</span>
+							<img src="/img/arrow.svg" alt="arrow" class="arrow-icon">
+						</button>
+					{% endif %}
 				</div>
 			</div>
 		</div>
-	</div>
 	{% empty %}
 	<div class="list-group-item border-0">YOUR AWESOME TOURNAMENT WILL BE HERE</div>
 	{% endfor %}
-</ul>
+	</div>
+</section>
