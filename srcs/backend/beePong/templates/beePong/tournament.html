@@ -1,1 +1,23 @@
-<p>tournament</p>
+<h1>TOURNAMENTS</h1>
+<button class="button--primary" onclick="navigate('/tournament/create/')">+ NEW</button>
+<ul class="list-group border-bottom pb-2 mb-4">
+	{% for tournament in tournaments %}
+	<div class="card__container">
+		<div class="card">
+			<div class="card__content">
+				<h2 class="card__title">{{ tournament.name }}</h2>
+				<p>{{ tournament.state }}</p>
+				<div class="card__text font--alt font-size--sm">
+					<p>{{ tournament.description }}</p>
+					<p>{{ tournament.players|length }}/{{ tournament.num_players }}</p>
+					{% for player in tournament.players %}
+					<p>{{ player }}</p>
+					{% endfor %}
+				</div>
+			</div>
+		</div>
+	</div>
+	{% empty %}
+	<div class="list-group-item border-0">YOUR AWESOME TOURNAMENT WILL BE HERE</div>
+	{% endfor %}
+</ul>

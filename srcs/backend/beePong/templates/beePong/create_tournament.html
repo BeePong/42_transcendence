@@ -1,0 +1,20 @@
+<section>
+	<div class="card__container">
+			<div class="card">
+					<div class="card__content">
+							<h2 class="card__title">NEW TOURNAMENT</h2>
+							<form onsubmit=handleFormSubmit(event) action="{{ form_action }}">
+									{% csrf_token %}
+									{{ form.as_div }}
+									<input type="hidden" id="redirectUrl" name="redirect_url" value="/"/>
+									<div class="form-actions">
+											<button type="submit" class="button--primary">CREATE</button>
+											<a href="{{ alt_action_url }}" class="font-size--xs" onclick="navigate(event, document.getElementById('redirectUrl').value)">{{ alt_action }}</a>
+									</div>
+							</form>   
+					</div>
+			</div>
+			<div class="form-error-message">
+			</div>
+	</div>
+</section>
