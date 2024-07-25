@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     # My apps
     'beePong',
     'accounts',
+    'tournament',
 
     # Third-party apps
     'django_bootstrap5',
