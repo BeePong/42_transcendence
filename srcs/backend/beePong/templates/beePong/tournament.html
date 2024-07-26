@@ -42,8 +42,11 @@
 					{% if tournament.state == 'NEW' %}
 					<form onsubmit=handleFormSubmit(event) action="{{ form_action }}">
 						{% csrf_token %}
-						{{ form.as_div }}
-						<div class="form-actions">
+						<div class="form__input-button-container">
+							<div class="form__input-container">
+								<label for="id_alias">Alias</label>
+								{{ form.alias }}
+							</div>
 							<button type="submit" class="button--primary button--with-icon">
 								<span class="button__text">JOIN</span>
 								<img src="/img/arrow.svg" alt="arrow" class="arrow-icon">

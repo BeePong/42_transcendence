@@ -6,6 +6,7 @@ import os
 from urllib.parse import urlencode
 from collections import namedtuple
 from .forms import TournamentForm, AliasForm
+from .decorators import login_required_json
 
 # Create your views here.
 
@@ -17,22 +18,13 @@ mock_tournaments = [
         tournament_id=1,
         name='BEEPONG CUP', 
         description='The mighty Pong contest for the best of the best bees!', 
-        state='NEW',
+        state='FINISHED', 
         num_players=4,
-        players=['lclerc', 'vvagapov', 'wchan'],
-        winner=None
+        players=['wchan', 'lclerc', 'vvagapov', 'djames'],
+        winner='wchan'
     ),
     MockTournaments(
         tournament_id=2,
-        name='WORLD CUP', 
-        description='The mighty Pong contest for the best of the bestest in the world bees!', 
-        state='NEW', 
-        num_players=4,
-        players=['overripe_banana', 'bald_potato'],
-        winner=None
-    ),
-    MockTournaments(
-        tournament_id=3,
         name='BEEPONG CUP', 
         description='The mighty Pong contest for the best of the best bees!', 
         state='PLAYING', 
@@ -41,13 +33,22 @@ mock_tournaments = [
         winner=None
     ),
     MockTournaments(
+        tournament_id=3,
+        name='WORLD CUP', 
+        description='The mighty Pong contest for the best of the bestest in the world bees!', 
+        state='NEW', 
+        num_players=4,
+        players=['overripe_banana', 'bald_potato'],
+        winner=None
+    ),
+    MockTournaments(
         tournament_id=4,
         name='BEEPONG CUP', 
         description='The mighty Pong contest for the best of the best bees!', 
-        state='FINISHED', 
+        state='NEW',
         num_players=4,
-        players=['wchan', 'lclerc', 'vvagapov', 'djames'],
-        winner='wchan'
+        players=['lclerc', 'vvagapov', 'wchan'],
+        winner=None
     ),
 ]
 
@@ -80,23 +81,38 @@ def game(request):
     """The game page for BeePong."""
     return render(request, 'beePong/game.html')
 
+@login_required_json
 def tournament(request):
     """The tournament page for BeePong."""
-    tournaments = mock_tournaments
+    # if not request.user.is_authenticated:
+    #     return JsonResponse({'authenticated': False}, status=401)
+    tournaments = mock_tournaments[::-1] # Reverse the tournaments
     form = AliasForm(username=request.user.username)
     context = {'tournaments': tournaments, 'form': form, 'form_action': '/alias/'}
-    if request.user.is_authenticated:
-        return render(request, 'beePong/tournament.html', context)
-    return JsonResponse({'authenticated': False}, status=401)
+    return render(request, 'beePong/tournament.html', context)
 
+@login_required_json
 def create_tournament(request):
     """Handle the creation of a new tournament."""
+    # if not request.user.is_authenticated:
+    #     return JsonResponse({'authenticated': False}, status=401)
     if request.method != 'POST':
         form = TournamentForm()
     else:
         form = TournamentForm(request.POST)
         if form.is_valid():
             # form.save()
+            new_tournament = MockTournaments(
+                tournament_id=len(mock_tournaments) + 1,
+                name=form.cleaned_data['title'],
+                description=form.cleaned_data['description'],
+                state='NEW',
+                num_players=form.cleaned_data['num_players'],
+                players=[],
+                winner=None
+            )
+            # Add the new tournament to the mock list
+            mock_tournaments.append(new_tournament)
             return JsonResponse({'success': True, 'redirect': '/tournament'}) #TODO: also include title, description and number of players 
         else:
             return JsonResponse({'success': False, 'errors': form.errors}, status=400)

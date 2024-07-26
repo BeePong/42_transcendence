@@ -60,3 +60,20 @@ form label {
 .radio-label input[type="radio"] {
 	display: none;
 }
+
+.form__input-button-container {
+	display: flex;
+	align-items: center;
+}
+
+.form__input-container {
+	flex-grow: 1;
+	margin-right: 1rem;
+}
+
+.form__input-container > input {
+	margin-bottom: 0em;
+}
+
+
+
