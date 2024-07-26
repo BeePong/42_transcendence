@@ -5,7 +5,25 @@
 							<h2 class="card__title">NEW TOURNAMENT</h2>
 							<form onsubmit=handleFormSubmit(event) action="{{ form_action }}">
 									{% csrf_token %}
-									{{ form.as_div }}
+									<div>
+											<label for="id_title">Title</label>
+											{{ form.title }}
+									</div>
+									<div>
+											<label for="id_description">Description</label>
+											{{ form.description }}
+									</div>
+									<div>
+											<label for="id_title">Number of players</label>
+											<div class="radio-group" id="id_title">
+													{% for id, label in form.num_players.field.choices %}
+															<label class="radio-label" for="id_num_players_{{ forloop.counter0 }}">
+																	<input type="radio" id="id_num_players_{{ forloop.counter0 }}" name="num_players" value="{{ id }}" class="form-radio">
+																	<span>{{ label }}</span>
+															</label>
+													{% endfor %}
+											</div>
+									</div>
 									<div class="form-actions">
 										<button type="submit" class="button--primary">CREATE</button>
 									</div>

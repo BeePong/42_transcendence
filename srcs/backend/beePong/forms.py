@@ -2,6 +2,11 @@ from django import forms
 from .models import Tournament, Alias
 
 class TournamentForm(forms.ModelForm):
+    num_players = forms.ChoiceField(
+        choices=[(2, '2'), (4, '4')],
+        widget=forms.RadioSelect(attrs={'class': 'form-radio'})
+    )
+
     class Meta:
         model = Tournament
         fields = ['title', 'description', 'num_players']
@@ -13,11 +18,7 @@ class TournamentForm(forms.ModelForm):
             'description': forms.TextInput(attrs={
                 'placeholder': 'DESCRIPTION',
                 'class': 'form-input'
-            }),
-            'num_players': forms.TextInput(attrs={
-                'placeholder': 'Number of players',
-                'class': 'form-input'
-            }),
+            })
         }
 
 class AliasForm(forms.ModelForm):

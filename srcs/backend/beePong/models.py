@@ -5,7 +5,7 @@ from django.db import models
 class Tournament(models.Model):
     title = models.CharField(max_length=100)
     description = models.CharField(max_length=100)
-    num_players = models.CharField(max_length=100)
+    num_players = models.IntegerField(choices=[(2, '2'), (4, '4')])
 
     def __str__(self):
         return self.name

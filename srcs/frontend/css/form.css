@@ -1,13 +1,5 @@
 form label {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  border: 0;
-  white-space: nowrap;
+  display: none;
 }
 
 .form-input {
@@ -32,4 +24,39 @@ form label {
 	margin-bottom: 2em;
 	font-family: var(--font-family-alt);
 	font-size: var(--font-size-sm);
+}
+
+.radio-group {
+	display: flex;
+	gap: 1rem;
+}
+
+.radio-label {
+	display: block;
+	align-items: center;
+	justify-content: center;
+	padding: 1rem;
+	border: 1px solid var(--text-color-main);
+	cursor: pointer;
+	transition: background-color 0.1s, color 0.1s;
+	position: relative; /* Needed for z-index manipulation */
+}
+
+.radio-label:hover {
+	background-color: var(--color-tertiary);
+	color: var(--text-color-alt);
+}
+
+.radio-label input[type="radio"]:checked + span::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	background-color: var(--color-tertiary);
+}
+
+.radio-label input[type="radio"] {
+	display: none;
 }
