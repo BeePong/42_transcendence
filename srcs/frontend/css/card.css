@@ -4,6 +4,7 @@
 
 .card__container > div {
   width: 100%;
+  min-height: 300px;
 }
 
 .card {
@@ -19,6 +20,11 @@
   overflow: hidden;
   margin: 20px;
   height: 100%;
+}
+
+.card--empty {
+	outline: 1px dashed var(--text-color-main);
+  color: var(--text-color-grey);
 }
 
 .card__content {

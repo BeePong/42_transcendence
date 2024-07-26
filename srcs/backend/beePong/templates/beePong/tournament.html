@@ -49,8 +49,14 @@
 				</div>
 			</div>
 		</div>
-	{% empty %}
-	<div class="list-group-item border-0">YOUR AWESOME TOURNAMENT WILL BE HERE</div>
-	{% endfor %}
+		{% empty %}
+		<div class="card__container">
+			<div class="card--empty">
+					<div class="card__content">
+						YOUR AWESOME TOURNAMENT WILL BE HERE
+					</div>
+			</div>
+		</div>
+		{% endfor %}
 	</div>
 </section>
