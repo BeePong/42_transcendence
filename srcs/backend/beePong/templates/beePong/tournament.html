@@ -42,6 +42,7 @@
 					{% if tournament.state == 'NEW' %}
 					<form onsubmit=handleFormSubmit(event) action="{{ form_action }}">
 						{% csrf_token %}
+						<input type="hidden" name="tournament_id" value="{{ tournament.tournament_id }}">
 						<div class="form__input-button-container">
 							<div class="form__input-container">
 								<label for="id_alias">Alias</label>

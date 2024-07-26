@@ -120,15 +120,24 @@ def create_tournament(request):
 
 def alias(request):
     if request.method == 'POST':
+        tournament_id = request.POST.get('tournament_id')
         username = request.session.get('username', None)
         form = AliasForm(data=request.POST, username=username)
         if form.is_valid():
             # form.save()
-            return JsonResponse({'success': True, 'redirect': '/game'}) #TODO: also include alias
+            redirect_url = f'/tournament/{tournament_id}/lobby'
+            return JsonResponse({'success': True, 'redirect': redirect_url}) #TODO: also include alias
         else:
             return JsonResponse({'success': False, 'errors': form.errors}, status=400)
     return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=405)
 
+#TODO: only players in the tournament can access its lobby page
+@login_required_json
+def tournament_lobby(request, tournament_id):
+    """Retrieve the lobby page for a specific tournament."""
+    # tournament = get_object_or_404(Tournament, id=tournament_id)
+    # context = {'tournament': tournament}
+    return render(request, 'beePong/tournament_lobby.html')
 
 def custom_404(request, exception):
     """The 404 page for BeePong."""
