@@ -1,5 +1,9 @@
-.PHONY: up down clean clean_volumes clean_orphans clean_images clean_all re build_all up_nginx up_backend up_db up_elk up_all up_no_elk logs_nginx logs_backend logs_db logs_elk status exec_nginx exec_backend exec_db exec_elk stop_all help
+.PHONY: up down clean clean_volumes clean_orphans clean_images clean_all re re_elk re_all re_all_elk build_all up_nginx up_backend up_db up_elk up_all up_no_elk logs logs_errors logs_grep logs_nginx logs_backend logs_db logs_elk ps ps_short ps_inspect exec_nginx exec_backend exec_db exec_elk stop_all stats sys_df help
 
+
+################################################################################
+# Build and Start
+################################################################################
 # Default target: Build and start all services except ELK stack
 all: up_no_elk
 
@@ -28,22 +32,22 @@ up_db:
 up_elk:
 	docker-compose -f ./docker-compose.yml up --build -d es01 kibana logstash01 filebeat01 metricbeat01
 
+################################################################################
+# Clean and Remove
+################################################################################
 # Stop and remove containers, networks, and volumes
 down:
 	docker-compose -f ./docker-compose.yml down
 
-# Clean up volumes
-# Use this to remove volumes and reset persistent data
+# Clean up volumes to remove volumes and reset persistent data
 clean_volumes:
 	docker-compose -f ./docker-compose.yml down -v
 
-# Clean up orphans
-# Use this to remove containers that are no longer defined in the current docker-compose.yml
+# Clean up orphans to remove containers that are no longer defined in the current docker-compose.yml
 clean_orphans:
 	docker-compose -f ./docker-compose.yml down --remove-orphans
 
-# Clean up images
-# Use this to remove all Docker images
+# Clean up images to remove all Docker images
 clean_images:
 	docker rmi -f $$(docker images -aq)
 
@@ -55,9 +59,24 @@ clean_all: clean_volumes clean_orphans clean_images
 # Use this to reset data and ensure only defined services are running
 clean: clean_volumes clean_orphans
 
-# Rebuild and start all services
-re: clean_all up_no_elk
+################################################################################
+# Rebuild and Restart
+################################################################################
+# Rebuild and start all services without removing volumes
+re: clean_orphans clean_images up_no_elk
 
+# Rebuild and start all services including ELK stack without removing volumes
+re_elk: clean_orphans clean_images up_all
+
+# Rebuild and start all services with a full cleanup including volumes
+re_all: clean_all up_no_elk
+
+# Rebuild and start all services including ELK stack with a full cleanup including volumes
+re_all_elk: clean_all up_all
+
+################################################################################
+# Logging
+################################################################################
 # Tail logs from specific services
 logs_nginx:
 	docker-compose -f ./docker-compose.yml logs -f nginx
@@ -71,10 +90,38 @@ logs_db:
 logs_elk:
 	docker-compose -f ./docker-compose.yml logs -f es01 kibana logstash01 filebeat01 metricbeat01
 
+# Tail all logs with timestamps
+logs:
+	docker-compose -f ./docker-compose.yml logs -f -t
+
+# Tail ERROR logs with timestamps
+logs_errors:
+	docker-compose -f ./docker-compose.yml logs -f -t | grep "ERROR"
+
+# Tail logs containing keyword input by user with timestamps
+logs_grep:
+	@read -p "Enter keyword to search in logs: " keyword; docker-compose -f ./docker-compose.yml logs -f -t | grep "$$keyword"
+
+
+################################################################################
+# Status
+################################################################################
 # Check status of running containers
-status:
+ps:
 	docker-compose -f ./docker-compose.yml ps
 
+# Check status of running containers with concise output
+ps_short:
+	@docker container ls -a --format "table {{.ID}}\t{{.Names}}\t{{.RunningFor}}\t{{.Status}}"
+
+# Inspect a specific container
+ps_inspect: ps_short
+	@echo ""
+	@read -p "Enter container name: " name; docker inspect $$name
+
+################################################################################
+# Exec into Containers
+################################################################################
 # Open a shell in a specific container
 exec_nginx:
 	docker-compose -f ./docker-compose.yml exec nginx sh
@@ -88,15 +135,31 @@ exec_db:
 exec_elk:
 	docker-compose -f ./docker-compose.yml exec es01 sh
 
+################################################################################
+# Stop services
+################################################################################
 # Stop all services without removing them
 stop_all:
 	docker-compose -f ./docker-compose.yml stop
 
-# Show help
+################################################################################
+# Monitoring
+################################################################################
+stats:
+	docker stats
+
+sys_df:
+	docker system df
+
+################################################################################
+# Help
+################################################################################
 help:
 	@echo "Usage: make [target]"
 	@echo ""
 	@echo "Targets:"
+	@echo ""
+	@echo "Build and Start:"
 	@echo "  all            Build and start all services except ELK stack"
 	@echo "  up_no_elk      Build and start all services except ELK stack"
 	@echo "  up_all         Build and start all services including ELK stack"
@@ -104,22 +167,49 @@ help:
 	@echo "  up_backend     Build and start only the backend service"
 	@echo "  up_db          Build and start only the database service"
 	@echo "  up_elk         Build and start only the ELK stack services"
+	@echo "  build_all      Build all Docker images"
+	@echo ""
+	@echo "Stop:"
+	@echo "  stop_all       Stop all running services without removing them"
+	@echo ""
+	@echo "Clean and Remove:"
 	@echo "  down           Stop and remove containers, networks, and volumes"
 	@echo "  clean_volumes  Remove volumes and reset persistent data"
 	@echo "  clean_orphans  Remove orphaned containers not defined in the current docker-compose.yml"
 	@echo "  clean_images   Remove all Docker images"
 	@echo "  clean_all      Full cleanup: containers, networks, volumes, and images"
 	@echo "  clean          Default clean: reset data and ensure only defined services are running"
-	@echo "  re             Rebuild and start all services with a clean environment"
+	@echo ""
+	@echo "Rebuild and Restart:"
+	@echo "  re             Rebuild and start all services without removing volumes"
+	@echo "  re_elk         Rebuild and start all services including ELK stack without removing volumes"
+	@echo "  re_all         Rebuild and start all services with a full cleanup including volumes"
+	@echo "  re_all_elk     Rebuild and start all services including ELK stack with a full cleanup including volumes"
+	@echo ""
+	@echo "Logging:"
 	@echo "  logs_nginx     Tail logs from the Nginx service"
 	@echo "  logs_backend   Tail logs from the Backend service"
 	@echo "  logs_db        Tail logs from the Database service"
 	@echo "  logs_elk       Tail logs from the ELK stack services"
-	@echo "  status         Check status of running containers"
+	@echo "  logs           Tail all logs with timestamps"
+	@echo "  logs_errors    Tail logs with timestamps and filter for ERROR messages"
+	@echo "  logs_grep      Tail logs with timestamps and filter by a keyword"
+	@echo ""
+	@echo "Status:"
+	@echo "  ps             Check status of running containers"
+	@echo "  ps_short       Check status of running containers with concise output"
+	@echo "  ps_inspect     Inspect a specific container"
+	@echo ""
+	@echo "Exec into Containers:"
 	@echo "  exec_nginx     Open a shell in the Nginx container"
 	@echo "  exec_backend   Open a shell in the Backend container"
 	@echo "  exec_db        Open a shell in the Database container"
 	@echo "  exec_elk       Open a shell in the ELK stack container"
-	@echo "  stop_all       Stop all running services without removing them"
+	@echo ""
+	@echo "Monitoring:"
+	@echo "  stats          Show resource utilization statistics for running containers"
+	@echo "  sys_df         Show Docker system disk usage"
+	@echo ""
+	@echo "Help:"
 	@echo "  help           Show this help message"
 
