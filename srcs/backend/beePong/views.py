@@ -5,7 +5,7 @@ from accounts.forms import CustomAuthenticationForm
 import os
 from urllib.parse import urlencode
 from collections import namedtuple
-from .forms import TournamentForm
+from .forms import TournamentForm, AliasForm
 
 # Create your views here.
 
@@ -83,21 +83,35 @@ def game(request):
 def tournament(request):
     """The tournament page for BeePong."""
     tournaments = mock_tournaments
-    context = {'tournaments': tournaments}
+    form = AliasForm(username=request.user.username)
+    context = {'tournaments': tournaments, 'form': form, 'form_action': '/alias/'}
     if request.user.is_authenticated:
         return render(request, 'beePong/tournament.html', context)
     return JsonResponse({'authenticated': False}, status=401)
 
 def create_tournament(request):
     """Handle the creation of a new tournament."""
-    if request.method == 'POST':
+    if request.method != 'POST':
+        form = TournamentForm()
+    else:
         form = TournamentForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect('tournament_list')  # Replace with your tournament list view
-    else:
-        form = TournamentForm()
-    return render(request, 'beePong/create_tournament.html', {'form': form})
+            # form.save()
+            return JsonResponse({'success': True, 'redirect': '/tournament'}) #TODO: also include title, description and number of players 
+        else:
+            return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+    return render(request, 'beePong/create_tournament.html', {'form': form, 'form_action': '/tournament/create/'})
+
+def alias(request):
+    if request.method == 'POST':
+        username = request.session.get('username', None)
+        form = AliasForm(data=request.POST, username=username)
+        if form.is_valid():
+            # form.save()
+            return JsonResponse({'success': True, 'redirect': '/game'}) #TODO: also include alias
+        else:
+            return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+    return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=405)
 
 
 def custom_404(request, exception):

@@ -9,3 +9,9 @@ class Tournament(models.Model):
 
     def __str__(self):
         return self.name
+
+class Alias(models.Model):
+    alias = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.name

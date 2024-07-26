@@ -1,7 +1,7 @@
 <section>
 	<div class="tournament__container">
 		<h1>TOURNAMENTS</h1>
-		<button class="button--primary" onclick="navigate('/tournament/create/')">+ NEW</button>
+		<button class="button--primary" onclick="navigate(`{% url 'beePong:create_tournament' %}`)">+ NEW</button>
 	</div>
 
 	<div class="tournament__grid">
@@ -40,11 +40,16 @@
 						{% endfor %}
 					</div>
 					{% if tournament.state == 'NEW' %}
-						<input type="text" />
-						<button class="button--primary button--with-icon" onclick="navigate(`{% url 'beePong:game' %}`)">
-							<span class="button__text">JOIN</span>
-							<img src="/img/arrow.svg" alt="arrow" class="arrow-icon">
-						</button>
+					<form onsubmit=handleFormSubmit(event) action="{{ form_action }}">
+						{% csrf_token %}
+						{{ form.as_div }}
+						<div class="form-actions">
+							<button type="submit" class="button--primary button--with-icon">
+								<span class="button__text">JOIN</span>
+								<img src="/img/arrow.svg" alt="arrow" class="arrow-icon">
+							</button>
+						</div>
+					</form>  
 					{% endif %}
 				</div>
 			</div>

@@ -6,10 +6,8 @@
 							<form onsubmit=handleFormSubmit(event) action="{{ form_action }}">
 									{% csrf_token %}
 									{{ form.as_div }}
-									<input type="hidden" id="redirectUrl" name="redirect_url" value="/"/>
 									<div class="form-actions">
-											<button type="submit" class="button--primary">CREATE</button>
-											<a href="{{ alt_action_url }}" class="font-size--xs" onclick="navigate(event, document.getElementById('redirectUrl').value)">{{ alt_action }}</a>
+										<button type="submit" class="button--primary">CREATE</button>
 									</div>
 							</form>   
 					</div>
