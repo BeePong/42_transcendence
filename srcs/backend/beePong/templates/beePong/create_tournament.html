@@ -17,10 +17,12 @@
 											<label for="id_title">Number of players</label>
 											<div class="radio-group" id="id_title">
 													{% for id, label in form.num_players.field.choices %}
-															<label class="radio-label" for="id_num_players_{{ forloop.counter0 }}">
-																	<input type="radio" id="id_num_players_{{ forloop.counter0 }}" name="num_players" value="{{ id }}" class="form-radio">
-																	<span>{{ label }}</span>
-															</label>
+													<div>
+													<input type="radio" id="id_num_players_{{ forloop.counter0 }}" name="num_players" value="{{ id }}" class="radio-input">
+													<label class="radio-label" for="id_num_players_{{ forloop.counter0 }}">
+															<span>{{ label }}</span>
+													</label>
+													</div>
 													{% endfor %}
 											</div>
 									</div>

@@ -31,34 +31,31 @@ form label {
 	gap: 1rem;
 }
 
+.radio-input {
+	-webkit-appearance: none;
+	outline: none;
+}
+
 .radio-label {
 	display: block;
-	align-items: center;
-	justify-content: center;
-	padding: 1rem;
-	border: 1px solid var(--text-color-main);
+	height: 40px;
+	width: 40px;
+	border: 1px solid var(--color-tertiary);
+	position: relative;
+	transition: 0.1s;
 	cursor: pointer;
-	transition: background-color 0.1s, color 0.1s;
-	position: relative; /* Needed for z-index manipulation */
 }
 
-.radio-label:hover {
+label > span {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+}
+
+.radio-input:checked + label {
 	background-color: var(--color-tertiary);
 	color: var(--text-color-alt);
-}
-
-.radio-label input[type="radio"]:checked + span::before {
-	content: '';
-	position: absolute;
-	top: 0;
-	right: 0;
-	bottom: 0;
-	left: 0;
-	background-color: var(--color-tertiary);
-}
-
-.radio-label input[type="radio"] {
-	display: none;
 }
 
 .form__input-button-container {

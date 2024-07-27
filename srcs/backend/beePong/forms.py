@@ -4,7 +4,7 @@ from .models import Tournament, Alias
 class TournamentForm(forms.ModelForm):
     num_players = forms.ChoiceField(
         choices=[(2, '2'), (4, '4')],
-        widget=forms.RadioSelect(attrs={'class': 'form-radio'})
+        widget=forms.RadioSelect(attrs={'class': 'radio-input'})
     )
 
     class Meta:
