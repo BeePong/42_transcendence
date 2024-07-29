@@ -1,5 +1,4 @@
-.PHONY: up down clean clean_volumes clean_orphans clean_images clean_all re re_elk re_all re_all_elk build_all up_nginx up_backend up_db up_elk up_all up_no_elk logs logs_errors logs_grep logs_nginx logs_backend logs_db logs_elk ps ps_short ps_inspect exec_nginx exec_backend exec_db exec_elk stop_all stats sys_df help
-
+.PHONY: up down clean clean_volumes clean_orphans clean_images clean_all pre_clean_all re re_elk re_all re_all_elk build_all up_nginx up_backend up_db up_elk up_all up_no_elk logs logs_errors logs_grep logs_nginx logs_backend logs_db logs_elk ps ps_short ps_inspect exec_nginx exec_backend exec_db exec_elk stop_all stats sys_df help
 
 ################################################################################
 # Build and Start
@@ -35,29 +34,57 @@ up_elk:
 ################################################################################
 # Clean and Remove
 ################################################################################
+# Pre-clean step to capture image IDs before bringing containers down
+pre_clean_all:
+	@images=$$(docker-compose -f ./docker-compose.yml images -q); \
+	if [ -n "$$images" ]; then \
+		echo "$$images" >> .image_ids; \
+	else \
+		echo "pre_clean_all: no images to be deleted"; \
+	fi; \
+	sort .image_ids | uniq > .image_ids.tmp && mv .image_ids.tmp .image_ids; \
+	echo "pre_clean_all: images to be deleted identified"; \
+	cat .image_ids
+
 # Stop and remove containers, networks, and volumes
-down:
+down: pre_clean_all
 	docker-compose -f ./docker-compose.yml down
 
-# Clean up volumes to remove volumes and reset persistent data
-clean_volumes:
+# Clean up volumes and reset persistent data
+clean_volumes: pre_clean_all
 	docker-compose -f ./docker-compose.yml down -v
 
 # Clean up orphans to remove containers that are no longer defined in the current docker-compose.yml
-clean_orphans:
+clean_orphans: pre_clean_all
 	docker-compose -f ./docker-compose.yml down --remove-orphans
 
 # Clean up images to remove all Docker images
 clean_images:
-	docker rmi -f $$(docker images -aq)
+	@if [ -f .image_ids ]; then \
+		echo "clean_images: remove following images"; \
+		cat .image_ids; \
+		images=$$(cat .image_ids); \
+		if [ -n "$$images" ]; then \
+			for image in $$images; do \
+				docker image rm -f $$image || true; \
+			done; \
+			echo "clean_images: Images removed"; \
+		else \
+			echo "clean_images: No images to remove"; \
+		fi; \
+		rm -f .image_ids; \
+	else \
+		echo "clean_images: .image_ids file not found"; \
+	fi
+	
 
 # Clean up all: containers, networks, volumes, and images
 # Use this for a full cleanup of the Docker environment
-clean_all: clean_volumes clean_orphans clean_images
+clean_all: pre_clean_all clean_orphans clean_volumes clean_images 
 
 # Clean up: containers, networks, volumes, and orphans (default clean)
 # Use this to reset data and ensure only defined services are running
-clean: clean_volumes clean_orphans
+clean: pre_clean_all clean_orphans clean_volumes
 
 ################################################################################
 # Rebuild and Restart
@@ -101,7 +128,6 @@ logs_errors:
 # Tail logs containing keyword input by user with timestamps
 logs_grep:
 	@read -p "Enter keyword to search in logs: " keyword; docker-compose -f ./docker-compose.yml logs -f -t | grep "$$keyword"
-
 
 ################################################################################
 # Status
@@ -213,3 +239,4 @@ help:
 	@echo "Help:"
 	@echo "  help           Show this help message"
 
+re: clean all
