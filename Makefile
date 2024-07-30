@@ -8,35 +8,35 @@ all: up_no_elk
 
 # Build all Docker images
 build_all:
-	docker-compose -f ./docker-compose.yml build
+	docker compose -f ./docker-compose.yml build
 
 # Start all services except ELK stack and rebuild if necessary
 up_no_elk:
-	docker-compose -f ./docker-compose.yml up --build -d nginx backend_dummy db
+	docker compose -f ./docker-compose.yml up --build -d nginx backend_dummy db
 
 # Start all services including ELK stack and rebuild if necessary
 up_all:
-	docker-compose -f ./docker-compose.yml up --build -d
+	docker compose -f ./docker-compose.yml up --build -d
 
 # Start specific services and rebuild if necessary
 up_nginx:
-	docker-compose -f ./docker-compose.yml up --build -d nginx
+	docker compose -f ./docker-compose.yml up --build -d nginx
 
 up_backend:
-	docker-compose -f ./docker-compose.yml up --build -d backend_dummy
+	docker compose -f ./docker-compose.yml up --build -d backend_dummy
 
 up_db:
-	docker-compose -f ./docker-compose.yml up --build -d db
+	docker compose -f ./docker-compose.yml up --build -d db
 
 up_elk:
-	docker-compose -f ./docker-compose.yml up --build -d es01 kibana logstash01 filebeat01 metricbeat01
+	docker compose -f ./docker-compose.yml up --build -d es01 kibana logstash01 filebeat01 metricbeat01
 
 ################################################################################
 # Clean and Remove
 ################################################################################
 # Pre-clean step to capture image IDs before bringing containers down
 pre_clean_all:
-	@images=$$(docker-compose -f ./docker-compose.yml images -q); \
+	@images=$$(docker compose -f ./docker-compose.yml images -q); \
 	if [ -n "$$images" ]; then \
 		echo "$$images" >> .image_ids; \
 	else \
@@ -48,15 +48,15 @@ pre_clean_all:
 
 # Stop and remove containers, networks, and volumes
 down: pre_clean_all
-	docker-compose -f ./docker-compose.yml down
+	docker compose -f ./docker-compose.yml down
 
 # Clean up volumes and reset persistent data
 clean_volumes: pre_clean_all
-	docker-compose -f ./docker-compose.yml down -v
+	docker compose -f ./docker-compose.yml down -v
 
 # Clean up orphans to remove containers that are no longer defined in the current docker-compose.yml
 clean_orphans: pre_clean_all
-	docker-compose -f ./docker-compose.yml down --remove-orphans
+	docker compose -f ./docker-compose.yml down --remove-orphans
 
 # Clean up images to remove all Docker images
 clean_images:
@@ -106,35 +106,35 @@ re_all_elk: clean_all up_all
 ################################################################################
 # Tail logs from specific services
 logs_nginx:
-	docker-compose -f ./docker-compose.yml logs -f nginx
+	docker compose -f ./docker-compose.yml logs -f nginx
 
 logs_backend:
-	docker-compose -f ./docker-compose.yml logs -f backend_dummy
+	docker compose -f ./docker-compose.yml logs -f backend_dummy
 
 logs_db:
-	docker-compose -f ./docker-compose.yml logs -f db
+	docker compose -f ./docker-compose.yml logs -f db
 
 logs_elk:
-	docker-compose -f ./docker-compose.yml logs -f es01 kibana logstash01 filebeat01 metricbeat01
+	docker compose -f ./docker-compose.yml logs -f es01 kibana logstash01 filebeat01 metricbeat01
 
 # Tail all logs with timestamps
 logs:
-	docker-compose -f ./docker-compose.yml logs -f -t
+	docker compose -f ./docker-compose.yml logs -f -t
 
 # Tail ERROR logs with timestamps
 logs_errors:
-	docker-compose -f ./docker-compose.yml logs -f -t | grep "ERROR"
+	docker compose -f ./docker-compose.yml logs -f -t | grep "ERROR"
 
 # Tail logs containing keyword input by user with timestamps
 logs_grep:
-	@read -p "Enter keyword to search in logs: " keyword; docker-compose -f ./docker-compose.yml logs -f -t | grep "$$keyword"
+	@read -p "Enter keyword to search in logs: " keyword; docker compose -f ./docker-compose.yml logs -f -t | grep "$$keyword"
 
 ################################################################################
 # Status
 ################################################################################
 # Check status of running containers
 ps:
-	docker-compose -f ./docker-compose.yml ps
+	docker compose -f ./docker-compose.yml ps
 
 # Check status of running containers with concise output
 ps_short:
@@ -150,23 +150,23 @@ ps_inspect: ps_short
 ################################################################################
 # Open a shell in a specific container
 exec_nginx:
-	docker-compose -f ./docker-compose.yml exec nginx sh
+	docker compose -f ./docker-compose.yml exec nginx sh
 
 exec_backend:
-	docker-compose -f ./docker-compose.yml exec backend_dummy sh
+	docker compose -f ./docker-compose.yml exec backend_dummy sh
 
 exec_db:
-	docker-compose -f ./docker-compose.yml exec db sh
+	docker compose -f ./docker-compose.yml exec db sh
 
 exec_elk:
-	docker-compose -f ./docker-compose.yml exec es01 sh
+	docker compose -f ./docker-compose.yml exec es01 sh
 
 ################################################################################
 # Stop services
 ################################################################################
 # Stop all services without removing them
 stop_all:
-	docker-compose -f ./docker-compose.yml stop
+	docker compose -f ./docker-compose.yml stop
 
 ################################################################################
 # Monitoring
