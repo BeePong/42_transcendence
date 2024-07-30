@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   db:
     image: postgres:16
@@ -12,22 +14,36 @@ services:
       - "5432:5432"
     env_file:
       - .env
-  
+    restart: on-failure
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   backend_dummy:
     container_name: backendDummy
+    command: ["sh", "-c", "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"]
     build:
       context: ./srcs/backend
     volumes:
       - ./srcs/backend/beePong:/usr/src/backend/beePong
     env_file:
       - .env
+    ports:
+      - "8000:8000"
     depends_on:
-      - db
-  
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    restart: on-failure
+
   nginx:
     container_name: nginx
-    depends_on:
-      - backend_dummy
     build:
       context: ./srcs/nginx
     volumes:
@@ -35,6 +51,10 @@ services:
     ports:
       - 443:443
     restart: on-failure
+    depends_on:
+      backend_dummy:
+        condition: service_healthy
 
 volumes:
   postgres_data:
+
