@@ -1,4 +1,4 @@
-.PHONY: up down clean clean_volumes clean_orphans clean_images clean_all pre_clean_all re re_elk re_all re_all_elk build_all up_nginx up_backend up_db up_elk up_all up_no_elk logs logs_errors logs_grep logs_nginx logs_backend logs_db logs_elk ps ps_short ps_inspect exec_nginx exec_backend exec_db exec_elk stop_all stats sys_df help
+.PHONY: up down clean clean_volumes clean_orphans clean_images clean_all get_images_id re re_elk re_all re_all_elk build_all up_nginx up_backend up_db up_elk up_all up_no_elk logs logs_errors logs_grep logs_nginx logs_backend logs_db logs_elk ps ps_short ps_inspect exec_nginx exec_backend exec_db exec_elk stop_all stats sys_df help nuke
 
 ################################################################################
 # Build and Start
@@ -34,31 +34,31 @@ up_elk:
 ################################################################################
 # Clean and Remove
 ################################################################################
-# Pre-clean step to capture image IDs before bringing containers down
-pre_clean_all:
+# Capture image IDs to .image_ids before bringing containers down
+get_images_id:
 	@images=$$(docker compose -f ./docker-compose.yml images -q); \
 	if [ -n "$$images" ]; then \
 		echo "$$images" >> .image_ids; \
 	else \
-		echo "pre_clean_all: no images to be deleted"; \
+		echo "get_images_id: no images to be deleted"; \
 	fi; \
 	sort .image_ids | uniq > .image_ids.tmp && mv .image_ids.tmp .image_ids; \
-	echo "pre_clean_all: images to be deleted identified"; \
+	echo "get_images_id: images to be deleted identified"; \
 	cat .image_ids
 
 # Stop and remove containers, networks, and volumes
-down: pre_clean_all
+down: get_images_id
 	docker compose -f ./docker-compose.yml down
 
 # Clean up volumes and reset persistent data
-clean_volumes: pre_clean_all
+clean_volumes: get_images_id
 	docker compose -f ./docker-compose.yml down -v
 
 # Clean up orphans to remove containers that are no longer defined in the current docker-compose.yml
-clean_orphans: pre_clean_all
+clean_orphans: get_images_id
 	docker compose -f ./docker-compose.yml down --remove-orphans
 
-# Clean up images to remove all Docker images
+# Clean up images present in .image_ids, delete the file, and remove all Docker images
 clean_images:
 	@if [ -f .image_ids ]; then \
 		echo "clean_images: remove following images"; \
@@ -76,15 +76,14 @@ clean_images:
 	else \
 		echo "clean_images: .image_ids file not found"; \
 	fi
-	
 
 # Clean up all: containers, networks, volumes, and images
 # Use this for a full cleanup of the Docker environment
-clean_all: pre_clean_all clean_orphans clean_volumes clean_images 
+clean_all: clean_orphans clean_volumes clean_images 
 
 # Clean up: containers, networks, volumes, and orphans (default clean)
 # Use this to reset data and ensure only defined services are running
-clean: pre_clean_all clean_orphans clean_volumes
+clean: clean_orphans clean_volumes
 
 ################################################################################
 # Rebuild and Restart
@@ -177,6 +176,14 @@ stats:
 sys_df:
 	docker system df
 
+
+################################################################################
+# Reset repository to last commit (destructive action)
+################################################################################
+nuke:
+	git clean -dxf
+	git reset --hard	
+
 ################################################################################
 # Help
 ################################################################################
@@ -235,6 +242,9 @@ help:
 	@echo "Monitoring:"
 	@echo "  stats          Show resource utilization statistics for running containers"
 	@echo "  sys_df         Show Docker system disk usage"
+	@echo ""
+	@echo "Reset repository:"
+	@echo "  nuke           Reset repository to the last commit (destructive action, removes all untracked files)"
 	@echo ""
 	@echo "Help:"
 	@echo "  help           Show this help message"
