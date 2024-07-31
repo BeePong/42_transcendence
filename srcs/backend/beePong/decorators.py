@@ -14,11 +14,11 @@ def login_required_json(view_func):
     Returns:
         A wrapped view function that enforces authentication.
     """
-    @wraps(view_func)  # Preserve the original function's metadata (like its name and docstring)
+    @wraps(view_func)
     def _wrapped_view(request, *args, **kwargs):
         if not request.user.is_authenticated:
             return JsonResponse({'authenticated': False}, status=401)
         # Call the original view function with the request and any additional arguments
         return view_func(request, *args, **kwargs)
     
-    return _wrapped_view  # Return the wrapped view function
+    return _wrapped_view 

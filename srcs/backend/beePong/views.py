@@ -10,9 +10,9 @@ from .decorators import login_required_json
 
 # Create your views here.
 
+#TODO: to be replaced by real database
 MockTournaments = namedtuple('MockTournaments', ['tournament_id', 'name', 'description', 'state', 'num_players', 'players', 'winner'])
 
-# Create some mock data
 mock_tournaments = [
     MockTournaments(
         tournament_id=1,
@@ -84,24 +84,21 @@ def game(request):
 @login_required_json
 def tournament(request):
     """The tournament page for BeePong."""
-    # if not request.user.is_authenticated:
-    #     return JsonResponse({'authenticated': False}, status=401)
+    #TODO: to be replaced by real database
     tournaments = mock_tournaments[::-1] # Reverse the tournaments
     form = AliasForm(username=request.user.username)
-    context = {'tournaments': tournaments, 'form': form, 'form_action': '/alias/'}
-    return render(request, 'beePong/tournament.html', context)
+    return render(request, 'beePong/tournament.html', {'tournaments': tournaments, 'form': form, 'form_action': '/alias/'})
 
 @login_required_json
 def create_tournament(request):
-    """Handle the creation of a new tournament."""
-    # if not request.user.is_authenticated:
-    #     return JsonResponse({'authenticated': False}, status=401)
+    """The create tournament page for BeePong."""
     if request.method != 'POST':
         form = TournamentForm()
     else:
         form = TournamentForm(request.POST)
         if form.is_valid():
-            # form.save()
+            # TODO: save the form 
+            # TODO: delete new_tournament and mock_tournaments.append because the new tournament data will be saved in the database and fetching the tournament page again should show the new tournament
             new_tournament = MockTournaments(
                 tournament_id=len(mock_tournaments) + 1,
                 name=form.cleaned_data['title'],
@@ -111,9 +108,8 @@ def create_tournament(request):
                 players=[],
                 winner=None
             )
-            # Add the new tournament to the mock list
             mock_tournaments.append(new_tournament)
-            return JsonResponse({'success': True, 'redirect': '/tournament'}) #TODO: also include title, description and number of players 
+            return JsonResponse({'success': True, 'redirect': '/tournament'}, status=201) #TODO: also return title, description and number of players in the json respsonse
         else:
             return JsonResponse({'success': False, 'errors': form.errors}, status=400)
     return render(request, 'beePong/create_tournament.html', {'form': form, 'form_action': '/tournament/create/'})
@@ -124,9 +120,9 @@ def alias(request):
         username = request.session.get('username', None)
         form = AliasForm(data=request.POST, username=username)
         if form.is_valid():
-            # form.save()
+            # TODO: save the alias
             redirect_url = f'/tournament/{tournament_id}/lobby'
-            return JsonResponse({'success': True, 'redirect': redirect_url}) #TODO: also include alias
+            return JsonResponse({'success': True, 'redirect': redirect_url}, status=201) #TODO: also return alias in the json respsonse
         else:
             return JsonResponse({'success': False, 'errors': form.errors}, status=400)
     return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=405)
@@ -134,9 +130,7 @@ def alias(request):
 #TODO: only players in the tournament can access its lobby page
 @login_required_json
 def tournament_lobby(request, tournament_id):
-    """Retrieve the lobby page for a specific tournament."""
-    # tournament = get_object_or_404(Tournament, id=tournament_id)
-    # context = {'tournament': tournament}
+    """The lobby page for BeePong."""
     return render(request, 'beePong/tournament_lobby.html')
 
 def custom_404(request, exception):
