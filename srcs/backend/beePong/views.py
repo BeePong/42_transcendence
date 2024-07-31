@@ -84,10 +84,20 @@ def game(request):
 @login_required_json
 def tournament(request):
     """The tournament page for BeePong."""
-    #TODO: to be replaced by real database
-    tournaments = mock_tournaments[::-1] # Reverse the tournaments
-    form = AliasForm(username=request.user.username)
-    return render(request, 'beePong/tournament.html', {'tournaments': tournaments, 'form': form, 'form_action': '/alias/'})
+    if request.method != 'POST':
+        #TODO: to be replaced by real database
+        tournaments = mock_tournaments[::-1] # Reverse the tournaments to show the new tournament at the top
+        form = AliasForm(username=request.user.username)
+    else:
+        tournament_id = request.POST.get('tournament_id')
+        username = request.session.get('username', None)
+        form = AliasForm(data=request.POST, username=username)
+        if form.is_valid():
+            # TODO: save the alias
+            return JsonResponse({'success': True, 'redirect': f'/tournament/{tournament_id}/lobby'}, status=201) #TODO: also return alias in the json respsonse
+        else:
+            return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+    return render(request, 'beePong/tournament.html', {'tournaments': tournaments, 'form': form, 'form_action': '/tournament/'})
 
 @login_required_json
 def create_tournament(request):
@@ -114,23 +124,10 @@ def create_tournament(request):
             return JsonResponse({'success': False, 'errors': form.errors}, status=400)
     return render(request, 'beePong/create_tournament.html', {'form': form, 'form_action': '/tournament/create/'})
 
-def alias(request):
-    if request.method == 'POST':
-        tournament_id = request.POST.get('tournament_id')
-        username = request.session.get('username', None)
-        form = AliasForm(data=request.POST, username=username)
-        if form.is_valid():
-            # TODO: save the alias
-            redirect_url = f'/tournament/{tournament_id}/lobby'
-            return JsonResponse({'success': True, 'redirect': redirect_url}, status=201) #TODO: also return alias in the json respsonse
-        else:
-            return JsonResponse({'success': False, 'errors': form.errors}, status=400)
-    return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=405)
-
 #TODO: only players in the tournament can access its lobby page
 @login_required_json
 def tournament_lobby(request, tournament_id):
-    """The lobby page for BeePong."""
+    """The tournament lobby page for BeePong."""
     return render(request, 'beePong/tournament_lobby.html')
 
 def custom_404(request, exception):
