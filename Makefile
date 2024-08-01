@@ -1,14 +1,10 @@
-.PHONY: up down clean clean_volumes clean_orphans clean_images clean_all get_images_id re re_elk re_all re_all_elk build_all up_nginx up_backend up_db up_elk up_all up_no_elk logs logs_errors logs_grep logs_nginx logs_backend logs_db logs_elk ps ps_short ps_inspect exec_nginx exec_backend exec_db exec_elk stop_all stats sys_df help nuke
+.PHONY: up down clean clean_volumes clean_orphans clean_images clean_all get_images_id re re_elk re_all re_all_elk  up_backend up_db up_elk up_all up_no_elk logs logs_errors logs_grep logs_nginx logs_backend logs_db logs_elk ps ps_short ps_inspect exec_nginx exec_backend exec_db exec_elk stop_all stats sys_df help nuke
 
 ################################################################################
 # Build and Start
 ################################################################################
 # Default target: Build and start all services except ELK stack
 all: up_no_elk
-
-# Build all Docker images
-build_all:
-	docker compose -f ./docker-compose.yml build
 
 # Start all services except ELK stack and rebuild if necessary
 up_no_elk:
@@ -17,10 +13,6 @@ up_no_elk:
 # Start all services including ELK stack and rebuild if necessary
 up_all:
 	docker compose -f ./docker-compose.yml up --build -d
-
-# Start specific services and rebuild if necessary
-up_nginx:
-	docker compose -f ./docker-compose.yml up --build -d nginx
 
 up_backend:
 	docker compose -f ./docker-compose.yml up --build -d backend_dummy
@@ -196,11 +188,9 @@ help:
 	@echo "  all            Build and start all services except ELK stack"
 	@echo "  up_no_elk      Build and start all services except ELK stack"
 	@echo "  up_all         Build and start all services including ELK stack"
-	@echo "  up_nginx       Build and start only the Nginx service"
 	@echo "  up_backend     Build and start only the backend service"
 	@echo "  up_db          Build and start only the database service"
 	@echo "  up_elk         Build and start only the ELK stack services"
-	@echo "  build_all      Build all Docker images"
 	@echo ""
 	@echo "Stop:"
 	@echo "  stop_all       Stop all running services without removing them"
