@@ -46,3 +46,7 @@ def tournament(request):
 def custom_404(request, exception):
     """The 404 page for BeePong."""
     return render(request, 'beePong/404.html', status=404)
+
+# Needed for health check in docker-compose.yml
+def health_check(request):
+    return JsonResponse({"status": "healthy"})
