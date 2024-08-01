@@ -186,7 +186,6 @@ help:
 	@echo ""
 	@echo "Build and Start:"
 	@echo "  all            Build and start all services except ELK stack"
-	@echo "  up_no_elk      Build and start all services except ELK stack"
 	@echo "  up_all         Build and start all services including ELK stack"
 	@echo "  up_backend     Build and start only the backend service"
 	@echo "  up_db          Build and start only the database service"
