@@ -37,10 +37,10 @@ async function handleFormSubmit(event) {
 
 		if (result.success) {
 				// Handle redirection
-				if (relativePath === '/accounts/login/' || relativePath === '/accounts/register/')
-					navigate(result.redirect);
-				else
+				if (relativePath === '/accounts/logout/')
 					navigate('/');
+				else
+					navigate(result.redirect);
 				loadNavBar();
 		}
 		else {

@@ -4,6 +4,7 @@
 	--color-tertiary: #FFFFFF;
 	--text-color-main: #FFFFFF;
 	--text-color-alt: #000000;
+  --text-color-grey: #515151;
   --background-color: #1F1F1F;
   --font-family-main: "Krona One", sans-serif;
   --font-family-alt: "Kumbh Sans", sans-serif;
@@ -86,6 +87,10 @@ footer {
   font-size: var(--font-size-xl);
 }
 
+.font-size--lg {
+  font-size: var(--font-size-base);
+}
+
 .font-size--md {
   font-size: var(--font-size-md);
 }
@@ -96,6 +101,10 @@ footer {
 
 .font-size--xs {
   font-size: var(--font-size-xs);
+}
+
+h1 {
+  font-size: var(--font-size-xl);
 }
 
 @media (max-width: var(--breakpoint-md)) {

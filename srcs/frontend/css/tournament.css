@@ -1,0 +1,45 @@
+.tournament__container {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.tournament__grid {
+	margin-top: 2em;
+	display: grid;
+	grid-template-columns: repeat(2, minmax(300px, 1fr));
+	gap: 2.5rem;
+}
+
+.tournament__state {
+	font-size: var(--font-size-xs);
+	color: var(--text-color-alt);
+	border-radius: 10px;
+	text-align: center;
+	padding: 0.2em 0.8em;
+}
+
+.tournament__state--new {
+	background-color: var(--color-primary);
+}
+
+.tournament__state--playing {
+	background-color: var(--color-secondary);
+}
+
+.tournament__state--finished {
+	background-color: var(--color-tertiary);
+}
+
+.tournament__num_players {
+	margin-top: 1em;
+	font-family: var(--font-family-main);
+	font-size: var(--font-size-base);
+	color: var(--color-primary);
+}
+
+@media (max-width: 900px) {
+  .tournament__grid {
+    grid-template-columns: 1fr;
+  }
+}
