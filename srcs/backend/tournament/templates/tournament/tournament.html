@@ -1,0 +1,71 @@
+<section>
+	<div class="tournament__container">
+		<h1>TOURNAMENTS</h1>
+		<button class="button--primary" onclick="navigate(`{% url 'tournament:create_tournament' %}`)">+ NEW</button>
+	</div>
+
+	<div class="tournament__grid">
+		{% for tournament in tournaments %}
+		<div class="card__container">
+			<div class="
+				{% if tournament.state == 'NEW' %}
+				 card
+				{% else %}
+					card--inactive
+				{% endif %}">
+				<div class="card__content">
+					<div class="card__title tournament__container">
+						<h2>{{ tournament.name }}</h2>
+						<div class="tournament__state
+							{% if tournament.state == 'NEW' %}
+								tournament__state--new
+							{% elif tournament.state == 'PLAYING' %}
+								tournament__state--playing
+							{% else %}
+								tournament__state--finished
+							{% endif %}">
+							{{ tournament.state }}
+						</div>
+					</div>
+					<div class="card__text font--alt font-size--sm">
+						<p>{{ tournament.description }}</p>
+						<p class="tournament__num_players">{{ tournament.players|length }}/{{ tournament.num_players }}</p>
+						{% for player in tournament.players %}
+							<p>
+								{{ player }}
+								{% if player == tournament.winner %}
+										<span>👑</span>
+								{% endif %}
+							</p>
+						{% endfor %}
+					</div>
+					{% if tournament.state == 'NEW' %}
+					<form onsubmit=handleFormSubmit(event) action="{{ form_action }}">
+						{% csrf_token %}
+						<input type="hidden" name="tournament_id" value="{{ tournament.tournament_id }}">
+						<div class="form__input-button-container">
+							<div class="form__input-container">
+								<label for="id_alias">Alias</label>
+								{{ form.alias }}
+							</div>
+							<button type="submit" class="button--primary button--with-icon">
+								<span class="button__text">JOIN</span>
+								<img src="/img/arrow.svg" alt="arrow" class="arrow-icon">
+							</button>
+						</div>
+					</form>  
+					{% endif %}
+				</div>
+			</div>
+		</div>
+		{% empty %}
+		<div class="card__container">
+			<div class="card--empty">
+					<div class="card__content">
+						YOUR AWESOME TOURNAMENT WILL BE HERE
+					</div>
+			</div>
+		</div>
+		{% endfor %}
+	</div>
+</section>
