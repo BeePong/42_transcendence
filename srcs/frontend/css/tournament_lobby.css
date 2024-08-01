@@ -3,48 +3,65 @@
 }
 
 .match {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin: 20px 0;
   position: relative;
+  border: var(--border);
+  width: 180px;
+  height: 40px;
 }
 
-.match div {
-    border: var(--border);
+.name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
-.player {
-  display: block;
-}
-
-section .match:after, section .match:before {
+.match:after, .match:before {
   content: "";
   display: block;
   position: absolute;
 }
 
-section .match:after {
+.match:after {
   right: -16px;
   width: 15px;
 }
 
-section .match:nth-child(even):after {
+.match:nth-child(even):after {
   border-bottom: var(--border);
-  border-bottom-right-radius: 0.3em;
+  border-bottom-right-radius: 1em;
   border-right: var(--border);
   bottom: 50%;
-  height: 80%;
+  height: 100%;
 }
 
-section .match:nth-child(odd):after {
+.match:nth-child(odd):after {
   border-right: var(--border);
   border-top: var(--border);
-  border-top-right-radius: 0.3em;
-  height: 80%;
+  border-top-right-radius: 1em;
+  height: 100%;
   top: 50%;
 }
 
-section .match:nth-child(odd):before {
+.match:first-child:before {
   border-top: var(--border);
-  bottom: -32%;
-  right: -27px;
-  width: 12px;
+  border-right: var(--border);
+  border-top-right-radius: 2em;
+  bottom: -250%;
+  right: -46px;
+  height: 200%;
+  width: 30px;
+}
+
+.match:nth-child(3):before {
+  border-bottom: var(--border);
+  border-right: var(--border);
+  border-bottom-right-radius: 2em;
+  bottom: -50%;
+  right: -46px;
+  height: 200%;
+  width: 30px;
 }

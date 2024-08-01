@@ -47,6 +47,11 @@ async function loadPage(path, redirectUrl = '/', fromNavigate = false) {
 				// Add the redirect url for login and register page 
 				if (page === '/accounts/login' || page === '/accounts/register')
 					document.getElementById('redirectUrl').value = redirectUrl;
+
+				//perform countdown in tournmament lobby
+				const regex = /^\/tournament\/\d+\/lobby$/;
+				if (regex.test(page))
+					tournamentLobbyCountDown();
 			}
 	} catch (error) {
 			console.error('There was a problem with the fetch operation:', error);
@@ -71,6 +76,22 @@ async function redirectToLoginPage(redirectUrl) {
 	catch (error) {
 		console.error('There was a problem with the fetch operation:', error);
 	}
+}
+
+function tournamentLobbyCountDown() {
+	let countdownValue = 3;
+	const countdownElement = document.getElementById('countdown');
+
+	const countdownInterval = setInterval(() => {
+			if (countdownValue > 1) {
+					countdownValue--;
+					countdownElement.textContent = `${countdownValue}`;
+			} else {
+					clearInterval(countdownInterval);
+					navigate('/game');
+			}
+	}, 1000);
+	
 }
 
 // Load navbar
