@@ -248,5 +248,3 @@ help:
 	@echo ""
 	@echo "Help:"
 	@echo "  help           Show this help message"
-
-re: clean all
