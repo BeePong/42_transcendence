@@ -31,3 +31,4 @@ Icon
 .vscode
 *.code-workspace
 
+.image_ids
