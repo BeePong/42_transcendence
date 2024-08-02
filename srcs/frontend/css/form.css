@@ -1,0 +1,76 @@
+form label {
+  display: none;
+}
+
+.form-input {
+	font-size: var(--font-size-xs);
+	padding: 1em;
+	margin-bottom: 1em;
+	width: 100%;
+}
+
+.form-actions {
+	display: flex;
+	align-items: flex-end;
+	gap: 10px;
+	flex-direction: column;
+}
+
+.form-error-message {
+	display: none;
+	background-color: var(--color-secondary);
+	color: var(--text-color-alt);
+	padding: 2em 3em;
+	margin-bottom: 2em;
+	font-family: var(--font-family-alt);
+	font-size: var(--font-size-sm);
+}
+
+.radio-group {
+	display: flex;
+	gap: 1rem;
+}
+
+.radio-input {
+	-webkit-appearance: none;
+	outline: none;
+}
+
+.radio-label {
+	display: block;
+	height: 40px;
+	width: 40px;
+	border: 1px solid var(--color-tertiary);
+	position: relative;
+	transition: 0.1s;
+	cursor: pointer;
+}
+
+label > span {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+}
+
+.radio-input:checked + label {
+	background-color: var(--color-tertiary);
+	color: var(--text-color-alt);
+}
+
+.form__input-button-container {
+	display: flex;
+	align-items: center;
+}
+
+.form__input-container {
+	flex-grow: 1;
+	margin-right: 1rem;
+}
+
+.form__input-container > input {
+	margin-bottom: 0em;
+}
+
+
+
