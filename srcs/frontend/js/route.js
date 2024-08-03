@@ -49,9 +49,9 @@ async function loadPage(path, redirectUrl = '/', fromNavigate = false) {
 					document.getElementById('redirectUrl').value = redirectUrl;
 
 				//perform countdown in tournmament lobby
-				const regex = /^\/tournament\/\d+\/lobby$/;
-				if (regex.test(page))
-					tournamentLobbyCountDown();
+				// const regex = /^\/tournament\/\d+\/lobby$/;
+				// if (regex.test(page))
+				// 	tournamentLobbyCountDown();
 			}
 	} catch (error) {
 			console.error('There was a problem with the fetch operation:', error);
@@ -78,6 +78,7 @@ async function redirectToLoginPage(redirectUrl) {
 	}
 }
 
+// Countdown in lobby page and navigate to the game page after countdown
 function tournamentLobbyCountDown() {
 	let countdownValue = 3;
 	const countdownElement = document.getElementById('countdown');
@@ -91,7 +92,6 @@ function tournamentLobbyCountDown() {
 					navigate('/game');
 			}
 	}, 1000);
-	
 }
 
 // Load navbar

@@ -1,67 +1,76 @@
-.tournament__lobby {
-  --border: 1px solid white;
+.tournament_lobby__num_players {
+  margin-top: 2em;
+	font-size: var(--font-size-md);
+	color: var(--color-primary);
 }
 
-.match {
+.name__container {
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 20px 0;
   position: relative;
-  border: var(--border);
   width: 180px;
   height: 40px;
+  outline: 1px solid var(--text-color-main);
+	box-shadow: -5px -5px var(--color-primary);
 }
 
 .name {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+  font-size: var(--font-size-md);
 }
 
-.match:after, .match:before {
+section.full .name__container:after, .name__container:before {
   content: "";
   display: block;
   position: absolute;
 }
 
-.match:after {
-  right: -16px;
-  width: 15px;
+section.full .name__container:after {
+  right: -35px;
+  width: 28px;
 }
 
-.match:nth-child(even):after {
-  border-bottom: var(--border);
-  border-bottom-right-radius: 1em;
-  border-right: var(--border);
+section.full .name__container:nth-child(even):after {
+  border-bottom: 1px solid var(--text-color-main);
+  border-bottom-right-radius: 10em;
+  border-right: 1px solid var(--text-color-main);
   bottom: 50%;
-  height: 100%;
+  height: 80%;
 }
 
-.match:nth-child(odd):after {
-  border-right: var(--border);
-  border-top: var(--border);
-  border-top-right-radius: 1em;
-  height: 100%;
+section.full .name__container:nth-child(odd):after {
+  border-right: 1px solid var(--text-color-main);
+  border-top: 1px solid var(--text-color-main);
+  border-top-right-radius: 10em;
   top: 50%;
+  height: 80%;
 }
 
-.match:first-child:before {
-  border-top: var(--border);
-  border-right: var(--border);
-  border-top-right-radius: 2em;
-  bottom: -250%;
-  right: -46px;
-  height: 200%;
-  width: 30px;
+section.full.two-players .name__container:nth-child(1):before,
+section.full.two-players .name__container:nth-child(3):before {
+  display: none;
 }
 
-.match:nth-child(3):before {
-  border-bottom: var(--border);
-  border-right: var(--border);
-  border-bottom-right-radius: 2em;
-  bottom: -50%;
-  right: -46px;
-  height: 200%;
-  width: 30px;
+section.full .name__container:first-child:before {
+  border-top: 1px solid var(--text-color-main);
+  border-right: 1px solid var(--text-color-main);
+  border-top-right-radius: 10em;
+  bottom: -180%;
+  right: -112px;
+  height: 160%;
+  width: 70px;
+}
+
+section.full .name__container:nth-child(3):before {
+  border-bottom: 1px solid var(--text-color-main);
+  border-right: 1px solid var(--text-color-main);
+  border-bottom-right-radius: 10em;
+  bottom: -35%;
+  right: -112px;
+  height: 155%;
+  width: 70px;
 }

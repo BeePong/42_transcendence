@@ -1,28 +1,27 @@
-<section>
-  <h1>BEEPONG CUP IS STARTING IN <span id="countdown">3</span>...</h1>
-  <p>vvagapov vs wchan</p>
-  <div class="tournament__lobby">
+<section class="{% if players_in_lobby|length == num_players %}full{% endif %} {% if num_players == 2 %}two-players{% endif %}">
+  {% if players_in_lobby|length < num_players %}
+    <h1>BEEPONG CUP</h1>
+    <p class="font--alt font-size--sm">The The mighty Pong contest for the best of the best bees!</p>
+    <p class="tournament_lobby__num_players">{{ players_in_lobby|length }}/{{ num_players }} PLAYERS</p>
+  {% else %}
+    <h1>BEEPONG CUP IS STARTING IN <span id="countdown">3</span>...</h1>
+    <p class="font--alt font-size--sm">{{ players_in_match.0 }} vs {{ players_in_match.1 }}</p>
+  {% endif %}
+  <div>
     <div>
-      <div class="match">
+      {% for player in players_in_lobby %}
+      <div class="name__container">
         <div class="name">
-          vvagapov
+          {{ player }}
         </div>
       </div>
-      <div class="match">
-        <div class="name">
-          wchan
-        </div>
-      </div>
-      <div class="match">
-        <div class="name">
-          lclerc
-        </div>
-      </div>
-      <div class="match">
-        <div class="name">
-          djames
-        </div>
-      </div>
+      {% endfor %}
     </div>
   </div>
+  {% if players_in_lobby|length < num_players %}
+  <button class="button--tertiary button--with-icon" onclick="navigate('/')">
+    <div class="cross"></div>
+    <span>LEAVE TOURNAMENT</span>
+  </button>
+  {% endif %}
 </section>

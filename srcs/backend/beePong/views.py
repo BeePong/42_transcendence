@@ -52,6 +52,17 @@ mock_tournaments = [
     ),
 ]
 
+#TODO: to be replaced by real database
+mockPlayersInLobby = ['lclerc', 'vvagapov', 'wchan', 'djames']
+mockPlayersInMatch = ['lclerc', 'vvagapov']
+mockNumPlayers = 4
+# mockPlayersInLobby = ['lclerc', 'vvagapov', 'wchan']
+# mockPlayersInMatch = ['lclerc', 'vvagapov']
+# mockNumPlayers = 4
+# mockPlayersInLobby = ['lclerc', 'vvagapov']
+# mockPlayersInMatch = ['lclerc', 'vvagapov']
+# mockNumPlayers = 2
+
 def test(request):
     data = {"test": "This is a test JSON"}
     return JsonResponse(data)
@@ -128,7 +139,7 @@ def create_tournament(request):
 @login_required_json
 def tournament_lobby(request, tournament_id):
     """The tournament lobby page for BeePong."""
-    return render(request, 'beePong/tournament_lobby.html')
+    return render(request, 'beePong/tournament_lobby.html', {'players_in_match': mockPlayersInMatch, 'players_in_lobby': mockPlayersInLobby, 'num_players': mockNumPlayers})
 
 def custom_404(request, exception):
     """The 404 page for BeePong."""
