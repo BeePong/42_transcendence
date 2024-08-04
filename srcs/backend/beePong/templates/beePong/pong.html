@@ -5,16 +5,20 @@
 </head>
 <body>
     <h1>Pong Game</h1>
+    <button id="tournamentSendButton">Test tournament message</button>
+    <button id="gameSendButton">Test game message</button>
+    <p id="messageDisplay"></p>
     <script>
         var socket = new WebSocket('ws://' + window.location.host + '/ws/pong/');
 
-        /* socket.onmessage = function(e) {
+        socket.onmessage = function(e) {
             var data = JSON.parse(e.data);
             console.log(data);
-            // Update your game field here with data.paddle_x, data.paddle_y, data.ball_x, data.ball_y
-        }; */
+            document.getElementById('messageDisplay').innerText = data.message;
+            // Updating our game field will be here
+        };
 
-        console.log(window.location.host);
+        console.log(socket); // for debugging
 
         socket.onopen = function(e) {
             console.log('WebSocket connection opened');
@@ -22,6 +26,14 @@
 
         socket.onclose = function(e) {
             console.log('WebSocket connection closed');
+        };
+
+        document.getElementById('tournamentSendButton').onclick = function() {
+            socket.send(JSON.stringify({message: 'Test tournament message from client!', type: 'tournament'}));
+        };
+
+        document.getElementById('gameSendButton').onclick = function() {
+            socket.send(JSON.stringify({message: 'Test game message from client!', type: 'game'}));
         };
 
         /* function sendGameData(paddle_x, paddle_y, ball_x, ball_y) {
@@ -33,9 +45,8 @@
             }));
         }
 
-        // Example of sending data to the server
         setInterval(function() {
-            // Replace these with actual game coordinates
+            // random data for testing, later will be replaces with actual coordinates
             var paddle_x = Math.random() * 100;
             var paddle_y = Math.random() * 100;
             var ball_x = Math.random() * 100;
