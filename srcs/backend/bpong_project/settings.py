@@ -17,8 +17,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure--5o3-*y!2w25g-%9h^8yt!z(!7f^p_xf8+x5u(9z#*^o#pxtq9')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# DEBUG = True
-DEBUG = False
+DEBUG = True
+# DEBUG = False
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     # My apps
     'beePong',
     'accounts',
+    'tournament',
 
     # Third-party apps
     'django_bootstrap5',
@@ -143,3 +144,4 @@ LOGIN_URL = 'accounts:login'
 # List of trusted origins for CSRF protection
 # Requests from these origins will be allowed to bypass the CSRF protection
 CSRF_TRUSTED_ORIGINS = ['https://localhost']
+
