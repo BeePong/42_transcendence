@@ -133,7 +133,7 @@ LOGIN_URL = 'accounts:login'
 
 # List of trusted origins for CSRF protection
 # Requests from these origins will be allowed to bypass the CSRF protection
-CSRF_TRUSTED_ORIGINS = ['https://localhost', 'https://127.0.0.1']
+CSRF_TRUSTED_ORIGINS = ['https://localhost', 'https://127.0.0.1', 'https://localhost:1024']
 
 ################################################################################
 ## Django setting for Logging 
