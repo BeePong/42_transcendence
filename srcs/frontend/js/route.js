@@ -49,9 +49,15 @@ async function loadPage(path, redirectUrl = '/', fromNavigate = false) {
 					document.getElementById('redirectUrl').value = redirectUrl;
 
 				//perform countdown in tournmament lobby
-				// const regex = /^\/tournament\/\d+\/lobby$/;
-				// if (regex.test(page))
-				// 	tournamentLobbyCountDown();
+				const regex = /^\/tournament\/\d+\/lobby$/;
+				if (regex.test(page))
+				{
+					const isFull = document.querySelector('.full');
+					if (isFull)
+						tournamentLobbyCountDown();
+					else
+						mockWebSocket();
+				}
 			}
 	} catch (error) {
 			console.error('There was a problem with the fetch operation:', error);
@@ -80,18 +86,63 @@ async function redirectToLoginPage(redirectUrl) {
 
 // Countdown in lobby page and navigate to the game page after countdown
 function tournamentLobbyCountDown() {
-	let countdownValue = 3;
-	const countdownElement = document.getElementById('countdown');
+  let countdownValue = 3;
+  const countdownElement = document.getElementById('countdown');
 
-	const countdownInterval = setInterval(() => {
-			if (countdownValue > 1) {
-					countdownValue--;
-					countdownElement.textContent = `${countdownValue}`;
-			} else {
-					clearInterval(countdownInterval);
-					navigate('/game');
-			}
-	}, 1000);
+  setTimeout(() => {
+    const countdownInterval = setInterval(() => {
+      if (countdownValue > 1) {
+        countdownValue--;
+        countdownElement.textContent = `${countdownValue}`;
+      } else {
+        clearInterval(countdownInterval);
+        navigate('/game');
+      }
+    }, 1000);
+  }, 2000);
+}
+
+// Mock WebSocket connection
+function mockWebSocket() {
+	setTimeout(() => {
+		addPlayer();
+	}, 1000); // Simulate a new player joining every second
+}
+
+function addPlayer() {
+	const playersInLobby = Array.from(document.querySelectorAll('.name'))
+	.map(nameEl => nameEl.textContent);
+	const num_players_in_lobby = parseInt(document.querySelector('.num_players_in_lobby').textContent, 10);
+	const num_players = parseInt(document.querySelector('.num_players').textContent, 10);
+
+	const updated_num_players_in_lobby = num_players_in_lobby + 1;
+	const playerCountEl = document.querySelector('.num_players_in_lobby');
+	playerCountEl.textContent = `${updated_num_players_in_lobby}`;
+
+	const playerDiv = document.createElement('div');
+	playerDiv.classList.add('name__container');
+	playerDiv.innerHTML = `
+		<div class="name">Dummy Player</div>
+		<span class="tournament_lobby__num_match"></span>
+	`;
+	document.querySelector('.container').appendChild(playerDiv);
+
+	const sectionEl = document.querySelector('section');
+	if (updated_num_players_in_lobby === num_players)
+	{
+		sectionEl.classList.add('full');
+		document.querySelector('h1').innerHTML = 'BEEPONG CUP IS STARTING IN <span id="countdown">3</span>...';
+		document.querySelector('.font--alt').textContent = `${playersInLobby[0]} vs ${playersInLobby[1]}`;
+		// const playersCountWrapper = document.querySelector('.tournament_lobby__num_players');
+		// console.log(playersCountWrapper);
+		// if (playersCountWrapper)
+		// 	playersCountWrapper.remove();
+		// const leaveButton = document.querySelector('.button--tertiary');
+		// console.log(leaveButton);
+		// if (leaveButton)
+		// 	leaveButton.remove();
+		tournamentLobbyCountDown();
+	}
 }
 
 // Load navbar

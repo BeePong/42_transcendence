@@ -2,7 +2,7 @@
   {% if players_in_lobby|length < num_players %}
     <h1>BEEPONG CUP</h1>
     <p class="font--alt font-size--sm">The The mighty Pong contest for the best of the best bees!</p>
-    <p class="tournament_lobby__num_players">{{ players_in_lobby|length }}/{{ num_players }} PLAYERS</p>
+    <p class="tournament_lobby__num_players"><span class="num_players_in_lobby">{{ players_in_lobby|length }}</span>/<span class="num_players">{{ num_players }}</span> PLAYERS</p>
   {% else %}
     <h1>BEEPONG CUP IS STARTING IN <span id="countdown">3</span>...</h1>
     <p class="font--alt font-size--sm">{{ players_in_match.0 }} vs {{ players_in_match.1 }}</p>
