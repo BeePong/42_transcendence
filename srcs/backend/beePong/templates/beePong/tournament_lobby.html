@@ -7,16 +7,13 @@
     <h1>BEEPONG CUP IS STARTING IN <span id="countdown">3</span>...</h1>
     <p class="font--alt font-size--sm">{{ players_in_match.0 }} vs {{ players_in_match.1 }}</p>
   {% endif %}
-  <div>
-    <div>
-      {% for player in players_in_lobby %}
-      <div class="name__container">
-        <div class="name">
-          {{ player }}
-        </div>
-      </div>
-      {% endfor %}
+  <div class="container">
+    {% for player in players_in_lobby %}
+    <div class="name__container">
+      <div class="name">{{ player }}</div>
+      <span class="tournament_lobby__num_match"></span>
     </div>
+    {% endfor %}
   </div>
   {% if players_in_lobby|length < num_players %}
   <button class="button--tertiary button--with-icon" onclick="navigate('/')">
