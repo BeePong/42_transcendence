@@ -51,6 +51,10 @@ section.full .name__container:nth-child(2) .tournament_lobby__num_match::after {
   bottom: -20px;
 }
 
+section.full.two-players .name__container:nth-child(2) .tournament_lobby__num_match::after {
+  display: none;
+}
+
 section.full .name__container:nth-child(3) .tournament_lobby__num_match::after {
   content: "2";
   left: -30px;
