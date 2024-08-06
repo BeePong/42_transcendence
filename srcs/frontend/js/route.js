@@ -99,7 +99,7 @@ function tournamentLobbyCountDown() {
         navigate('/game');
       }
     }, 1000);
-  }, 2000);
+  }, 500);
 }
 
 // Mock WebSocket connection
@@ -122,7 +122,7 @@ function addPlayer() {
 	const playerDiv = document.createElement('div');
 	playerDiv.classList.add('name__container');
 	playerDiv.innerHTML = `
-		<div class="name">Dummy Player</div>
+		<div class="name">Dummy</div>
 		<span class="tournament_lobby__num_match"></span>
 	`;
 	document.querySelector('.container').appendChild(playerDiv);
@@ -130,19 +130,21 @@ function addPlayer() {
 	const sectionEl = document.querySelector('section');
 	if (updated_num_players_in_lobby === num_players)
 	{
-		sectionEl.classList.add('full');
-		document.querySelector('h1').innerHTML = 'BEEPONG CUP IS STARTING IN <span id="countdown">3</span>...';
-		document.querySelector('.font--alt').textContent = `${playersInLobby[0]} vs ${playersInLobby[1]}`;
-		// const playersCountWrapper = document.querySelector('.tournament_lobby__num_players');
-		// console.log(playersCountWrapper);
-		// if (playersCountWrapper)
-		// 	playersCountWrapper.remove();
-		// const leaveButton = document.querySelector('.button--tertiary');
-		// console.log(leaveButton);
-		// if (leaveButton)
-		// 	leaveButton.remove();
-		tournamentLobbyCountDown();
+		setTimeout(() => {
+			sectionEl.classList.add('full');
+			document.querySelector('h1').innerHTML = 'BEEPONG CUP IS STARTING IN <span id="countdown">3</span>...';
+			document.querySelector('.font--alt').textContent = 'dummy vs dummy';
+			const playersCountWrapper = document.querySelector('.tournament_lobby__num_players');
+			if (playersCountWrapper)
+				playersCountWrapper.remove();
+			const leaveButton = document.getElementById('leave_button');
+			if (leaveButton)
+				leaveButton.remove();
+			tournamentLobbyCountDown();
+		}, 1000);
 	}
+	else
+		mockWebSocket();
 }
 
 // Load navbar

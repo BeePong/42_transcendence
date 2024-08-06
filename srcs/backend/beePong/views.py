@@ -53,12 +53,12 @@ mock_tournaments = [
 ]
 
 #TODO: to be replaced by real database
-# mockPlayersInLobby = ['lclerc', 'vvagapov', 'wchan', 'djames']
-# mockPlayersInMatch = ['lclerc', 'vvagapov']
-# mockNumPlayers = 4
-mockPlayersInLobby = ['lclerc', 'vvagapov', 'wchan']
+mockPlayersInLobby = ['lclerc', 'vvagapov', 'wchan', 'djames']
 mockPlayersInMatch = ['lclerc', 'vvagapov']
 mockNumPlayers = 4
+# mockPlayersInLobby = ['lclerc', 'vvagapov', 'wchan']
+# mockPlayersInMatch = ['lclerc', 'vvagapov']
+# mockNumPlayers = 4
 # mockPlayersInLobby = ['lclerc', 'vvagapov']
 # mockPlayersInMatch = ['lclerc', 'vvagapov']
 # mockNumPlayers = 2

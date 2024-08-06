@@ -16,7 +16,7 @@
     {% endfor %}
   </div>
   {% if players_in_lobby|length < num_players %}
-  <button class="button--tertiary button--with-icon" onclick="navigate('/')">
+  <button id="leave_button" class="button--tertiary button--with-icon" onclick="navigate('/')">
     <div class="cross"></div>
     <span>LEAVE TOURNAMENT</span>
   </button>
