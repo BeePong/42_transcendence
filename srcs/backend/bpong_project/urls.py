@@ -25,6 +25,7 @@ from . import consumers
 urlpatterns = [
     path("admin/", admin.site.urls),
     path('accounts/', include('accounts.urls')),
+    path('tournament/', include('tournament.urls')),
     path('', include('beePong.urls')),
 ]
 

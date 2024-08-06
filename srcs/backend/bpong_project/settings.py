@@ -30,9 +30,10 @@ INSTALLED_APPS = [
     'accounts',
     'tournament',
 
-    # Third-party apps
+    # Third-party appsx
     'django_bootstrap5',
     'channels',
+    'daphne',
 
     # Django apps
     "django.contrib.admin",
