@@ -48,15 +48,16 @@ async function loadPage(path, redirectUrl = '/', fromNavigate = false) {
 				if (page === '/accounts/login' || page === '/accounts/register')
 					document.getElementById('redirectUrl').value = redirectUrl;
 
-				//perform countdown in tournmament lobby
+				// perform countdown in tournmament lobby if the list is full. Otherwise, wait for other players.
 				const regex = /^\/tournament\/\d+\/lobby$/;
 				if (regex.test(page))
 				{
+					//TODO: open websocket
 					const isFull = document.querySelector('.full');
 					if (isFull)
-						tournamentLobbyCountDown();
+						tournamentLobbyCountdown();
 					else
-						mockWebSocket();
+						mockWebSocket(); 
 				}
 			}
 	} catch (error) {
@@ -84,8 +85,53 @@ async function redirectToLoginPage(redirectUrl) {
 	}
 }
 
+// TODO: replace by websocket
+// Mock WebSocket connection
+function mockWebSocket() {
+	setTimeout(() => {
+		tournamentLobbyAddPlayer();
+	}, 1000); // Simulate a new player joining every second
+}
+
+// Add player in the tournament lobby
+function tournamentLobbyAddPlayer() {
+	const numPlayersInLobby = parseInt(document.getElementById('num-players-in-lobby').textContent, 10);
+	const numPlayers = parseInt(document.getElementById('num-players').textContent, 10);
+
+	// Update number of players in lobby
+	const updatedNumPlayersInLobby = numPlayersInLobby + 1;
+	document.getElementById('num-players-in-lobby').textContent = `${updatedNumPlayersInLobby}`;
+
+	// Add new div for new player
+	const playerDiv = document.createElement('div');
+	playerDiv.classList.add('tournament_lobby__name-container');
+	playerDiv.innerHTML = `
+		<div class="tournament_lobby__name">Dummy</div>
+		<span class="tournament_lobby__match-num"></span>
+	`;
+	document.querySelector('.tournament_lobby__name-list-container').appendChild(playerDiv);
+
+	// if the name list is full
+	if (updatedNumPlayersInLobby === numPlayers)
+		handleFullTournamentLobby();
+	else
+		mockWebSocket();
+}
+
+// Handle full tournament lobby
+function handleFullTournamentLobby() {
+	setTimeout(() => {
+		document.querySelector('section').classList.add('full');
+		document.querySelector('.tournament_lobby__header').innerHTML = 'BEEPONG CUP IS STARTING IN <span id="countdown">3</span>...';
+		document.querySelector('.tournament_lobby__description').textContent = 'dummy vs dummy';
+		document.querySelector('.tournament_lobby__player-count').remove();
+		document.getElementById('leave-button').remove();
+		tournamentLobbyCountdown();
+	}, 1000);
+}
+
 // Countdown in lobby page and navigate to the game page after countdown
-function tournamentLobbyCountDown() {
+function tournamentLobbyCountdown() {
   let countdownValue = 3;
   const countdownElement = document.getElementById('countdown');
 
@@ -100,51 +146,6 @@ function tournamentLobbyCountDown() {
       }
     }, 1000);
   }, 500);
-}
-
-// Mock WebSocket connection
-function mockWebSocket() {
-	setTimeout(() => {
-		addPlayer();
-	}, 1000); // Simulate a new player joining every second
-}
-
-function addPlayer() {
-	const playersInLobby = Array.from(document.querySelectorAll('.name'))
-	.map(nameEl => nameEl.textContent);
-	const num_players_in_lobby = parseInt(document.querySelector('.num_players_in_lobby').textContent, 10);
-	const num_players = parseInt(document.querySelector('.num_players').textContent, 10);
-
-	const updated_num_players_in_lobby = num_players_in_lobby + 1;
-	const playerCountEl = document.querySelector('.num_players_in_lobby');
-	playerCountEl.textContent = `${updated_num_players_in_lobby}`;
-
-	const playerDiv = document.createElement('div');
-	playerDiv.classList.add('name__container');
-	playerDiv.innerHTML = `
-		<div class="name">Dummy</div>
-		<span class="tournament_lobby__num_match"></span>
-	`;
-	document.querySelector('.container').appendChild(playerDiv);
-
-	const sectionEl = document.querySelector('section');
-	if (updated_num_players_in_lobby === num_players)
-	{
-		setTimeout(() => {
-			sectionEl.classList.add('full');
-			document.querySelector('h1').innerHTML = 'BEEPONG CUP IS STARTING IN <span id="countdown">3</span>...';
-			document.querySelector('.font--alt').textContent = 'dummy vs dummy';
-			const playersCountWrapper = document.querySelector('.tournament_lobby__num_players');
-			if (playersCountWrapper)
-				playersCountWrapper.remove();
-			const leaveButton = document.getElementById('leave_button');
-			if (leaveButton)
-				leaveButton.remove();
-			tournamentLobbyCountDown();
-		}, 1000);
-	}
-	else
-		mockWebSocket();
 }
 
 // Load navbar

@@ -1,23 +1,25 @@
 <section class="{% if players_in_lobby|length == num_players %}full{% endif %} {% if num_players == 2 %}two-players{% endif %}">
   {% if players_in_lobby|length < num_players %}
-    <h1>BEEPONG CUP</h1>
-    <p class="font--alt font-size--sm">The The mighty Pong contest for the best of the best bees!</p>
-    <p class="tournament_lobby__num_players"><span class="num_players_in_lobby">{{ players_in_lobby|length }}</span>/<span class="num_players">{{ num_players }}</span> PLAYERS</p>
+    <h1 class="tournament_lobby__header">BEEPONG CUP</h1>
+    <p class="tournament_lobby__description font--alt font-size--sm">The mighty Pong contest for the best of the best bees!</p>
+    <p class="tournament_lobby__player-count"><span id="num-players-in-lobby">{{ players_in_lobby|length }}</span>/<span id="num-players">{{ num_players }}</span> PLAYERS</p>
   {% else %}
-    <h1>BEEPONG CUP IS STARTING IN <span id="countdown">3</span>...</h1>
-    <p class="font--alt font-size--sm">{{ players_in_match.0 }} vs {{ players_in_match.1 }}</p>
+    <h1 class="tournament_lobby__header">BEEPONG CUP IS STARTING IN <span id="countdown">3</span>...</h1>
+    {% if match_players|length == 2 %}
+    <p class="tournament_lobby__description font--alt font-size--sm">{{ match_players.0 }} vs {{ match_players.1 }}</p>
+    {% endif %}
   {% endif %}
-  <div class="container">
+  <div class="tournament_lobby__name-list-container">
     {% for player in players_in_lobby %}
-    <div class="name__container">
-      <div class="name">{{ player }}</div>
-      <span class="tournament_lobby__num_match"></span>
+    <div class="tournament_lobby__name-container">
+      <div class="tournament_lobby__name">{{ player }}</div>
+      <span class="tournament_lobby__match-num"></span>
     </div>
     {% endfor %}
   </div>
   {% if players_in_lobby|length < num_players %}
-  <button id="leave_button" class="button--tertiary button--with-icon" onclick="navigate('/')">
-    <div class="cross"></div>
+  <button id="leave-button" class="button--tertiary button--with-icon" onclick="navigate('/')">
+    <div class="cross-icon"></div>
     <span>LEAVE TOURNAMENT</span>
   </button>
   {% endif %}

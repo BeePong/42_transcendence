@@ -1,16 +1,20 @@
-.tournament_lobby__num_players {
-  margin-top: 2em;
+.tournament_lobby__description {
+  margin-top: 1.5em;
+}
+
+.tournament_lobby__player-count {
+  margin-top: 3em;
 	font-size: var(--font-size-md);
 	color: var(--color-primary);
 }
 
-.container {
+.tournament_lobby__name-list-container {
   margin-top: 3em;
   display: grid;
   place-items: center;
 }
 
-.name__container {
+.tournament_lobby__name-container {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -22,89 +26,89 @@
 	box-shadow: -5px -5px var(--color-primary);
 }
 
-section.full {
-  text-align: center;
-}
-
-.name {
+.tournament_lobby__name {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
   font-size: var(--font-size-md);
 }
 
-section.full .name__container .tournament_lobby__num_match::after {
+section.full {
+  text-align: center;
+}
+
+section.full .tournament_lobby__name-container .tournament_lobby__match-num::after {
   display: block;
   position: absolute;
   font-size: var(--font-size-md);
 }
 
-section.full .name__container:first-child .tournament_lobby__num_match::after {
+section.full .tournament_lobby__name-container:first-child .tournament_lobby__match-num::after {
   content: "1";
   left: -30px;
   bottom: -18px;
 }
 
-section.full .name__container:nth-child(2) .tournament_lobby__num_match::after {
+section.full .tournament_lobby__name-container:nth-child(2) .tournament_lobby__match-num::after {
   content: "3";
   left: -95px;
   bottom: -20px;
 }
 
-section.full.two-players .name__container:nth-child(2) .tournament_lobby__num_match::after {
+section.full.two-players .tournament_lobby__name-container:nth-child(2) .tournament_lobby__match-num::after {
   display: none;
 }
 
-section.full .name__container:nth-child(3) .tournament_lobby__num_match::after {
+section.full .tournament_lobby__name-container:nth-child(3) .tournament_lobby__match-num::after {
   content: "2";
   left: -30px;
   bottom: -18px;
 }
 
-section.full .name__container:after, .name__container::before {
+section.full .tournament_lobby__name-container:after, .tournament_lobby__name-container::before {
   content: "";
   display: block;
   position: absolute;
 }
 
-section.full .name__container::after {
+section.full .tournament_lobby__name-container::after {
   border-left: 1px solid var(--text-color-main);
   left: -40px;
   height: 30px;
   width: 29px;
 }
 
-section.full .name__container:nth-child(even)::after {
+section.full .tournament_lobby__name-container:nth-child(even)::after {
   border-bottom: 1px solid var(--text-color-main);
   border-bottom-left-radius: 10em;
   bottom: 20px;
 }
 
-section.full .name__container:nth-child(odd)::after {
+section.full .tournament_lobby__name-container:nth-child(odd)::after {
   border-top: 1px solid var(--text-color-main);
   border-top-left-radius: 10em;
   top: 20px;
 }
 
-section.full.two-players .name__container::before {
+section.full.two-players .tournament_lobby__name-container::before {
   display: none;
 }
 
-section.full .name__container:first-child::before,
-section.full .name__container:nth-child(3)::before {
+section.full .tournament_lobby__name-container:first-child::before,
+section.full .tournament_lobby__name-container:nth-child(3)::before {
   border-left: 1px solid var(--text-color-main);
   left: -105px;
   height: 62px;
   width: 62px;
 }
 
-section.full .name__container:first-child::before {
+section.full .tournament_lobby__name-container:first-child::before {
   border-top: 1px solid var(--text-color-main);
   border-top-left-radius: 10em;
   top: 50px;
 }
 
-section.full .name__container:nth-child(3)::before {
+section.full .tournament_lobby__name-container:nth-child(3)::before {
   border-bottom: 1px solid var(--text-color-main);
   border-bottom-left-radius: 10em;
   top: -10px;

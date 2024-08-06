@@ -58,12 +58,12 @@ button {
 	height: 40px;
 }
 
-.cross {
+.cross-icon {
 	position: relative;
 	width: 10%;
 }
 
-.cross::before, .cross::after {
+.cross-icon::before, .cross-icon::after {
 	content: '';
 	position: absolute;
 	background-color: var(--text-color-main);
@@ -72,6 +72,6 @@ button {
 	transform: translateY(-50%) rotate(45deg);
 }
 
-.cross::after {
+.cross-icon::after {
 	transform: translateY(-50%) rotate(-45deg);
 }
