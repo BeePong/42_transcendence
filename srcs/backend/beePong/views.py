@@ -53,18 +53,9 @@ mock_tournaments = [
 ]
 
 #TODO: to be replaced by real database
-# mockPlayersInLobby = ['lclerc', 'vvagapov', 'wchan', 'djames'] # players waiting in the lobby, including the current user who clicks the join button
-# mockMatchPlayers = ['lclerc', 'vvagapov'] # current user and the opponent, if the lobby is full. None otherwise.
-# mockNumPlayers = 4 # num_players
-mockPlayersInLobby = ['lclerc']
-mockMatchPlayers = None
-mockNumPlayers = 4
-# mockPlayersInLobby = ['lclerc', 'vvagapov']
-# mockMatchPlayers = ['lclerc', 'vvagapov']
-# mockNumPlayers = 2
-# mockPlayersInLobby = ['lclerc']
-# mockMatchPlayers = None
-# mockNumPlayers = 2
+mockPlayersInLobby = ['lclerc', 'vvagapov'] # players waiting in the lobby, including the current user who clicks the join button
+mockMatchPlayers = ['lclerc', 'vvagapov'] # current user and the opponent, if the lobby is full. None otherwise.
+mockNumPlayers = 4 # num_players
 
 def test(request):
     data = {"test": "This is a test JSON"}

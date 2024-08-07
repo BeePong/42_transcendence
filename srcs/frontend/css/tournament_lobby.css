@@ -1,29 +1,37 @@
 .tournament_lobby__description {
   margin-top: 1.5em;
+  margin-bottom: 3em;
 }
 
 .tournament_lobby__player-count {
-  margin-top: 3em;
 	font-size: var(--font-size-md);
 	color: var(--color-primary);
+  margin-bottom: 1em;
 }
 
 .tournament_lobby__name-list-container {
-  margin-top: 3em;
+  margin-bottom: 3em;
   display: grid;
+}
+
+section.full .tournament_lobby__name-list-container {
   place-items: center;
 }
 
 .tournament_lobby__name-container {
   display: flex;
   align-items: center;
-  justify-content: center;
+  padding-left: 1.5em;
   margin: 10px 0;
   position: relative;
-  width: 180px;
+  width: 300px;
   height: 40px;
   outline: 1px solid var(--text-color-main);
 	box-shadow: -5px -5px var(--color-primary);
+}
+
+section.full .tournament_lobby__name-container {
+  width: 180px;
 }
 
 .tournament_lobby__name {
