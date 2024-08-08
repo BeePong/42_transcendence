@@ -19,8 +19,8 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf.urls import handler404
 
-from django.urls import re_path
-from . import consumers
+# from django.urls import re_path
+# from . import consumers
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -29,8 +29,8 @@ urlpatterns = [
     path('', include('beePong.urls')),
 ]
 
-websocket_urlpatterns = [
-    re_path(r'ws/pong/$', consumers.PongConsumer.as_asgi()),
-]
+# websocket_urlpatterns = [
+#     re_path(r'^ws/pong/$', consumers.PongConsumer.as_asgi()),
+# ]
 
 handler404 = 'beePong.views.custom_404'

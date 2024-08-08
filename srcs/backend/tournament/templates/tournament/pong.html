@@ -10,20 +10,32 @@
     <p id="messageDisplay"></p>
     <h2 id="welcome"></h2>
     <script>
-        // var socket = new WebSocket('ws://' + window.location.host + '/ws/pong/');
-        // Event when a new message is received by WebSockets
-        const socket = new WebSocket("ws://{{request.get_host }}/ws/pong/");
-        socket.addEventListener("message",
+        var socket = new WebSocket('ws://' + window.location.host + '/ws/pong/');
 
-            (event) => {
+        socket.onmessage = function(e) {
+            var data = JSON.parse(e.data);
+            console.log(data);
+            document.getElementById('messageDisplay').innerText = data.message;
+            // Updating our game field will be here
+        };
 
-            // Display the message in '#welcome'.
+        console.log(socket); // for debugging
 
-            document.querySelector("#welcome").
+        socket.onopen = function(e) {
+            console.log('WebSocket connection opened');
+        };
 
-                textContent = event.data;
+        socket.onclose = function(e) {
+            console.log('WebSocket connection closed');
+        };
 
-        });
+        document.getElementById('tournamentSendButton').onclick = function() {
+            socket.send(JSON.stringify({message: 'Test tournament message from client!', type: 'tournament'}));
+        };
+
+        document.getElementById('gameSendButton').onclick = function() {
+            socket.send(JSON.stringify({message: 'Test game message from client!', type: 'game'}));
+        };
 
         // socket.onmessage = function(e) {
         //     var data = JSON.parse(e.data);

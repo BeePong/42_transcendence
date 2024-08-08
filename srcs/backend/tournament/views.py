@@ -95,3 +95,7 @@ def create_tournament(request):
 def tournament_lobby(request, tournament_id):
     """The tournament lobby page for BeePong."""
     return render(request, 'tournament/tournament_lobby.html')
+
+def pong(request):
+    """The pong page for BeePong."""
+    return render(request, 'tournament/pong.html')

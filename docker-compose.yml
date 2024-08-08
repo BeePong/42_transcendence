@@ -16,14 +16,14 @@ services:
       - .env
     restart: on-failure
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      test: ["CMD-SHELL", "psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} --password ${POSTGRES_PASSWORD}"]
       interval: 10s
       timeout: 5s
       retries: 5
 
   backend_dummy:
     container_name: backendDummy
-    command: ["sh", "-c", "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"]
+    # command: ["sh", "-c", "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"]
     build:
       context: ./srcs/backend
     volumes:

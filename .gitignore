@@ -6,3 +6,4 @@ venv/
 *venv/
 .env
 .docker-compose.yml.swp
+.image_ids
