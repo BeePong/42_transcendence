@@ -1,4 +1,4 @@
-<section class="{% if players_in_lobby|length == num_players %}full{% endif %} {% if num_players == 2 %}two-players{% endif %}">
+<section id="tournament-lobby-section" class="{% if players_in_lobby|length == num_players %}full{% endif %} {% if num_players == 2 %}two-players{% endif %}">
   {% if players_in_lobby|length < num_players %}
     <h1 class="tournament_lobby__header">BEEPONG CUP</h1>
     <p class="tournament_lobby__description font--alt font-size--sm">The mighty Pong contest for the best of the best bees!</p>

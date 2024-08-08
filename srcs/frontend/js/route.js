@@ -49,21 +49,19 @@ async function loadPage(path, redirectUrl = '/', fromNavigate = false) {
 					document.getElementById('redirectUrl').value = redirectUrl;
 
 				// perform countdown in tournmament lobby if the list is full. Otherwise, wait for other players.
-				const regex = /^\/tournament\/\d+\/lobby$/;
-				if (regex.test(page))
-				{
-					//TODO: open websocket
-					const isFull = document.querySelector('.full');
-					if (isFull)
-						tournamentLobbyCountdown();
-					else
-						mockWebSocket(); 
-				}
+				if (isTournamentLobbyPage(page))
+					document.querySelector('.full') ? tournamentLobbyCountdown() : mockWebSocket(); //TODO: open websocket
 			}
 	} catch (error) {
 			console.error('There was a problem with the fetch operation:', error);
 	}
 }
+
+// check if it is tournament lobby page
+function isTournamentLobbyPage(page) {
+	const regex = /^\/tournament\/\d+\/lobby$/;
+	return regex.test(page) ? true : false; 
+} 
 
 // redirect to login page
 async function redirectToLoginPage(redirectUrl) {
@@ -89,7 +87,8 @@ async function redirectToLoginPage(redirectUrl) {
 // Mock WebSocket connection
 function mockWebSocket() {
 	setTimeout(() => {
-		tournamentLobbyAddPlayer();
+		if (isTournamentLobbyPage(window.location.pathname))
+			tournamentLobbyAddPlayer();
 	}, 1000); // Simulate a new player joining every second
 }
 
@@ -121,12 +120,14 @@ function tournamentLobbyAddPlayer() {
 // Handle full tournament lobby
 function handleFullTournamentLobby() {
 	setTimeout(() => {
-		document.querySelector('section').classList.add('full');
-		document.querySelector('.tournament_lobby__header').innerHTML = 'BEEPONG CUP IS STARTING IN <span id="countdown">3</span>...';
-		document.querySelector('.tournament_lobby__description').textContent = 'dummy vs dummy';
-		document.querySelector('.tournament_lobby__player-count').remove();
-		document.getElementById('leave-button').remove();
-		tournamentLobbyCountdown();
+		if (isTournamentLobbyPage(window.location.pathname)) {
+			document.getElementById('tournament-lobby-section').classList.add('full');
+			document.querySelector('.tournament_lobby__header').innerHTML = 'BEEPONG CUP IS STARTING IN <span id="countdown">3</span>...';
+			document.querySelector('.tournament_lobby__description').textContent = 'dummy vs dummy';
+			document.querySelector('.tournament_lobby__player-count').remove();
+			document.getElementById('leave-button').remove();
+			tournamentLobbyCountdown();
+		}
 	}, 1000);
 }
 
@@ -137,13 +138,18 @@ function tournamentLobbyCountdown() {
 
   setTimeout(() => {
     const countdownInterval = setInterval(() => {
-      if (countdownValue > 1) {
-        countdownValue--;
-        countdownElement.textContent = `${countdownValue}`;
-      } else {
-        clearInterval(countdownInterval);
-        navigate('/game');
-      }
+			if (isTournamentLobbyPage(window.location.pathname))
+			{
+				if (countdownValue > 1) {
+					countdownValue--;
+					countdownElement.textContent = `${countdownValue}`;
+				} else {
+					clearInterval(countdownInterval);
+					navigate('/game');
+				}
+			}
+			else
+				clearInterval(countdownInterval);
     }, 1000);
   }, 500);
 }
