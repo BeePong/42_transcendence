@@ -47,10 +47,85 @@ async function loadPage(path, redirectUrl = '/', fromNavigate = false) {
 				// Add the redirect url for login and register page 
 				if (page === '/accounts/login' || page === '/accounts/register')
 					document.getElementById('redirectUrl').value = redirectUrl;
+
+				if (page === '/tournament/pong')
+					webSocketTest();
 			}
 	} catch (error) {
 			console.error('There was a problem with the fetch operation:', error);
 	}
+}
+
+function webSocketTest() {
+	var socket = new WebSocket('ws://' + window.location.host + '/ws/pong/');
+
+	socket.onmessage = function(e) {
+			var data = JSON.parse(e.data);
+			console.log(data);
+			document.getElementById('messageDisplay').innerText = data.message;
+			// Updating our game field will be here
+	};
+
+	console.log(socket); // for debugging
+
+	socket.onopen = function(e) {
+			console.log('WebSocket connection opened');
+	};
+
+	socket.onclose = function(e) {
+			console.log('WebSocket connection closed');
+	};
+
+	document.getElementById('tournamentSendButton').onclick = function() {
+			socket.send(JSON.stringify({message: 'Test tournament message from client!', type: 'tournament'}));
+	};
+
+	document.getElementById('gameSendButton').onclick = function() {
+			socket.send(JSON.stringify({message: 'Test game message from client!', type: 'game'}));
+	};
+
+	// socket.onmessage = function(e) {
+	//     var data = JSON.parse(e.data);
+	//     console.log(data);
+	//     document.getElementById('messageDisplay').innerText = data.message;
+	//     // Updating our game field will be here
+	// };
+
+	// console.log(socket); // for debugging
+
+	// socket.onopen = function(e) {
+	//     console.log('WebSocket connection opened');
+	// };
+
+	// socket.onclose = function(e) {
+	//     console.log('WebSocket connection closed');
+	// };
+
+	// document.getElementById('tournamentSendButton').onclick = function() {
+	//     socket.send(JSON.stringify({message: 'Test tournament message from client!', type: 'tournament'}));
+	// };
+
+	// document.getElementById('gameSendButton').onclick = function() {
+	//     socket.send(JSON.stringify({message: 'Test game message from client!', type: 'game'}));
+	// };
+
+	/* function sendGameData(paddle_x, paddle_y, ball_x, ball_y) {
+			socket.send(JSON.stringify({
+					'paddle_x': paddle_x,
+					'paddle_y': paddle_y,
+					'ball_x': ball_x,
+					'ball_y': ball_y,
+			}));
+	}
+
+	setInterval(function() {
+			// random data for testing, later will be replaces with actual coordinates
+			var paddle_x = Math.random() * 100;
+			var paddle_y = Math.random() * 100;
+			var ball_x = Math.random() * 100;
+			var ball_y = Math.random() * 100;
+			sendGameData(paddle_x, paddle_y, ball_x, ball_y);
+	}, 1000); */
 }
 
 // redirect to login page
