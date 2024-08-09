@@ -1,5 +1,5 @@
 from django import forms
-from .models import Tournament, Alias
+from .models import Tournament, Alias, Player
 
 #TODO: to be replaced by real database
 class TournamentForm(forms.ModelForm):
@@ -21,6 +21,15 @@ class TournamentForm(forms.ModelForm):
                 'class': 'form-input'
             })
         }
+
+    def __init__(self, *args, **kwargs):
+        super(TournamentForm, self).__init__(*args, **kwargs)
+        # Additional code can be added here if needed
+        
+class PlayerForm(forms.ModelForm):
+    class Meta:
+        model = Player
+        fields = ['name']
 
 #TODO: to be replaced by real database
 class AliasForm(forms.ModelForm):

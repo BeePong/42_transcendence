@@ -1,8 +1,11 @@
-from django.shortcuts import render
 from django.http import JsonResponse
 from collections import namedtuple
 from .forms import TournamentForm, AliasForm
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from .models import Tournament, Player
 from .decorators import login_required_json
+
 # Create your views here.
 
 #TODO: to be replaced by real database
@@ -73,23 +76,29 @@ def create_tournament(request):
     else:
         form = TournamentForm(request.POST)
         if form.is_valid():
-            # TODO: save the form 
-            # TODO: delete new_tournament and mock_tournaments.append because the new tournament data will be saved in the database and fetching the tournament page again should show the new tournament
-            new_tournament = MockTournaments(
-                tournament_id=len(mock_tournaments) + 1,
-                name=form.cleaned_data['title'],
-                description=form.cleaned_data['description'],
-                state='NEW',
-                num_players=form.cleaned_data['num_players'],
-                players=[],
-                winner=None
-            )
-            mock_tournaments.append(new_tournament)
-            return JsonResponse({'success': True, 'redirect': '/tournament'}, status=201) #TODO: also return title, description and number of players in the json respsonse
+            print("the form is valid")
+            tournament = form.save(commit=False)
+            tournament.save()  # Save the tournament instance first
+            if not tournament.players:
+                tournament.players = []
+            # Now you can add players to the many-to-many field
+            form.save_m2m()
+            # Convert the players to a list of player IDs or names
+            players_list = list(tournament.players.values_list('id', flat=True))
+            return JsonResponse({
+                'success': True,
+                'redirect': '/tournament',
+                'name': tournament.title,
+                'description': tournament.description,
+                'num_players': tournament.num_players,
+                'tournament_id': tournament.tournament_id,
+                'state': tournament.state,
+                'players': players_list,
+                'winner': tournament.winner
+            }, status=201)
         else:
             return JsonResponse({'success': False, 'errors': form.errors}, status=400)
     return render(request, 'tournament/create_tournament.html', {'form': form, 'form_action': '/tournament/create/'})
-
 #TODO: only players in the tournament can access its lobby page
 @login_required_json
 def tournament_lobby(request, tournament_id):

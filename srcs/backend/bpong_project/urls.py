@@ -26,4 +26,5 @@ urlpatterns = [
     path('', include('beePong.urls')),
 ]
 
+
 handler404 = 'beePong.views.custom_404'

@@ -1,4 +1,3 @@
-# settings.py
 
 from pathlib import Path
 import os
@@ -136,3 +135,47 @@ LOGIN_URL = 'accounts:login'
 # Requests from these origins will be allowed to bypass the CSRF protection
 CSRF_TRUSTED_ORIGINS = ['https://localhost']
 
+################################################################################
+## Django setting for Logging 
+################################################################################
+import os
+import logging.config
+
+# Create a logs directory if it doesn't exist
+LOGS_DIR = os.path.join(BASE_DIR, 'logs')
+os.makedirs(LOGS_DIR, exist_ok=True)
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(LOGS_DIR, 'app.log'),
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}
+
+import logging
+logger = logging.getLogger('django')
+
+logger.debug('DEBUG: Test log entry for Django in settings.py')

@@ -78,13 +78,31 @@ from django.contrib.auth.models import User
 #     created_at = models.DateTimeField(auto_now_add=True)
 
 #TODO: to be replaced by real database
-class Tournament(models.Model):
-    title = models.CharField(max_length=100)
-    description = models.CharField(max_length=100)
-    num_players = models.IntegerField(choices=[(2, '2'), (4, '4')])
+#class Tournament(models.Model):
+ #   title = models.CharField(max_length=100)
+  #  description = models.CharField(max_length=100)
+   # num_players = models.IntegerField(choices=[(2, '2'), (4, '4')])
 
+    #def __str__(self):
+     #   return self.name
+class Player(models.Model):
+    name = models.CharField(max_length=255)
+    
     def __str__(self):
         return self.name
+    
+class Tournament(models.Model):
+    tournament_id = models.AutoField(primary_key=True)
+    title = models.CharField(max_length=255)
+    description = models.TextField()
+    state = models.CharField(max_length=50)
+    num_players = models.IntegerField()
+    players = models.ManyToManyField(Player, related_name='tournaments', blank=True)
+    winner = models.CharField(max_length=255, null=True, blank=True)
+
+    def __str__(self):
+        return self.title  # Updated to return title instead of name
+    
 
 #TODO: to be replaced replace by real database
 class Alias(models.Model):
