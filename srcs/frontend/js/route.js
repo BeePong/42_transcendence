@@ -57,7 +57,7 @@ async function loadPage(path, redirectUrl = '/', fromNavigate = false) {
 }
 
 function webSocketTest() {
-	var socket = new WebSocket('ws://' + window.location.host + '/ws/pong/');
+	var socket = new WebSocket('ws://' + window.location.host + ':8000' + '/ws/pong/');
 
 	socket.onmessage = function(e) {
 			var data = JSON.parse(e.data);
