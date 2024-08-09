@@ -57,7 +57,7 @@ async function loadPage(path, redirectUrl = '/', fromNavigate = false) {
 }
 
 function webSocketTest() {
-	var socket = new WebSocket('ws://' + window.location.host + '/ws/pong/');
+	var socket = new WebSocket('ws://localhost:8000/ws/pong/');
 
 	socket.onmessage = function(e) {
 			var data = JSON.parse(e.data);
@@ -66,7 +66,7 @@ function webSocketTest() {
 			// Updating our game field will be here
 	};
 
-	console.log(socket); // for debugging
+	console.log("webSocketTest SOCKET", socket); // for debugging
 
 	socket.onopen = function(e) {
 			console.log('WebSocket connection opened');
@@ -84,37 +84,15 @@ function webSocketTest() {
 			socket.send(JSON.stringify({message: 'Test game message from client!', type: 'game'}));
 	};
 
-	// socket.onmessage = function(e) {
-	//     var data = JSON.parse(e.data);
-	//     console.log(data);
-	//     document.getElementById('messageDisplay').innerText = data.message;
-	//     // Updating our game field will be here
-	// };
-
-	// console.log(socket); // for debugging
-
-	// socket.onopen = function(e) {
-	//     console.log('WebSocket connection opened');
-	// };
-
-	// socket.onclose = function(e) {
-	//     console.log('WebSocket connection closed');
-	// };
-
-	// document.getElementById('tournamentSendButton').onclick = function() {
-	//     socket.send(JSON.stringify({message: 'Test tournament message from client!', type: 'tournament'}));
-	// };
-
-	// document.getElementById('gameSendButton').onclick = function() {
-	//     socket.send(JSON.stringify({message: 'Test game message from client!', type: 'game'}));
-	// };
-
-	/* function sendGameData(paddle_x, paddle_y, ball_x, ball_y) {
+	function sendGameData(paddle_x, paddle_y, ball_x, ball_y) {
 			socket.send(JSON.stringify({
+				message: {
 					'paddle_x': paddle_x,
 					'paddle_y': paddle_y,
 					'ball_x': ball_x,
 					'ball_y': ball_y,
+				},
+				type: 'game'
 			}));
 	}
 
@@ -125,7 +103,11 @@ function webSocketTest() {
 			var ball_x = Math.random() * 100;
 			var ball_y = Math.random() * 100;
 			sendGameData(paddle_x, paddle_y, ball_x, ball_y);
-	}, 1000); */
+	}, 1000);
+
+	window.onbeforeunload = function() {
+		socket.close();
+	};
 }
 
 // redirect to login page

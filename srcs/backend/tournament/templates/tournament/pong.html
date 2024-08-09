@@ -10,6 +10,7 @@
     <p id="messageDisplay"></p>
     <h2 id="welcome"></h2>
     <script>
+        console.log("hello from pong.html");
         var socket = new WebSocket('ws://' + window.location.host + '/ws/pong/');
 
         socket.onmessage = function(e) {
@@ -19,7 +20,7 @@
             // Updating our game field will be here
         };
 
-        console.log(socket); // for debugging
+        console.log("SOCKET: ", socket); // for debugging
 
         socket.onopen = function(e) {
             console.log('WebSocket connection opened');
