@@ -49,19 +49,13 @@ async function loadPage(path, redirectUrl = '/', fromNavigate = false) {
 					document.getElementById('redirectUrl').value = redirectUrl;
 
 				// perform countdown in tournmament lobby if the list is full. Otherwise, wait for other players.
-				if (isTournamentLobbyPage(page))
+				if (/^\/tournament\/\d+\/lobby$/.test(page))
 					document.querySelector('.full') ? tournamentLobbyCountdown() : mockWebSocket(); //TODO: open websocket
 			}
 	} catch (error) {
 			console.error('There was a problem with the fetch operation:', error);
 	}
 }
-
-// check if it is tournament lobby page
-function isTournamentLobbyPage(page) {
-	const regex = /^\/tournament\/\d+\/lobby$/;
-	return regex.test(page) ? true : false; 
-} 
 
 // redirect to login page
 async function redirectToLoginPage(redirectUrl) {
@@ -87,7 +81,7 @@ async function redirectToLoginPage(redirectUrl) {
 // Mock WebSocket connection
 function mockWebSocket() {
 	setTimeout(() => {
-		if (isTournamentLobbyPage(window.location.pathname))
+		if (/^\/tournament\/\d+\/lobby$/.test(window.location.pathname))
 			tournamentLobbyAddPlayer();
 	}, 1000); // Simulate a new player joining every second
 }
@@ -110,17 +104,14 @@ function tournamentLobbyAddPlayer() {
 	`;
 	document.querySelector('.tournament_lobby__name-list-container').appendChild(playerDiv);
 
-	// if the name list is full
-	if (updatedNumPlayersInLobby === numPlayers)
-		handleFullTournamentLobby();
-	else
-		mockWebSocket();
+	// If the lobby is full, go to handle full tournament lobby. Otherwise, add new players again
+	(updatedNumPlayersInLobby === numPlayers) ? handleFullTournamentLobby() : mockWebSocket();
 }
 
 // Handle full tournament lobby
 function handleFullTournamentLobby() {
 	setTimeout(() => {
-		if (isTournamentLobbyPage(window.location.pathname)) {
+		if (/^\/tournament\/\d+\/lobby$/.test(window.location.pathname)) {
 			document.getElementById('tournament-lobby-section').classList.add('full');
 			document.querySelector('.tournament_lobby__header').innerHTML = 'BEEPONG CUP IS STARTING IN <span id="countdown">3</span>...';
 			document.querySelector('.tournament_lobby__description').textContent = 'dummy vs dummy';
@@ -138,7 +129,7 @@ function tournamentLobbyCountdown() {
 
   setTimeout(() => {
     const countdownInterval = setInterval(() => {
-			if (isTournamentLobbyPage(window.location.pathname))
+			if (/^\/tournament\/\d+\/lobby$/.test(window.location.pathname))
 			{
 				if (countdownValue > 1) {
 					countdownValue--;
