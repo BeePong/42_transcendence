@@ -2,6 +2,22 @@ import json
 from channels.generic.websocket import WebsocketConsumer
 
 class PongConsumer(WebsocketConsumer):
+    FIELD_WIDTH = 800
+    FIELD_HEIGHT = 500
+    PADDLE_WIDTH = 10
+    PADDLE_HEIGHT = 100
+    BALL_RADIUS = 15
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.game_state = {
+            'active': False,
+            'ball_x': {'x': 0, 'y': 0},
+            'ball_speed': 5,
+            'ball_vector': {'x': 1, 'y': 1},
+            'paddles': {}
+        }
+    
     def send_message(self, message):
         self.send(text_data=json.dumps({
             'message': message
@@ -19,7 +35,12 @@ class PongConsumer(WebsocketConsumer):
         self.send_message('Received tournament message: ' + str(text_data_json['message']))
 
     def handle_game_message(self, text_data_json):
-        self.send_message('Received game message: ' + str(text_data_json['message']))
+        player_id = text_data_json['message']['player_id']
+        paddle_y = text_data_json['message']['paddle_y']
+        # Update the game state
+        self.game_state['paddles'][player_id] = {'y': paddle_y}
+        # Send the updated game state to all players
+        self.send(text_data=json.dumps(self.game_state))
 
     def receive(self, text_data):
         text_data_json = json.loads(text_data)

@@ -58,10 +58,11 @@ function webSocketTest() {
   const paddle_height = 100;
   const paddle_width = 20;
   const increment = 10;
+  const ball_radius = 15;
   const fps = 60;
   let upPressed = false;
   let downPressed = false;
-  let paddle_y = 400;
+  let paddle_y = canvas_height / 2 - paddle_height / 2;
 
   console.log("webSocketTest");
   var socket = new WebSocket("ws://localhost:8000/ws/pong/");
@@ -79,22 +80,34 @@ function webSocketTest() {
     context.lineTo(0, 0);
     context.stroke();
   };
+
+  const drawBall = (x, y) => {
+    context.fillStyle = primaryColor;
+    context.beginPath();
+    context.arc(x, y, ball_radius, 0, Math.PI * 2);
+    context.fill();
+  };
+
   var backgroundColor = getComputedStyle(
     document.documentElement
   ).getPropertyValue("--background-color");
+  var primaryColor = getComputedStyle(
+    document.documentElement
+  ).getPropertyValue("--color-secondary");
+
   context.fillStyle = backgroundColor;
   context.fillRect(0, 0, canvas_width, canvas_height);
   drawBorders();
+  drawBall(canvas_width / 2, canvas_height / 2);
 
   socket.onmessage = function (e) {
     var data = JSON.parse(e.data);
-    console.log(data);
-    document.getElementById("messageDisplay").innerText = data.message;
-
+    console.log(data.message);
+    updateCanvas(data.message);
     // Updating our game field will be here
   };
 
-  console.log("webSocketTest SOCKET", socket); // for debugging
+  // console.log("webSocketTest SOCKET", socket); // for debugging
 
   socket.onopen = function (e) {
     console.log("WebSocket connection opened");
@@ -104,7 +117,7 @@ function webSocketTest() {
     console.log("WebSocket connection closed");
   };
 
-  document.getElementById("tournamentSendButton").onclick = function () {
+  /*   document.getElementById("tournamentSendButton").onclick = function () {
     socket.send(
       JSON.stringify({
         message: "Test tournament message from client!",
@@ -120,16 +133,14 @@ function webSocketTest() {
         type: "game",
       })
     );
-  };
+  }; */
 
-  function sendGameData(paddle_x, paddle_y, ball_x, ball_y) {
+  function sendGameData(paddle_y) {
     socket.send(
       JSON.stringify({
         message: {
-          paddle_x: paddle_x,
           paddle_y: paddle_y,
-          ball_x: ball_x,
-          ball_y: ball_y,
+          player: "player1",
         },
         type: "game",
       })
@@ -154,12 +165,15 @@ function webSocketTest() {
     }
   });
 
-  function updateCanvas(paddle_y) {
+  function updateCanvas(game_data) {
+    console.log("updateCanvas");
     context.fillStyle = backgroundColor;
     context.fillRect(0, 0, canvas_width, canvas_height);
     drawBorders();
     context.fillStyle = "white";
     context.fillRect(canvas_width - 50, paddle_y, 20, 100);
+    // game_data.ball_y
+    drawBall(canvas_width / 2, canvas_height / 2);
   }
 
   // In your game loop, check the flags and move the paddle
@@ -171,6 +185,7 @@ function webSocketTest() {
         paddle_y = paddle_height / 2;
       }
     } else if (downPressed) {
+      console.log("downPressed");
       if (paddle_y < canvas_height - paddle_height - paddle_height / 2) {
         paddle_y += increment;
       } else {
@@ -178,7 +193,6 @@ function webSocketTest() {
       }
     }
     // Send the game data
-    updateCanvas(paddle_y);
     sendGameData(paddle_y);
   }, 1000 / fps);
 }
