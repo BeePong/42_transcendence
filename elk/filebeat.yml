@@ -1,37 +1,81 @@
+#=================== Filebeat Inputs ===================== 
+# Define the different types of log inputs that Filebeat will monitor.
+
 filebeat.inputs:
-- type: filestream
-  id: nginx-access-logs
-  paths:
-    - /usr/share/filebeat/nginx_logs/access.log
+  
+  # Nginx Access Logs Input
+  - type: filestream
+    id: nginx-access-logs
+    paths:
+      - /usr/share/filebeat/nginx_logs/access.log
+    # Filebeat will track the Nginx access log file for any new entries.
 
-- type: filestream
-  id: nginx-error-logs
-  paths:
-    - /usr/share/filebeat/nginx_logs/error.log
+  # Nginx Error Logs Input
+  - type: filestream
+    id: nginx-error-logs
+    paths:
+      - /usr/share/filebeat/nginx_logs/error.log
+    # Filebeat will track the Nginx error log file for any new entries.
 
-- type: filestream
-  id: app-logs
-  paths:
-    - /usr/share/filebeat/app_logs/app.log
+  # Application Logs Input
+  - type: filestream
+    id: app-logs
+    paths:
+      - /usr/share/filebeat/app_logs/app.log
+    # Filebeat will track the application log file for any new entries.
 
-- type: filestream
-  id: sys-logs
-  paths:
-    - /var/log/syslog
+  # System Logs Input
+  - type: filestream
+    id: sys-logs
+    paths:
+      - /var/log/syslog
+    # Filebeat will track the system log file for any new entries.
+
+#=================== Autodiscover Setup ===================== 
+# This allows Filebeat to automatically detect Docker containers and capture their logs.
+# The logs will be enriched with metadata from the Docker containers.
 
 filebeat.autodiscover:
   providers:
     - type: docker
       hints.enabled: true
+      # Enables hints-based autodiscover for Docker containers.
+      # Docker containers will be dynamically monitored and their logs will be processed.
+
+#=================== Processors ===================== 
+# Processors modify or enhance the data before it is sent to the output.
+# In this case, we are adding Docker metadata to the logs.
 
 processors:
-- add_docker_metadata: ~
+  - add_docker_metadata: ~
+    # This adds Docker metadata such as container name, image name, etc., to each log entry.
+
+#=================== Kibana Setup ===================== 
+# Configures the Kibana instance that will be used for visualizing the logs.
 
 setup.kibana:
   host: ${KIBANA_HOSTS}
   username: ${ELASTIC_USER}
   password: ${ELASTIC_PASSWORD}
+  # The Kibana instance where Filebeat will send data for visualization.
 
-output.logstash:
-  hosts: ["logstash:5044"]
+#========================== Outputs ========================== 
+# Specify where to send the collected log data. Filebeat can output data to different destinations.
+
+#-------------------- Elasticsearch output ------------------- 
+# If you want to send logs directly to Elasticsearch, uncomment this section.
+# output.elasticsearch: 
+#   hosts: ["localhost:9200"]
+#   # Optional protocol and basic auth credentials.
+#   protocol: "https"
+#   username: "elastic"
+#   password: "changeme"
+
+#-------------------- Logstash output ------------------------- 
+# Configuring the Logstash output.
+# Logs will be sent to Logstash for further processing and then forwarded to Elasticsearch or another output.
+
+output.logstash: 
+  hosts: ["localhost:5044"]
+  # Logstash hosts where Filebeat will send the collected logs.
 

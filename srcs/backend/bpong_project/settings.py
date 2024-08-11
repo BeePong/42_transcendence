@@ -19,7 +19,7 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure--5o3-*y!2w25g-%9h^8
 DEBUG = True
 # DEBUG = False
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'https://127.0.0.1']
 
 # Application definition
 
@@ -133,7 +133,7 @@ LOGIN_URL = 'accounts:login'
 
 # List of trusted origins for CSRF protection
 # Requests from these origins will be allowed to bypass the CSRF protection
-CSRF_TRUSTED_ORIGINS = ['https://localhost']
+CSRF_TRUSTED_ORIGINS = ['https://localhost', 'https://127.0.0.1']
 
 ################################################################################
 ## Django setting for Logging 
