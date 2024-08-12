@@ -21,7 +21,7 @@ up_db:
 	docker compose -f ./docker-compose.yml up --build -d db
 
 up_elk:
-	docker compose -f ./docker-compose.yml up --build -d elasticsearch kibana logstash filebeat metricbeat
+	docker compose -f ./docker-compose.yml up --build -d es01 kibana logstash01 filebeat01 metricbeat01
 
 ################################################################################
 # Clean and Remove
@@ -106,7 +106,7 @@ logs_db:
 	docker compose -f ./docker-compose.yml logs -f db
 
 logs_elk:
-	docker compose -f ./docker-compose.yml logs -f elasticsearch kibana logstash filebeat metricbeat
+	docker compose -f ./docker-compose.yml logs -f es01 kibana logstash01 filebeat01 metricbeat01
 
 # Tail all logs with timestamps
 logs:
@@ -150,7 +150,7 @@ exec_db:
 	docker compose -f ./docker-compose.yml exec db sh
 
 exec_elk:
-	docker compose -f ./docker-compose.yml exec elasticsearch sh
+	docker compose -f ./docker-compose.yml exec es01 sh
 
 ################################################################################
 # Stop services
