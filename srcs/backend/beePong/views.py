@@ -6,7 +6,6 @@ from accounts.forms import CustomAuthenticationForm
 import os
 from urllib.parse import urlencode
 from collections import namedtuple
-from .decorators import login_required_json
 
 # Create your views here.
 
