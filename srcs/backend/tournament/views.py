@@ -47,14 +47,11 @@ mock_tournaments = [
     ),
 ]
 
-<<<<<<< HEAD
-=======
 #TODO: to be replaced by real database
 mockPlayersInLobby = ['lclerc', 'vvagapov'] # players waiting in the lobby, including the current user who clicks the join button
 mockMatchPlayers = ['lclerc', 'vvagapov'] # current user and the opponent, if the lobby is full. None otherwise.
 mockNumPlayers = 4 # num_players
 
->>>>>>> 43-wss
 @login_required_json
 def tournament(request):
     """The tournament page for BeePong."""

@@ -13,9 +13,6 @@ def test(request):
     data = {"test": "This is a test JSON"}
     return JsonResponse(data)
 
-def pong(request):
-    return render(request, 'beePong/pong.html')
-
 def navbar(request):
     """The navbar for BeePong."""
     return render(request, 'beePong/navbar.html')
