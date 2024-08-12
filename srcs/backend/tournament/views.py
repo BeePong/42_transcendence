@@ -47,6 +47,14 @@ mock_tournaments = [
     ),
 ]
 
+<<<<<<< HEAD
+=======
+#TODO: to be replaced by real database
+mockPlayersInLobby = ['lclerc', 'vvagapov'] # players waiting in the lobby, including the current user who clicks the join button
+mockMatchPlayers = ['lclerc', 'vvagapov'] # current user and the opponent, if the lobby is full. None otherwise.
+mockNumPlayers = 4 # num_players
+
+>>>>>>> 43-wss
 @login_required_json
 def tournament(request):
     """The tournament page for BeePong."""
@@ -94,7 +102,7 @@ def create_tournament(request):
 @login_required_json
 def tournament_lobby(request, tournament_id):
     """The tournament lobby page for BeePong."""
-    return render(request, 'tournament/tournament_lobby.html')
+    return render(request, 'tournament/tournament_lobby.html', {'match_players': mockMatchPlayers, 'players_in_lobby': mockPlayersInLobby, 'num_players': mockNumPlayers})
 
 def pong(request):
     """The pong page for BeePong."""
