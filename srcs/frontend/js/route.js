@@ -45,8 +45,8 @@ async function loadPage(path, redirectUrl = '/', fromNavigate = false) {
 				document.getElementById('content').innerHTML = data;
 
 				// Add the redirect url for login and register page 
-				if (page === '/accounts/login' || page === '/accounts/register')
-					document.getElementById('redirectUrl').value = redirectUrl;
+				if ((page === '/accounts/login' || page === '/accounts/register') && redirectUrl !== '/')
+					changeRedirectUrlandOauthState(redirectUrl);
 
 				// perform countdown in tournmament lobby if the list is full. Otherwise, wait for other players.
 				if (/^\/tournament\/\d+\/lobby$/.test(page))
@@ -70,11 +70,26 @@ async function redirectToLoginPage(redirectUrl) {
 		}
 		const data = await response.text();
 		document.getElementById('content').innerHTML = data;
-		document.getElementById('redirectUrl').value = redirectUrl;
+
+		changeRedirectUrlandOauthState(redirectUrl);
 	}
 	catch (error) {
 		console.error('There was a problem with the fetch operation:', error);
 	}
+}
+
+function changeRedirectUrlandOauthState(redirectUrl) {
+	// Change the redirect url in the form
+	document.getElementById('redirectUrl').value = redirectUrl;
+
+	// Change the state of the oauth according to the redirect url
+	const login42UrlElement = document.getElementById('login-42-url');
+
+	const updatedLogin42Url = new URL(login42UrlElement.href);
+	const newStateParam = `qwerty|${encodeURIComponent(`https://localhost${redirectUrl}`)}`;
+	updatedLogin42Url.searchParams.set('state', newStateParam);
+
+	login42UrlElement.href = updatedLogin42Url.toString();
 }
 
 // TODO: replace by websocket

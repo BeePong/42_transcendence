@@ -5,10 +5,18 @@ from django.http import JsonResponse
 import os
 import requests
 import json
-import urllib.parse
+from urllib.parse import urlencode, unquote, quote
 
 # Create your views here.
 
+login_42_params = {
+    'client_id': os.getenv('FTAPI_UID'),
+    'redirect_uri': os.getenv('FTAPI_REDIR_URL'),
+    'response_type': 'code',
+    'scope': 'public',
+    'state': f'qwerty|{quote("https://localhost")}', # include redirect url to frontend
+}
+login_42_url = f"https://api.intra.42.fr/oauth/authorize?{urlencode(login_42_params)}"
 
 def register(request):
     """Register a new user."""
@@ -44,6 +52,7 @@ def register(request):
         'form_button_text': 'REGISTER',
         'alt_action': 'OR LOGIN',
         'alt_action_url': '/accounts/login/',
+        'login_42_url': login_42_url,
     }
     return render(request, 'registration/form.html', context)
 
@@ -67,6 +76,7 @@ def custom_login(request):
         'form_button_text': 'LOGIN',
         'alt_action': 'OR REGISTER',
         'alt_action_url': '/accounts/register/',
+        'login_42_url': login_42_url,
     }
     return render(request, 'registration/form.html', context)
 
@@ -123,6 +133,20 @@ def oauth_token(request):
 
         # Log the user in
         login(request, user)
-        return JsonResponse({'success': True, 'username': user.username}, status=201)
+
+        # Use the redirect url to frontend in state
+        state = request.GET.get('state')
+
+        if not state:
+            return JsonResponse({'success': False, 'error': 'Missing state parameter'}, status=400)
+
+        # Split the state to extract the redirect url
+        state_parts = state.split('|')
+        encoded_url = state_parts[1] if len(state_parts) > 1 else '/'
+
+        # Decode the redirect url
+        redirect_url = unquote(encoded_url)
+
+        return redirect(redirect_url)
     else:
-        return JsonResponse({'success': False, 'error': '42 authentication failed'}, status=401)
+        return redirect(redirect_url)
