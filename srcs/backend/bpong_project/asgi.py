@@ -17,6 +17,14 @@ from channels.security.websocket import AllowedHostsOriginValidator
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "bpong_project.settings")
 
+# application = ProtocolTypeRouter({
+#     'http': get_asgi_application(),
+#     'websocket':
+#         AuthMiddlewareStack(
+#         URLRouter(websocket_urlpatterns)
+#     ),
+# })
+
 application = ProtocolTypeRouter({
     'http': get_asgi_application(),
     'websocket': AllowedHostsOriginValidator(
