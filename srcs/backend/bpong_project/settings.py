@@ -32,7 +32,7 @@ INSTALLED_APPS = [
 
     # Third-party appsx
     'django_bootstrap5',
-    'channels',
+    # 'channels',
     'daphne',
 
     # Django apps

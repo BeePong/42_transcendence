@@ -65,7 +65,12 @@ function webSocketTest() {
   let paddle_y = canvas_height / 2 - paddle_height / 2;
 
   console.log("webSocketTest");
-  var socket = new WebSocket("ws://localhost:8000/ws/pong/");
+  console.log("window.location.protocol", window.location.protocol);
+  // var socket = new WebSocket("ws://localhost:8000/ws/pong/");
+  var socket = new WebSocket(
+        (window.location.protocol == 'https:' ? 'wss://' : 'ws://')
+        + window.location.host
+        + ':8000/ws/pong/');
   var canvas = document.getElementById("gameCanvas");
   var context = canvas.getContext("2d");
 
@@ -116,7 +121,7 @@ function webSocketTest() {
   socket.onclose = function (e) {
     console.log("WebSocket connection closed");
   };
-
+}
   /*   document.getElementById("tournamentSendButton").onclick = function () {
     socket.send(
       JSON.stringify({
@@ -135,67 +140,67 @@ function webSocketTest() {
     );
   }; */
 
-  function sendGameData(paddle_y) {
-    socket.send(
-      JSON.stringify({
-        message: {
-          paddle_y: paddle_y,
-          player: "player1",
-        },
-        type: "game",
-      })
-    );
-  }
+//   function sendGameData(paddle_y) {
+//     socket.send(
+//       JSON.stringify({
+//         message: {
+//           paddle_y: paddle_y,
+//           player: "player1",
+//         },
+//         type: "game",
+//       })
+//     );
+//   }
 
-  // Listen for keydown events
-  window.addEventListener("keydown", function (event) {
-    if (event.key === "ArrowUp") {
-      upPressed = true;
-    } else if (event.key === "ArrowDown") {
-      downPressed = true;
-    }
-  });
+//   // Listen for keydown events
+//   window.addEventListener("keydown", function (event) {
+//     if (event.key === "ArrowUp") {
+//       upPressed = true;
+//     } else if (event.key === "ArrowDown") {
+//       downPressed = true;
+//     }
+//   });
 
-  // Listen for keyup events
-  window.addEventListener("keyup", function (event) {
-    if (event.key === "ArrowUp") {
-      upPressed = false;
-    } else if (event.key === "ArrowDown") {
-      downPressed = false;
-    }
-  });
+//   // Listen for keyup events
+//   window.addEventListener("keyup", function (event) {
+//     if (event.key === "ArrowUp") {
+//       upPressed = false;
+//     } else if (event.key === "ArrowDown") {
+//       downPressed = false;
+//     }
+//   });
 
-  function updateCanvas(game_data) {
-    console.log("updateCanvas");
-    context.fillStyle = backgroundColor;
-    context.fillRect(0, 0, canvas_width, canvas_height);
-    drawBorders();
-    context.fillStyle = "white";
-    context.fillRect(canvas_width - 50, paddle_y, 20, 100);
-    // game_data.ball_y
-    drawBall(canvas_width / 2, canvas_height / 2);
-  }
+//   function updateCanvas(game_data) {
+//     console.log("updateCanvas");
+//     context.fillStyle = backgroundColor;
+//     context.fillRect(0, 0, canvas_width, canvas_height);
+//     drawBorders();
+//     context.fillStyle = "white";
+//     context.fillRect(canvas_width - 50, paddle_y, 20, 100);
+//     // game_data.ball_y
+//     drawBall(canvas_width / 2, canvas_height / 2);
+//   }
 
-  // In your game loop, check the flags and move the paddle
-  setInterval(function () {
-    if (upPressed) {
-      if (paddle_y > paddle_height / 2) {
-        paddle_y -= increment;
-      } else {
-        paddle_y = paddle_height / 2;
-      }
-    } else if (downPressed) {
-      console.log("downPressed");
-      if (paddle_y < canvas_height - paddle_height - paddle_height / 2) {
-        paddle_y += increment;
-      } else {
-        paddle_y = canvas_height - paddle_height - paddle_height / 2;
-      }
-    }
-    // Send the game data
-    sendGameData(paddle_y);
-  }, 1000 / fps);
-}
+//   // In your game loop, check the flags and move the paddle
+//   setInterval(function () {
+//     if (upPressed) {
+//       if (paddle_y > paddle_height / 2) {
+//         paddle_y -= increment;
+//       } else {
+//         paddle_y = paddle_height / 2;
+//       }
+//     } else if (downPressed) {
+//       console.log("downPressed");
+//       if (paddle_y < canvas_height - paddle_height - paddle_height / 2) {
+//         paddle_y += increment;
+//       } else {
+//         paddle_y = canvas_height - paddle_height - paddle_height / 2;
+//       }
+//     }
+//     // Send the game data
+//     sendGameData(paddle_y);
+//   }, 1000 / fps);
+// }
 
 // redirect to login page
 async function redirectToLoginPage(redirectUrl) {

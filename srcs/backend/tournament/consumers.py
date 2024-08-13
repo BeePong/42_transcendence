@@ -52,7 +52,10 @@ class PongConsumer(WebsocketConsumer):
         if message_type == 'tournament':
             self.handle_tournament_message(text_data_json)
         elif message_type == 'game':
-            self.handle_game_message(text_data_json)
+            self.send(text_data=json.dumps({
+                'game': 'game message type'
+            }))
+            # self.handle_game_message(text_data_json)
         else:
             self.send(text_data=json.dumps({
                 'error': 'Invalid message type'
