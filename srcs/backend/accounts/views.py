@@ -98,8 +98,8 @@ database, they are logged in. If the user does not exist, a new user is created
 """
 def oauth_token(request):
     code = request.GET.get('code')
-    if code is None:
-        return JsonResponse({'success': False, 'error': 'OAuth no code'}, status=400)
+    if code:
+        return redirect('/accounts/oauth_error?from=oauth_token')
     data = {
         'grant_type': 'authorization_code',
         'client_id': os.getenv('FTAPI_UID'),
@@ -136,17 +136,22 @@ def oauth_token(request):
 
         # Use the redirect url to frontend in state
         state = request.GET.get('state')
-
         if not state:
-            return JsonResponse({'success': False, 'error': 'Missing state parameter'}, status=400)
-
+            return redirect('/accounts/oauth_error?from=oauth_token')
         # Split the state to extract the redirect url
         state_parts = state.split('|')
-        encoded_url = state_parts[1] if len(state_parts) > 1 else '/'
-
+        if len(state_parts) < 2:
+            return redirect('/accounts/oauth_error?from=oauth_token')
         # Decode the redirect url
-        redirect_url = unquote(encoded_url)
-
+        redirect_url = unquote(state_parts[1])
         return redirect(redirect_url)
     else:
-        return redirect(redirect_url)
+        return redirect('/accounts/oauth_error?from=oauth_token')
+
+def oauth_error(request):
+    # Check if the request came from the oauth_token function
+    from_param = request.GET.get('from')
+    if from_param == 'oauth_token':
+        return JsonResponse({'success': False, 'error': '42 Authorization Error'}, status=400)
+    else:
+        return render(request, 'registration/oauth_error.html')

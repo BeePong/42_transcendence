@@ -24,14 +24,32 @@ async function loadPage(path, redirectUrl = '/', fromNavigate = false) {
 			const response = await fetch(`/page${page}/`);
 
 			if (!response.ok) {
-					if (!(response.status === 401 || response.status === 404))
+					if (!(response.status === 400 || response.status === 401 || response.status === 404))
 							throw new Error('Network response was not ok');
 			}
 
 			// If the navigation was triggered programmatically (fromNavigate is true) and the response status is not 401 (unauthorized),
 			// update the browser's history to the new path without reloading the page.
-			if (fromNavigate === true && response.status !== 401)
+			if (fromNavigate === true && response.status !== 400 && response.status !== 401)
 				history.pushState(null, null, path);
+
+			// Handle 42 authorization error by redirecting to the previous page (login or register page) and print out the error message
+			if (page === '/accounts/oauth_error' && response.status === 400) {
+				const data = await response.json();
+				console.log('here');
+				try {
+					const response = await fetch('/page/accounts/oauth_error');
+					if (!response.ok) {
+							throw new Error('Network response was not ok');
+					}
+					const data = await response.text();
+					document.getElementById('content').innerHTML = data;
+				}
+				catch (error) {
+					console.error('There was a problem with the fetch operation:', error);
+				}
+				return;
+			}
 
 			// Redirect to login page if the user is not login
 			if (response.status === 401) {
