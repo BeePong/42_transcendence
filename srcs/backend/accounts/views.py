@@ -100,6 +100,17 @@ def oauth_token(request):
     code = request.GET.get('code')
     if code is None:
         return redirect('/accounts/oauth_error/?from=oauth_token')
+
+    # Use the redirect url to frontend stored in state
+    state = request.GET.get('state')
+    if not state:
+        return redirect('/accounts/oauth_error/?from=oauth_token')
+    # Split the state to extract the redirect url
+    state_parts = state.split('|')
+    if len(state_parts) < 2:
+        return redirect('/accounts/oauth_error/?from=oauth_token')
+    redirect_url = unquote(state_parts[1])
+
     data = {
         'grant_type': 'authorization_code',
         'client_id': os.getenv('FTAPI_UID'),
@@ -109,16 +120,6 @@ def oauth_token(request):
     }
     response = requests.post('https://api.intra.42.fr/oauth/token', data=data)
     if response.status_code == 200:
-        # Use the redirect url to frontend stored in state
-        state = request.GET.get('state')
-        if not state:
-            return redirect('/accounts/oauth_error/?from=oauth_token')
-        # Split the state to extract the redirect url
-        state_parts = state.split('|')
-        if len(state_parts) < 2:
-            return redirect('/accounts/oauth_error/?from=oauth_token')
-        redirect_url = unquote(state_parts[1])
-
         access_token = response.json().get('access_token')
         # Save the access token in the session or database
         request.session['access_token'] = access_token
@@ -143,7 +144,6 @@ def oauth_token(request):
 
         # Log the user in
         login(request, user)
-
         return redirect(redirect_url)
     else:
         return redirect('/accounts/oauth_error/?from=oauth_token')
