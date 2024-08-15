@@ -44,7 +44,7 @@ async function loadPage(path, redirectUrl = "/", fromNavigate = false) {
       // Add the redirect url for login and register page
       if (page === "/accounts/login" || page === "/accounts/register")
         document.getElementById("redirectUrl").value = redirectUrl;
-
+      console.log("page", page);
       if (page === "/tournament/pong") webSocketTest();
     }
   } catch (error) {

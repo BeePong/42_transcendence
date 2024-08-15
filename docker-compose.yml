@@ -20,16 +20,16 @@ services:
       timeout: 5s
       retries: 5
 
-  backend_dummy:
-    container_name: backendDummy
+  backendummy:
+    container_name: backendummy
     build:
       context: ./srcs/backend
     volumes:
       - ./srcs/backend/beePong:/usr/src/backend/beePong
     env_file:
       - .env
-    ports:
-      - "8000:8000"
+    # ports:
+      # - "8000:8000"
     depends_on:
       db:
         condition: service_healthy
@@ -50,7 +50,7 @@ services:
       - 443:443
     restart: on-failure
     depends_on:
-      backend_dummy:
+      backendummy:
         condition: service_healthy
 
   pgadmin:

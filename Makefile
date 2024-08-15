@@ -8,14 +8,14 @@ all: up_no_elk
 
 # Start all services except ELK stack and rebuild if necessary
 up_no_elk:
-	docker compose -f ./docker-compose.yml up --build -d nginx backend_dummy db
+	docker compose -f ./docker-compose.yml up --build -d nginx backendummy db
 
 # Start all services including ELK stack and rebuild if necessary
 up_all:
 	docker compose -f ./docker-compose.yml up --build -d
 
 up_backend:
-	docker compose -f ./docker-compose.yml up --build -d backend_dummy
+	docker compose -f ./docker-compose.yml up --build -d backendummy
 
 up_db:
 	docker compose -f ./docker-compose.yml up --build -d db
@@ -100,7 +100,7 @@ logs_nginx:
 	docker compose -f ./docker-compose.yml logs -f nginx
 
 logs_backend:
-	docker compose -f ./docker-compose.yml logs -f backend_dummy
+	docker compose -f ./docker-compose.yml logs -f backendummy
 
 logs_db:
 	docker compose -f ./docker-compose.yml logs -f db
@@ -144,7 +144,7 @@ exec_nginx:
 	docker compose -f ./docker-compose.yml exec nginx sh
 
 exec_backend:
-	docker compose -f ./docker-compose.yml exec backend_dummy sh
+	docker compose -f ./docker-compose.yml exec backendummy sh
 
 exec_db:
 	docker compose -f ./docker-compose.yml exec db sh
