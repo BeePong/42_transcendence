@@ -16,12 +16,12 @@ function navigate(eventOrPath, redirectUrl = '/') {
 }
 
 // Load content based on the path, and add the redirect url for login and register page 
-async function loadPage(path, redirectUrl = '/', fromNavigate = false) {
+async function loadPage(path, redirectUrl = '/', fromNavigate = false, queryString = '') {
 	// If the path is '/', set page to '/home'.
 	// Otherwise, remove the trailing slash from the path and set page to the resulting string.
 	const page = path === '/' ? '/home' : path.replace(/\/$/, '');
 	try {
-			const response = await fetch(`/page${page}/`);
+			const response = await fetch(`/page${page}/${queryString}`);
 
 			if (!response.ok) {
 					if (!(response.status === 400 || response.status === 401 || response.status === 404))
@@ -33,26 +33,11 @@ async function loadPage(path, redirectUrl = '/', fromNavigate = false) {
 			if (fromNavigate === true && response.status !== 400 && response.status !== 401)
 				history.pushState(null, null, path);
 
-			// Handle 42 authorization error by redirecting to the previous page (login or register page) and print out the error message
-			if (page === '/accounts/oauth_error' && response.status === 400) {
-				const data = await response.json();
-				console.log('here');
-				try {
-					const response = await fetch('/page/accounts/oauth_error');
-					if (!response.ok) {
-							throw new Error('Network response was not ok');
-					}
-					const data = await response.text();
-					document.getElementById('content').innerHTML = data;
-				}
-				catch (error) {
-					console.error('There was a problem with the fetch operation:', error);
-				}
-				return;
-			}
-
+			// Handle 42 authorization error by fetching the error page
+			if (page === '/accounts/oauth_error' && response.status === 400)
+				fetchOauthErrorPage();
 			// Redirect to login page if the user is not login
-			if (response.status === 401) {
+			else if (response.status === 401) {
 				const data = await response.json();
 				if (data.authenticated === false) {
 					redirectToLoginPage(redirectUrl);
@@ -72,6 +57,21 @@ async function loadPage(path, redirectUrl = '/', fromNavigate = false) {
 			}
 	} catch (error) {
 			console.error('There was a problem with the fetch operation:', error);
+	}
+}
+
+// Fetching the error page for 42 authorization error
+async function fetchOauthErrorPage() {
+	try {
+		const response = await fetch('/page/accounts/oauth_error/');
+		if (!response.ok) {
+				throw new Error('Network response was not ok');
+		}
+		const data = await response.text();
+		document.getElementById('content').innerHTML = data;
+	}
+	catch (error) {
+		console.error('There was a problem with the fetch operation:', error);
 	}
 }
 
@@ -96,6 +96,7 @@ async function redirectToLoginPage(redirectUrl) {
 	}
 }
 
+// Change the redirect url in the form and the state of the oauth
 function changeRedirectUrlandOauthState(redirectUrl) {
 	// Change the redirect url in the form
 	document.getElementById('redirectUrl').value = redirectUrl;
@@ -200,5 +201,5 @@ window.addEventListener('popstate', () => {
 // Initial page load
 document.addEventListener('DOMContentLoaded', () => {
 	loadNavBar();
-	loadPage(window.location.pathname);
+	loadPage(window.location.pathname, '/', false, window.location.search);
 });

@@ -98,8 +98,8 @@ database, they are logged in. If the user does not exist, a new user is created
 """
 def oauth_token(request):
     code = request.GET.get('code')
-    if code:
-        return redirect('/accounts/oauth_error?from=oauth_token')
+    if code is None:
+        return redirect('/accounts/oauth_error/?from=oauth_token')
     data = {
         'grant_type': 'authorization_code',
         'client_id': os.getenv('FTAPI_UID'),
@@ -109,6 +109,16 @@ def oauth_token(request):
     }
     response = requests.post('https://api.intra.42.fr/oauth/token', data=data)
     if response.status_code == 200:
+        # Use the redirect url to frontend stored in state
+        state = request.GET.get('state')
+        if not state:
+            return redirect('/accounts/oauth_error/?from=oauth_token')
+        # Split the state to extract the redirect url
+        state_parts = state.split('|')
+        if len(state_parts) < 2:
+            return redirect('/accounts/oauth_error/?from=oauth_token')
+        redirect_url = unquote(state_parts[1])
+
         access_token = response.json().get('access_token')
         # Save the access token in the session or database
         request.session['access_token'] = access_token
@@ -134,22 +144,17 @@ def oauth_token(request):
         # Log the user in
         login(request, user)
 
-        # Use the redirect url to frontend in state
-        state = request.GET.get('state')
-        if not state:
-            return redirect('/accounts/oauth_error?from=oauth_token')
-        # Split the state to extract the redirect url
-        state_parts = state.split('|')
-        if len(state_parts) < 2:
-            return redirect('/accounts/oauth_error?from=oauth_token')
-        # Decode the redirect url
-        redirect_url = unquote(state_parts[1])
         return redirect(redirect_url)
     else:
-        return redirect('/accounts/oauth_error?from=oauth_token')
+        return redirect('/accounts/oauth_error/?from=oauth_token')
 
+"""
+The oauth_error view handles the display of an OAuth error message.
+It checks if the request is originated from the 'oauth_token' function.
+If the request comes from 'oauth_token', it returns a JSON response with an error message.
+Otherwise, it renders an HTML error page.
+"""
 def oauth_error(request):
-    # Check if the request came from the oauth_token function
     from_param = request.GET.get('from')
     if from_param == 'oauth_token':
         return JsonResponse({'success': False, 'error': '42 Authorization Error'}, status=400)
