@@ -97,7 +97,7 @@ re_all_elk: clean_all up_all
 ################################################################################
 # Tail logs from specific services
 logs_nginx:
-	docker compose -f ./docker-compose.yml logs -f nginx
+	docker container exec -it beepong-nginx sh -c "cat /var/log/nginx/access.log && cat /var/log/nginx/error.log"
 
 logs_backend:
 	docker compose -f ./docker-compose.yml logs -f backend_dummy
