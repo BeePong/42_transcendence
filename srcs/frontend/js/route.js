@@ -44,7 +44,7 @@ async function loadPage(path, redirectUrl = "/", fromNavigate = false) {
       // Add the redirect url for login and register page
       if (page === "/accounts/login" || page === "/accounts/register")
         document.getElementById("redirectUrl").value = redirectUrl;
-      console.log("page", page);
+      // console.log("page", page);
       if (page === "/tournament/pong") webSocketTest();
     }
   } catch (error) {
@@ -64,13 +64,13 @@ function webSocketTest() {
   let downPressed = false;
   let paddle_y = canvas_height / 2 - paddle_height / 2;
 
-  console.log("webSocketTest");
-  console.log("window.location.protocol", window.location.protocol);
+  // console.log("webSocketTest");
+  // console.log("window.location.protocol", window.location.protocol);
   // var socket = new WebSocket("ws://localhost:8000/ws/pong/");
-  var socket = new WebSocket(
-        (window.location.protocol == 'https:' ? 'wss://' : 'ws://')
-        + window.location.host
-        + ':8000/ws/pong/');
+  const url = (window.location.protocol == 'https:' ? 'wss://' : 'ws://') + window.location.host + '/ws/pong/'
+
+  // console.log("Starting WebSocket on URL: ", url);
+  var socket = new WebSocket(url);
   var canvas = document.getElementById("gameCanvas");
   var context = canvas.getContext("2d");
 
