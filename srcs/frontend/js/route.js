@@ -67,7 +67,10 @@ function webSocketTest() {
   // console.log("webSocketTest");
   // console.log("window.location.protocol", window.location.protocol);
   // var socket = new WebSocket("ws://localhost:8000/ws/pong/");
-  const url = (window.location.protocol == 'https:' ? 'wss://' : 'ws://') + window.location.host + '/ws/pong/'
+  const url =
+    (window.location.protocol == "https:" ? "wss://" : "ws://") +
+    window.location.host +
+    "/ws/pong/";
 
   // console.log("Starting WebSocket on URL: ", url);
   var socket = new WebSocket(url);
@@ -93,6 +96,16 @@ function webSocketTest() {
     context.fill();
   };
 
+  const drawPaddle = (y) => {
+    context.fillStyle = "white";
+    context.fillRect(
+      canvas_width - 50,
+      y - paddle_height,
+      paddle_width,
+      paddle_height
+    );
+  };
+
   var backgroundColor = getComputedStyle(
     document.documentElement
   ).getPropertyValue("--background-color");
@@ -107,8 +120,8 @@ function webSocketTest() {
 
   socket.onmessage = function (e) {
     var data = JSON.parse(e.data);
-    console.log(data.message);
-    updateCanvas(data.message);
+    console.log("socket data:", data);
+    updateCanvas(data);
     // Updating our game field will be here
   };
 
@@ -121,86 +134,41 @@ function webSocketTest() {
   socket.onclose = function (e) {
     console.log("WebSocket connection closed");
   };
-}
-  /*   document.getElementById("tournamentSendButton").onclick = function () {
-    socket.send(
-      JSON.stringify({
-        message: "Test tournament message from client!",
-        type: "tournament",
-      })
-    );
-  };
 
-  document.getElementById("gameSendButton").onclick = function () {
+  function sendGameData(key, keyAction) {
     socket.send(
       JSON.stringify({
-        message: "Test game message from client!",
+        message: {
+          key: key,
+          keyAction: keyAction,
+          player_id: "player1",
+        },
         type: "game",
       })
     );
-  }; */
+  }
 
-//   function sendGameData(paddle_y) {
-//     socket.send(
-//       JSON.stringify({
-//         message: {
-//           paddle_y: paddle_y,
-//           player: "player1",
-//         },
-//         type: "game",
-//       })
-//     );
-//   }
+  window.addEventListener("keydown", function (event) {
+    if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+      sendGameData(event.key, "keydown");
+    }
+  });
 
-//   // Listen for keydown events
-//   window.addEventListener("keydown", function (event) {
-//     if (event.key === "ArrowUp") {
-//       upPressed = true;
-//     } else if (event.key === "ArrowDown") {
-//       downPressed = true;
-//     }
-//   });
+  window.addEventListener("keyup", function (event) {
+    if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+      sendGameData(event.key, "keyup");
+    }
+  });
 
-//   // Listen for keyup events
-//   window.addEventListener("keyup", function (event) {
-//     if (event.key === "ArrowUp") {
-//       upPressed = false;
-//     } else if (event.key === "ArrowDown") {
-//       downPressed = false;
-//     }
-//   });
-
-//   function updateCanvas(game_data) {
-//     console.log("updateCanvas");
-//     context.fillStyle = backgroundColor;
-//     context.fillRect(0, 0, canvas_width, canvas_height);
-//     drawBorders();
-//     context.fillStyle = "white";
-//     context.fillRect(canvas_width - 50, paddle_y, 20, 100);
-//     // game_data.ball_y
-//     drawBall(canvas_width / 2, canvas_height / 2);
-//   }
-
-//   // In your game loop, check the flags and move the paddle
-//   setInterval(function () {
-//     if (upPressed) {
-//       if (paddle_y > paddle_height / 2) {
-//         paddle_y -= increment;
-//       } else {
-//         paddle_y = paddle_height / 2;
-//       }
-//     } else if (downPressed) {
-//       console.log("downPressed");
-//       if (paddle_y < canvas_height - paddle_height - paddle_height / 2) {
-//         paddle_y += increment;
-//       } else {
-//         paddle_y = canvas_height - paddle_height - paddle_height / 2;
-//       }
-//     }
-//     // Send the game data
-//     sendGameData(paddle_y);
-//   }, 1000 / fps);
-// }
+  function updateCanvas(game_data) {
+    //console.log("updateCanvas game_data", game_data);
+    context.fillStyle = backgroundColor;
+    context.fillRect(0, 0, canvas_width, canvas_height);
+    drawBorders();
+    drawBall(game_data.ball.x, game_data.ball.y);
+    drawPaddle(game_data.player1.y);
+  }
+}
 
 // redirect to login page
 async function redirectToLoginPage(redirectUrl) {
@@ -223,67 +191,78 @@ async function redirectToLoginPage(redirectUrl) {
 // TODO: replace by websocket
 // Mock WebSocket connection
 function mockWebSocket() {
-	setTimeout(() => {
-		if (/^\/tournament\/\d+\/lobby$/.test(window.location.pathname))
-			tournamentLobbyAddPlayer();
-	}, 1000); // Simulate a new player joining every second
+  setTimeout(() => {
+    if (/^\/tournament\/\d+\/lobby$/.test(window.location.pathname))
+      tournamentLobbyAddPlayer();
+  }, 1000); // Simulate a new player joining every second
 }
 
 // Add player in the tournament lobby
 function tournamentLobbyAddPlayer() {
-	const numPlayersInLobby = parseInt(document.getElementById('num-players-in-lobby').textContent, 10);
-	const numPlayers = parseInt(document.getElementById('num-players').textContent, 10);
+  const numPlayersInLobby = parseInt(
+    document.getElementById("num-players-in-lobby").textContent,
+    10
+  );
+  const numPlayers = parseInt(
+    document.getElementById("num-players").textContent,
+    10
+  );
 
-	// Update number of players in lobby
-	const updatedNumPlayersInLobby = numPlayersInLobby + 1;
-	document.getElementById('num-players-in-lobby').textContent = `${updatedNumPlayersInLobby}`;
+  // Update number of players in lobby
+  const updatedNumPlayersInLobby = numPlayersInLobby + 1;
+  document.getElementById(
+    "num-players-in-lobby"
+  ).textContent = `${updatedNumPlayersInLobby}`;
 
-	// Add new div for new player
-	const playerDiv = document.createElement('div');
-	playerDiv.classList.add('tournament_lobby__name-container');
-	playerDiv.innerHTML = `
+  // Add new div for new player
+  const playerDiv = document.createElement("div");
+  playerDiv.classList.add("tournament_lobby__name-container");
+  playerDiv.innerHTML = `
 		<div class="tournament_lobby__name">Dummy</div>
 		<span class="tournament_lobby__match-num"></span>
 	`;
-	document.querySelector('.tournament_lobby__name-list-container').appendChild(playerDiv);
+  document
+    .querySelector(".tournament_lobby__name-list-container")
+    .appendChild(playerDiv);
 
-	// If the lobby is full, go to handle full tournament lobby. Otherwise, add new players again
-	(updatedNumPlayersInLobby === numPlayers) ? handleFullTournamentLobby() : mockWebSocket();
+  // If the lobby is full, go to handle full tournament lobby. Otherwise, add new players again
+  updatedNumPlayersInLobby === numPlayers
+    ? handleFullTournamentLobby()
+    : mockWebSocket();
 }
 
 // Handle full tournament lobby
 function handleFullTournamentLobby() {
-	setTimeout(() => {
-		if (/^\/tournament\/\d+\/lobby$/.test(window.location.pathname)) {
-			document.getElementById('tournament-lobby-section').classList.add('full');
-			document.querySelector('.tournament_lobby__header').innerHTML = 'BEEPONG CUP IS STARTING IN <span id="countdown">3</span>...';
-			document.querySelector('.tournament_lobby__description').textContent = 'dummy vs dummy';
-			document.querySelector('.tournament_lobby__player-count').remove();
-			document.getElementById('leave-button').remove();
-			tournamentLobbyCountdown();
-		}
-	}, 1000);
+  setTimeout(() => {
+    if (/^\/tournament\/\d+\/lobby$/.test(window.location.pathname)) {
+      document.getElementById("tournament-lobby-section").classList.add("full");
+      document.querySelector(".tournament_lobby__header").innerHTML =
+        'BEEPONG CUP IS STARTING IN <span id="countdown">3</span>...';
+      document.querySelector(".tournament_lobby__description").textContent =
+        "dummy vs dummy";
+      document.querySelector(".tournament_lobby__player-count").remove();
+      document.getElementById("leave-button").remove();
+      tournamentLobbyCountdown();
+    }
+  }, 1000);
 }
 
 // Countdown in lobby page and navigate to the game page after countdown
 function tournamentLobbyCountdown() {
   let countdownValue = 3;
-  const countdownElement = document.getElementById('countdown');
+  const countdownElement = document.getElementById("countdown");
 
   setTimeout(() => {
     const countdownInterval = setInterval(() => {
-			if (/^\/tournament\/\d+\/lobby$/.test(window.location.pathname))
-			{
-				if (countdownValue > 1) {
-					countdownValue--;
-					countdownElement.textContent = `${countdownValue}`;
-				} else {
-					clearInterval(countdownInterval);
-					navigate('/game');
-				}
-			}
-			else
-				clearInterval(countdownInterval);
+      if (/^\/tournament\/\d+\/lobby$/.test(window.location.pathname)) {
+        if (countdownValue > 1) {
+          countdownValue--;
+          countdownElement.textContent = `${countdownValue}`;
+        } else {
+          clearInterval(countdownInterval);
+          navigate("/game");
+        }
+      } else clearInterval(countdownInterval);
     }, 1000);
   }, 500);
 }
