@@ -97,23 +97,6 @@ def tournament(request):
         'form': form,
         'form_action': '/tournament/',
     })
-#@login_required_json
-#def tournament(request):
-#    """The tournament page for BeePong."""
-#    if request.method != 'POST':
-#        #TODO: to be replaced by real database
-#        tournaments = mock_tournaments[::-1] # Reverse the tournaments to show the new tournament at the top
-#        form = AliasForm(username=request.user.username)
-#    else:
-#        tournament_id = request.POST.get('tournament_id')
-#        username = request.session.get('username', None)
-#        form = AliasForm(data=request.POST, username=username)
-#        if form.is_valid():
-#            # TODO: save the alias
-#            return JsonResponse({'success': True, 'redirect': f'/tournament/{tournament_id}/lobby'}, status=201) #TODO: also return alias in the json respsonse
-#        else:
-#            return JsonResponse({'success': False, 'errors': form.errors}, status=400)
-#    return render(request, 'tournament/tournament.html', {'tournaments': tournaments, 'form': form, 'form_action': '/tournament/'})
 
 
 
@@ -142,47 +125,14 @@ def create_tournament(request):
         else:
             return JsonResponse({'success': False, 'errors': form.errors}, status=400)
     return render(request, 'tournament/create_tournament.html', {'form': form, 'form_action': '/tournament/create/'})
-#@login_required_json
-#def create_tournament(request):
-#    """The create tournament page for BeePong."""
-#    if request.method != 'POST':
-#        form = TournamentForm()
-#    else:
-#        form = TournamentForm(request.POST)
-#        if form.is_valid():
-#            # TODO: save the form 
-#            # TODO: delete new_tournament and mock_tournaments.append because the new tournament data will be saved in the database and fetching the tournament page again should show the new tournament
-#            new_tournament = MockTournaments(
-#                tournament_id=len(mock_tournaments) + 1,
-#                name=form.cleaned_data['title'],
-#                description=form.cleaned_data['description'],
-#                state='NEW',
-#                num_players=form.cleaned_data['num_players'],
-#                players=[],
-#                winner=None
-#            )
-#            mock_tournaments.append(new_tournament)
-#            return JsonResponse({'success': True, 'redirect': '/tournament'}, status=201) #TODO: also return title, description and number of players in the json respsonse
-#        else:
-#            return JsonResponse({'success': False, 'errors': form.errors}, status=400)
-#    return render(request, 'tournament/create_tournament.html', {'form': form, 'form_action': '/tournament/create/'})
-#
+
+
 
 
 
 @login_required
 def tournament_lobby(request, tournament_id):
     """The tournament lobby page for BeePong."""
-    print("hola vamos a ver si funciona")
-    #if request.method == 'POST':
-    #   form = PlayerForm(request.POST)
-    #   if form.is_valid():
-    #       player, _ = Player.objects.get_or_create(user=request.user)
-    #       player.alias = form.cleaned_data['alias']
-    #       player.save()
-    #       print(f"The form is valid, player alias saved: {player.alias}")
-    #   else:
-    #       print("The form is not valid")
     if request.method == 'POST':
         form = AliasForm(request.POST)
         if form.is_valid():
@@ -190,11 +140,8 @@ def tournament_lobby(request, tournament_id):
             #form = AliasForm(username=request.user.username)
 
             print("the form is valid")
-            #player = form.save(commit=False)
-            #player.user = request.user  # Link the player to the current user
-            #player.save()
-            #
-    print("estoy en loby")
+
+    
     try:
         # Safely retrieve the tournament object
         tournament = get_object_or_404(Tournament, tournament_id=tournament_id)
