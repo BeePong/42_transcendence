@@ -43,7 +43,6 @@ services:
       context: ./srcs/nginx
     volumes:
       - ./srcs/frontend:/var/www/html
-      - nginx_logs:/var/log/nginx  # Mount the nginx_logs volume
     ports:
       - ${NGINX_PORT}:${NGINX_PORT}
     restart: on-failure
