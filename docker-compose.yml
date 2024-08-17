@@ -53,8 +53,6 @@ services:
       - app_logs:/beePong/logs  # Mount application logs volume
     env_file:
       - .env
-    ports:
-      - "8000:8000"
     depends_on:
       db:
         condition: service_healthy
@@ -71,9 +69,10 @@ services:
       context: ./srcs/nginx
     volumes:
       - ./srcs/frontend:/var/www/html
+      - ./srcs/nginx/template-variables:/etc/nginx/templates/10-variables.conf.template:ro
       - nginx_logs:/var/log/nginx  # Mount the nginx_logs volume
     ports:
-      - 1024:1024
+      - ${NGINX_PORT}:${NGINX_PORT}
     restart: on-failure
     depends_on:
       backend_dummy:

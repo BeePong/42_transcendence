@@ -6,16 +6,24 @@ import os
 import requests
 import json
 from urllib.parse import urlencode, unquote, quote
+from dotenv import load_dotenv
 
 # Create your views here.
+
+# Fetch the port number from the environment variable
+nginxPort = os.getenv('NGINX_PORT')
+
+# Construct the URL with the port number
+oauthRedirUrl = f"https://localhost:{nginxPort}"
 
 login_42_params = {
     'client_id': os.getenv('FTAPI_UID'),
     'redirect_uri': os.getenv('FTAPI_REDIR_URL'),
     'response_type': 'code',
     'scope': 'public',
-    'state': f'qwerty|{quote("https://localhost")}', # include redirect url to frontend
+    'state': f'qwerty|{quote(oauthRedirUrl)}', # include redirect url to frontend
 }
+print(f"login_42_params state: {login_42_params['state']}")
 login_42_url = f"https://api.intra.42.fr/oauth/authorize?{urlencode(login_42_params)}"
 
 def register(request):
@@ -103,12 +111,14 @@ def oauth_token(request):
 
     # Use the redirect url to frontend stored in state
     state = request.GET.get('state')
+    print(f"state: {state}")
     if not state:
         return redirect('/accounts/oauth_error/?from=oauth_token')
     # Split the state to extract the redirect url
     state_parts = state.split('|')
     if len(state_parts) < 2:
         return redirect('/accounts/oauth_error/?from=oauth_token')
+    print(f"state_parts: {state_parts}")
     redirect_url = unquote(state_parts[1])
 
     data = {

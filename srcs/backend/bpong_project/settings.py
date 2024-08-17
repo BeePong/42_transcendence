@@ -131,9 +131,15 @@ LOGIN_REDIRECT_URL = 'beePong:index'
 LOGOUT_REDIRECT_URL = 'beePong:index'
 LOGIN_URL = 'accounts:login'
 
+# Get the port number from the environment variable
+port = os.getenv('NGINX_PORT', '8443')  # Default to 8443 if PORT is not set
+
+# Use the port number in your URL
+originURL = f"https://localhost:{port}"
+
 # List of trusted origins for CSRF protection
 # Requests from these origins will be allowed to bypass the CSRF protection
-CSRF_TRUSTED_ORIGINS = ['https://localhost', 'https://127.0.0.1', 'https://localhost:1024']
+CSRF_TRUSTED_ORIGINS = ['https://localhost', 'https://127.0.0.1', originURL]
 
 ################################################################################
 ## Django setting for Logging 
