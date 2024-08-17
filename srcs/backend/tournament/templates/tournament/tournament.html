@@ -1,7 +1,7 @@
 <section>
 	<div class="tournament__container">
 		<h1>TOURNAMENTS</h1>
-		<button class="button--primary" onclick="navigate(`{% url 'beePong:create_tournament' %}`)">+ NEW</button>
+		<button class="button--primary" onclick="navigate(`{% url 'tournament:create_tournament' %}`)">+ NEW</button>
 	</div>
 
 	<div class="tournament__grid">
@@ -53,7 +53,9 @@
 								<img src="/img/arrow.svg" alt="arrow" class="arrow-icon">
 							</button>
 						</div>
-					</form>  
+					</form>
+					<div class="form-error-message">
+					</div>  
 					{% endif %}
 				</div>
 			</div>
