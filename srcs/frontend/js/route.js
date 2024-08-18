@@ -57,12 +57,7 @@ function webSocketTest() {
   const canvas_width = 800;
   const paddle_height = 100;
   const paddle_width = 20;
-  const increment = 10;
   const ball_radius = 15;
-  const fps = 60;
-  let upPressed = false;
-  let downPressed = false;
-  let paddle_y = canvas_height / 2 - paddle_height / 2;
 
   // console.log("webSocketTest");
   // console.log("window.location.protocol", window.location.protocol);
@@ -99,8 +94,8 @@ function webSocketTest() {
   const drawPaddle = (y) => {
     context.fillStyle = "white";
     context.fillRect(
-      canvas_width - 50,
-      y - paddle_height,
+      canvas_width - 30 - paddle_width,
+      y - paddle_height / 2,
       paddle_width,
       paddle_height
     );

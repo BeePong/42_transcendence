@@ -1,6 +1,7 @@
 import json
 import time
 import threading
+import random
 from channels.generic.websocket import WebsocketConsumer
 
 class PongConsumer(WebsocketConsumer):
@@ -20,7 +21,7 @@ class PongConsumer(WebsocketConsumer):
         self.game_state = {
             'active': False,
             'ball': {'x': 300, 'y': 300},
-            'ball_speed': 5,
+            'ball_speed': 10,
             'ball_vector': {'x': 1, 'y': 1},
             'player1': {'y': self.FIELD_HEIGHT/2, 'up_pressed': False, 'down_pressed': False},
             'player2': {'y': self.FIELD_HEIGHT/2, 'up_pressed': False, 'down_pressed': False}
@@ -36,8 +37,9 @@ class PongConsumer(WebsocketConsumer):
     def connect(self):
         self.accept()
         print("USER CONNECTED: ", self.scope['user'])
-        print("user id: ", self.scope['user'].id)
-        print("user name: ", self.scope['user'].username)
+        if self.scope['user'].is_authenticated:
+            print("user id: ", self.scope['user'].id)
+            print("user name: ", self.scope['user'].username)
 
     def disconnect(self, close_code):
         pass
@@ -98,15 +100,25 @@ class PongConsumer(WebsocketConsumer):
                 # Move the ball the remaining distance in the new direction
                 ball_new_y = self.game_state['ball']['y'] - remaining_movement * self.game_state['ball_vector']['y']
 
+            # instead of left paddle place another wall for debugging
+            # handle collisions with left wall
+            if ball_new_x <= 30 + self.BALL_RADIUS:
+                # Calculate the remaining movement after the ball hits the wall
+                remaining_movement = 30 + self.BALL_RADIUS - self.game_state['ball']['x']
+                # Reverse the x-component of the ball's direction vector
+                self.game_state['ball_vector']['x'] *= -1
+                # Move the ball the remaining distance in the new direction
+                ball_new_x = self.game_state['ball']['x'] + remaining_movement * self.game_state['ball_vector']['x']
+
             # Collisions with the paddles
-            if ball_new_x <= 30 + self.PADDLE_WIDTH and self.game_state['player2']['y'] - self.PADDLE_HEIGHT / 2 <= ball_new_y <= self.game_state['player2']['y'] + self.PADDLE_HEIGHT / 2:
+            '''if ball_new_x <= 30 + self.PADDLE_WIDTH and self.game_state['player2']['y'] - self.PADDLE_HEIGHT / 2 <= ball_new_y <= self.game_state['player2']['y'] + self.PADDLE_HEIGHT / 2:
                 # Calculate the remaining movement after the ball hits the wall
                 remaining_movement = 30 + self.PADDLE_WIDTH - self.game_state['ball']['x']
                 # Reverse the x-component of the ball's direction vector
                 self.game_state['ball_vector']['x'] *= -1
                 # Move the ball the remaining distance in the new direction
-                ball_new_x = self.game_state['ball']['x'] + remaining_movement * self.game_state['ball_vector']['x']
-            elif ball_new_x >= self.FIELD_WIDTH - 30 - self.PADDLE_WIDTH - self.BALL_RADIUS and self.game_state['player1']['y'] - self.PADDLE_HEIGHT / 2 <= ball_new_y <= self.game_state['player1']['y'] + self.PADDLE_HEIGHT / 2:
+                ball_new_x = self.game_state['ball']['x'] + remaining_movement * self.game_state['ball_vector']['x']'''
+            if ball_new_x >= self.FIELD_WIDTH - 30 - self.PADDLE_WIDTH - self.BALL_RADIUS and self.game_state['player1']['y'] - self.PADDLE_HEIGHT / 2 <= ball_new_y <= self.game_state['player1']['y'] + self.PADDLE_HEIGHT / 2:
                 # Calculate the remaining movement after the ball hits the wall
                 remaining_movement = self.game_state['ball']['x'] + self.BALL_RADIUS - (self.FIELD_WIDTH - 30 - self.PADDLE_WIDTH)
                 # Reverse the x-component of the ball's direction vector
