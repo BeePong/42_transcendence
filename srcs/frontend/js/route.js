@@ -45,19 +45,27 @@ async function loadPage(path, redirectUrl = "/", fromNavigate = false) {
       if (page === "/accounts/login" || page === "/accounts/register")
         document.getElementById("redirectUrl").value = redirectUrl;
       // console.log("page", page);
-      if (page === "/tournament/pong") webSocketTest();
+      //if (page === "/tournament/pong") webSocketTest();
+      // if url contains "lobby", start mockWebSocket
+      var match = page.match(/^\/tournament\/(\d+)\/lobby$/);
+      console.log("match", match);
+      if (match) {
+        var tournament_id = match[1];
+        webSocketTest(tournament_id);
+      }
     }
   } catch (error) {
     console.error("There was a problem with the fetch operation:", error);
   }
 }
 
-function webSocketTest() {
+function webSocketTest(tournament_id) {
   const canvas_height = 500;
   const canvas_width = 800;
   const paddle_height = 100;
-  const paddle_width = 20;
+  const paddle_width = 26;
   const ball_radius = 15;
+  const padding_thickness = 5;
 
   // console.log("webSocketTest");
   // console.log("window.location.protocol", window.location.protocol);
@@ -65,10 +73,13 @@ function webSocketTest() {
   const url =
     (window.location.protocol == "https:" ? "wss://" : "ws://") +
     window.location.host +
-    "/ws/pong/";
+    "/ws/pong/" +
+    tournament_id +
+    "/";
 
   // console.log("Starting WebSocket on URL: ", url);
   var socket = new WebSocket(url);
+  // TODO: remember to close websocket after the tournament is over
   var canvas = document.getElementById("gameCanvas");
   var context = canvas.getContext("2d");
 
@@ -82,6 +93,8 @@ function webSocketTest() {
     context.lineTo(0, canvas_height);
     context.lineTo(0, 0);
     context.stroke();
+    context.fillStyle = "white";
+    // TODO: finish drawing borders
   };
 
   const drawBall = (x, y) => {
@@ -94,7 +107,7 @@ function webSocketTest() {
   const drawPaddle = (y) => {
     context.fillStyle = "white";
     context.fillRect(
-      canvas_width - 30 - paddle_width,
+      canvas_width - padding_thickness - paddle_width,
       y - paddle_height / 2,
       paddle_width,
       paddle_height
