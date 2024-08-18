@@ -15,7 +15,7 @@ from .forms import AliasForm
 from django.shortcuts import render, redirect, get_object_or_404
 # Create your views here.
 
-#TODO: to be replaced by real database
+""" #TODO: to be replaced by real database
 MockTournaments = namedtuple('MockTournaments', ['tournament_id', 'name', 'description', 'state', 'num_players', 'players', 'winner'])
 
 mock_tournaments = [
@@ -60,7 +60,7 @@ mock_tournaments = [
 #TODO: to be replaced by real database
 mockPlayersInLobby = ['lclerc', 'vvagapov'] # players waiting in the lobby, including the current user who clicks the join button
 mockMatchPlayers = ['lclerc', 'vvagapov'] # current user and the opponent, if the lobby is full. None otherwise.
-mockNumPlayers = 4 # num_players
+mockNumPlayers = 4 # num_players """
 
 @login_required_json
 def tournament(request):
@@ -159,7 +159,7 @@ def tournament_lobby(request, tournament_id):
                    player.current_tournament_id = tournament_id
                    player.is_registered = True
                    player.save()
-                   tournament.players.append(player.username)
+                   tournament.players.append(player.username) #append.*(player.alias) to put alias and not username and make unique the alias
                    tournament.num_players_in += 1
                if tournament.num_players_in >= tournament.num_players:
                    tournament.state = 'READY'
