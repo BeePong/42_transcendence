@@ -10,7 +10,7 @@ class PongConsumer(WebsocketConsumer):
     PADDLE_WIDTH = 20
     PADDLE_SPEED = 10
     BALL_RADIUS = 15
-    FPS = 60
+    FPS = 30
     UPPER_BORDER_THICKNESS = 20
     UPPER_LIMIT = UPPER_BORDER_THICKNESS + PADDLE_HEIGHT / 2
     LOWER_LIMIT = FIELD_HEIGHT - UPPER_BORDER_THICKNESS - PADDLE_HEIGHT / 2
@@ -35,19 +35,20 @@ class PongConsumer(WebsocketConsumer):
     
     def connect(self):
         self.accept()
-        # Send message to client
-        self.send_message('You are connected by websockets!')
+        print("USER CONNECTED: ", self.scope['user'])
+        print("user id: ", self.scope['user'].id)
+        print("user name: ", self.scope['user'].username)
 
     def disconnect(self, close_code):
         pass
 
-    def handle_tournament_message(self, text_data_json):
-        self.send_message('Received tournament message: ' + str(text_data_json['message']))
+    def handle_tournament_message(self, message):
+        self.send_message('Received tournament message: ' + str(message))
 
-    def handle_game_message(self, text_data_json):
-        player_id = text_data_json['message']['player_id']
-        key = text_data_json['message']['key']
-        keyAction = text_data_json['message']['keyAction']
+    def handle_game_message(self, message):
+        # player_id = self.scope['user'].id
+        key = message['key']
+        keyAction = message['keyAction']
         # Update the game state based on the key and action
 
         # Send the updated game state to all players
@@ -58,6 +59,7 @@ class PongConsumer(WebsocketConsumer):
             print("ArrowDown")
             self.game_state['player1']['down_pressed'] = keyAction == 'keydown'
     
+    # game loop should be off between games, instead just render pages
     def game_loop(self):
         while True:
             time.sleep(1/self.FPS)
@@ -76,38 +78,56 @@ class PongConsumer(WebsocketConsumer):
                         self.game_state[player_id]['y'] = self.LOWER_LIMIT
                     else:
                         self.game_state[player_id]['y'] = new_y
-            #move ball
-            self.game_state['ball']['x'] += self.game_state['ball_speed'] * self.game_state['ball_vector']['x']
-            self.game_state['ball']['y'] += self.game_state['ball_speed'] * self.game_state['ball_vector']['y']
-
+            
+            ball_new_x = self.game_state['ball']['x'] + self.game_state['ball_speed'] * self.game_state['ball_vector']['x']
+            ball_new_y = self.game_state['ball']['y'] + self.game_state['ball_speed'] * self.game_state['ball_vector']['y']
+            
             # Check for collisions with the game boundaries
-            if self.game_state['ball']['y'] <= self.UPPER_LIMIT or self.game_state['ball']['y'] >= self.LOWER_LIMIT - self.BALL_RADIUS:
+            if ball_new_y <= self.UPPER_BORDER_THICKNESS + self.BALL_RADIUS:
+                # Calculate the remaining movement after the ball hits the wall
+                remaining_movement = self.UPPER_BORDER_THICKNESS + self.BALL_RADIUS - self.game_state['ball']['y']
                 # Reverse the y-component of the ball's direction vector
                 self.game_state['ball_vector']['y'] *= -1
+                # Move the ball the remaining distance in the new direction
+                ball_new_y = self.game_state['ball']['y'] + remaining_movement * self.game_state['ball_vector']['y']
+            elif ball_new_y >= self.FIELD_HEIGHT - self.UPPER_BORDER_THICKNESS - self.BALL_RADIUS:
+                # Calculate the remaining movement after the ball hits the wall
+                remaining_movement = self.game_state['ball']['y'] + self.BALL_RADIUS - (self.FIELD_HEIGHT - self.UPPER_BORDER_THICKNESS)
+                # Reverse the y-component of the ball's direction vector
+                self.game_state['ball_vector']['y'] *= -1
+                # Move the ball the remaining distance in the new direction
+                ball_new_y = self.game_state['ball']['y'] - remaining_movement * self.game_state['ball_vector']['y']
 
-            # Check for collisions with the paddles
-            if self.game_state['ball']['x'] <= self.PADDLE_WIDTH and self.game_state['player2']['y'] <= self.game_state['ball']['y'] <= self.game_state['player2']['y'] + self.PADDLE_HEIGHT:
+            # Collisions with the paddles
+            if ball_new_x <= 30 + self.PADDLE_WIDTH and self.game_state['player2']['y'] - self.PADDLE_HEIGHT / 2 <= ball_new_y <= self.game_state['player2']['y'] + self.PADDLE_HEIGHT / 2:
+                # Calculate the remaining movement after the ball hits the wall
+                remaining_movement = 30 + self.PADDLE_WIDTH - self.game_state['ball']['x']
                 # Reverse the x-component of the ball's direction vector
                 self.game_state['ball_vector']['x'] *= -1
-            elif self.game_state['ball']['x'] >= self.FIELD_WIDTH - self.PADDLE_WIDTH - self.BALL_RADIUS and self.game_state['player1']['y'] <= self.game_state['ball']['y'] <= self.game_state['player1']['y'] + self.PADDLE_HEIGHT:
-            # Reverse the x-component of the ball's direction vector
+                # Move the ball the remaining distance in the new direction
+                ball_new_x = self.game_state['ball']['x'] + remaining_movement * self.game_state['ball_vector']['x']
+            elif ball_new_x >= self.FIELD_WIDTH - 30 - self.PADDLE_WIDTH - self.BALL_RADIUS and self.game_state['player1']['y'] - self.PADDLE_HEIGHT / 2 <= ball_new_y <= self.game_state['player1']['y'] + self.PADDLE_HEIGHT / 2:
+                # Calculate the remaining movement after the ball hits the wall
+                remaining_movement = self.game_state['ball']['x'] + self.BALL_RADIUS - (self.FIELD_WIDTH - 30 - self.PADDLE_WIDTH)
+                # Reverse the x-component of the ball's direction vector
                 self.game_state['ball_vector']['x'] *= -1
+                # Move the ball the remaining distance in the new direction
+                ball_new_x = self.game_state['ball']['x'] - remaining_movement * self.game_state['ball_vector']['x']
+
+            # Update the ball's position
+            self.game_state['ball']['x'] = ball_new_x
+            self.game_state['ball']['y'] = ball_new_y
 
             # Send the updated game state to all players
             self.send(text_data=json.dumps(self.game_state))
 
     def receive(self, text_data):
+        # TODO: only receive data from users who are playing the current game, ignore everyone else
         text_data_json = json.loads(text_data)
         message = text_data_json['message']
-        # TODO: remove line below, that doesn't seem right
-        # self.send_message(text_data=json.dumps({"message": message}))
         message_type = text_data_json['type']
 
         if message_type == 'tournament':
-            self.handle_tournament_message(text_data_json)
+            self.handle_tournament_message(message)
         elif message_type == 'game':
-            self.handle_game_message(text_data_json)
-        else:
-            self.send(text_data=json.dumps({
-                'error': 'Invalid message type'
-            }))
+            self.handle_game_message(message)
