@@ -23,7 +23,6 @@ login_42_params = {
     'scope': 'public',
     'state': f'qwerty|{quote(oauthRedirUrl)}', # include redirect url to frontend
 }
-print(f"login_42_params state: {login_42_params['state']}")
 login_42_url = f"https://api.intra.42.fr/oauth/authorize?{urlencode(login_42_params)}"
 
 def register(request):
@@ -111,14 +110,12 @@ def oauth_token(request):
 
     # Use the redirect url to frontend stored in state
     state = request.GET.get('state')
-    print(f"state: {state}")
     if not state:
         return redirect('/accounts/oauth_error/?from=oauth_token')
     # Split the state to extract the redirect url
     state_parts = state.split('|')
     if len(state_parts) < 2:
         return redirect('/accounts/oauth_error/?from=oauth_token')
-    print(f"state_parts: {state_parts}")
     redirect_url = unquote(state_parts[1])
 
     data = {
@@ -148,7 +145,6 @@ def oauth_token(request):
             # Note: You should set an unusable password for the user since
             # the password is not used in the OAuth flow
             user = User.objects.create_user(username=user_login)
-            print(f"Creating new user: {user.username}")
             user.set_unusable_password()
             user.save()
 
@@ -170,3 +166,6 @@ def oauth_error(request):
         return JsonResponse({'success': False, 'error': '42 Authorization Error'}, status=400)
     else:
         return render(request, 'registration/oauth_error.html')
+    
+
+# //TODO: find nasty query string that could mess with our db/backend, in that case we might need to drop the nice 42 Auth error page.

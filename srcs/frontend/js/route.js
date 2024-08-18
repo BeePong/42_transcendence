@@ -11,8 +11,6 @@ function navigate(eventOrPath, redirectUrl = '/') {
 	// Do not render again for the same path
 	if (window.location.pathname === path)
 			return;
-  console.log('path', path);
-  console.log('redirectUrl', redirectUrl);
 	loadPage(path, redirectUrl, true);
 }
 
@@ -100,28 +98,18 @@ async function redirectToLoginPage(redirectUrl) {
 // Change the redirect url in the form and the state of the oauth
 function changeRedirectUrlandOauthState(redirectUrl) {
 	// Change the redirect url in the form
-  console.log('[changeRedirectUrlandOauthState] redirectUrl', redirectUrl);
 	document.getElementById('redirectUrl').value = redirectUrl;
 
 	// Change the state of the oauth according to the redirect url
 	const login42UrlElement = document.getElementById('login-42-url');
 
 	const updatedLogin42Url = new URL(login42UrlElement.href);
-  // Load environment variables from .env file
-  // require('dotenv').config();
-  // // Fetch the port from environment variables
-  // const port = process.env.NGINX_PORT;
-  // // Construct the new state parameter with the port and the redirect url
-  // const newStateParam = `qwerty|${encodeURIComponent(`https://localhost:${port}${redirectUrl}`)}`;
-  // console.log('[changeRedirectUrlandOauthState] newStateParam', newStateParam);
-	// const newStateParam = `qwerty|${encodeURIComponent(`https://localhost:8443${redirectUrl}`)}`;
 
   // Extract the current port number from the window.location object
   const currentPort = window.location.port;
-  console.log('[changeRedirectUrlandOauthState] currentPort', currentPort);
+
   // Construct the new state parameter with the current port
   const newStateParam = `qwerty|${encodeURIComponent(`https://localhost:${currentPort}${redirectUrl}`)}`;
-  console.log('[changeRedirectUrlandOauthState] newStateParam', newStateParam);
 	
   updatedLogin42Url.searchParams.set('state', newStateParam);
 
