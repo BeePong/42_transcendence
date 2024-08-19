@@ -8,9 +8,9 @@ class Player(models.Model):
     player_id = models.AutoField(primary_key=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE, default=1)  # Replace 1 with an appropriate user ID
     username = models.CharField(max_length=255)
-    alias = models.CharField(max_length=255)
-    is_registered = models.BooleanField(default=False)
-    is_online = models.BooleanField(default=False)
+    alias = models.CharField(max_length=255) #todo put the alias
+    has_active_tournament = models.BooleanField(default=False) # active player in a tournament Rename has_active_tournament
+    is_online = models.BooleanField(default=False) # 
     auth_info = models.CharField(max_length=255)
     current_tournament_id = models.IntegerField(null=True, blank=True, default=-1)
     created_at = models.DateTimeField(auto_now_add=True)

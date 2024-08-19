@@ -155,9 +155,9 @@ def tournament_lobby(request, tournament_id):
                player, _ = Player.objects.get_or_create(user=request.user)
                player.is_online = True
                player.username = request.user.username
-               if player.is_registered == False:
+               if player.has_active_tournament == False:
                    player.current_tournament_id = tournament_id
-                   player.is_registered = True
+                   player.has_active_tournament = True
                    player.save()
                    tournament.players.append(player.username) #append.*(player.alias) to put alias and not username and make unique the alias
                    tournament.num_players_in += 1

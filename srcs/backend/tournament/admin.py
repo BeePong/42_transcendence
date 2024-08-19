@@ -3,7 +3,7 @@ from .models import Player, Tournament, Match, PlayerTournament, Alias
 
 @admin.register(Player)
 class PlayerAdmin(admin.ModelAdmin):
-    list_display = ('username', 'alias', 'is_registered', 'is_online', 'current_tournament_id', 'created_at')
+    list_display = ('username', 'alias', 'has_active_tournament', 'is_online', 'current_tournament_id', 'created_at')
     search_fields = ('username', 'alias')
 
 @admin.register(Tournament)
