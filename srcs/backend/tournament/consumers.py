@@ -12,7 +12,8 @@ class PongConsumer(WebsocketConsumer):
     PADDLE_SPEED = 10
     BALL_RADIUS = 15
     FPS = 30
-    PADDING_THICKNESS = 5
+    PADDING_THICKNESS = 7
+    THICK_BORDER_THICKNESS = 5
     UPPER_LIMIT = PADDING_THICKNESS + PADDLE_HEIGHT / 2
     LOWER_LIMIT = FIELD_HEIGHT - PADDING_THICKNESS - PADDLE_HEIGHT / 2
 
@@ -20,8 +21,8 @@ class PongConsumer(WebsocketConsumer):
         super().__init__(*args, **kwargs)
         self.game_state = {
             'active': False,
-            'ball': {'x': 300, 'y': 300},
-            'ball_speed': 10,
+            'ball': {'x': self.FIELD_WIDTH/2, 'y': self.FIELD_HEIGHT/2},
+            'ball_speed': 5,
             'ball_vector': {'x': 1, 'y': 1},
             'player1': {'y': self.FIELD_HEIGHT/2, 'up_pressed': False, 'down_pressed': False},
             'player2': {'y': self.FIELD_HEIGHT/2, 'up_pressed': False, 'down_pressed': False}
@@ -85,16 +86,16 @@ class PongConsumer(WebsocketConsumer):
             ball_new_y = self.game_state['ball']['y'] + self.game_state['ball_speed'] * self.game_state['ball_vector']['y']
             
             # Check for collisions with the game boundaries
-            if ball_new_y <= self.PADDING_THICKNESS + self.BALL_RADIUS:
+            if ball_new_y <= self.THICK_BORDER_THICKNESS + self.BALL_RADIUS:
                 # Calculate the remaining movement after the ball hits the wall
-                remaining_movement = self.PADDING_THICKNESS + self.BALL_RADIUS - self.game_state['ball']['y']
+                remaining_movement = self.THICK_BORDER_THICKNESS + self.BALL_RADIUS - self.game_state['ball']['y']
                 # Reverse the y-component of the ball's direction vector
                 self.game_state['ball_vector']['y'] *= -1
                 # Move the ball the remaining distance in the new direction
                 ball_new_y = self.game_state['ball']['y'] + remaining_movement * self.game_state['ball_vector']['y']
-            elif ball_new_y >= self.FIELD_HEIGHT - self.PADDING_THICKNESS - self.BALL_RADIUS:
+            elif ball_new_y >= self.FIELD_HEIGHT - self.THICK_BORDER_THICKNESS - self.BALL_RADIUS:
                 # Calculate the remaining movement after the ball hits the wall
-                remaining_movement = self.game_state['ball']['y'] + self.BALL_RADIUS - (self.FIELD_HEIGHT - self.PADDING_THICKNESS)
+                remaining_movement = self.game_state['ball']['y'] + self.BALL_RADIUS - (self.FIELD_HEIGHT - self.THICK_BORDER_THICKNESS)
                 # Reverse the y-component of the ball's direction vector
                 self.game_state['ball_vector']['y'] *= -1
                 # Move the ball the remaining distance in the new direction
@@ -102,9 +103,9 @@ class PongConsumer(WebsocketConsumer):
 
             # instead of left paddle place another wall for debugging
             # handle collisions with left wall
-            if ball_new_x <= self.PADDING_THICKNESS + self.BALL_RADIUS:
+            if ball_new_x <= self.BALL_RADIUS:
                 # Calculate the remaining movement after the ball hits the wall
-                remaining_movement = self.PADDING_THICKNESS + self.BALL_RADIUS - self.game_state['ball']['x']
+                remaining_movement = self.BALL_RADIUS - self.game_state['ball']['x']
                 # Reverse the x-component of the ball's direction vector
                 self.game_state['ball_vector']['x'] *= -1
                 # Move the ball the remaining distance in the new direction
