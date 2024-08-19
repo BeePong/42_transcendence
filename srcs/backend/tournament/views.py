@@ -8,7 +8,7 @@ from collections import namedtuple
 from .forms import TournamentForm, AliasForm
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-from .models import Tournament, Player
+from .models import Tournament, Player, Match
 from .decorators import login_required_json
 from django.utils.functional import SimpleLazyObject
 from .forms import AliasForm
@@ -164,8 +164,13 @@ def tournament_lobby(request, tournament_id):
                if tournament.num_players_in >= tournament.num_players:
                    tournament.state = 'READY'
                tournament.save()
-        return render(request, 'tournament/tournament_lobby.html', {'match_players': tournament.players, 'players_in_lobby': tournament.players, 'num_players': tournament.num_players})
-        #return render(request, 'tournament/tournament_lobby.html')
+
+        matches = Match.objects.filter(tournament=tournament) # Retrieve all matches associated with the tournament
+        lose_players = [match.determine_loser().alias for match in matches]
+        if tournament.state == 'READY':
+            return render(request, 'tournament/tournament_full_lobby.html', {'match_players': tournament.players, 'players_in_lobby': tournament.players, 'num_players': tournament.num_players, 'lose_players': lose_players})
+        else:
+            return render(request, 'tournament/tournament_waiting_lobby.html', {'players_in_lobby': tournament.players, 'num_players': tournament.num_players})
     except Exception as error:
         return JsonResponse({'success': False, 'error': error}, status=404)
 ##TODO: only players in the tournament can access its lobby page
