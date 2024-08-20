@@ -35,14 +35,14 @@ services:
       - postgres_data:/var/lib/postgresql/data/
     ports:
       - "5432:5432"
+    env_file:
+      - .env
     logging:
       driver: gelf
       options:
-        gelf-address: udp://localhost:12202
+        gelf-address: udp://localhost:12201
         tag: "postgres"
         env: ".env"
-    env_file:
-      - .env
     restart: on-failure
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
@@ -157,7 +157,63 @@ services:
         until curl -s --cacert config/certs/ca/ca.crt https://elasticsearch:9200 | grep -q "missing authentication credentials"; do sleep 30; done;
         echo "Setting kibana_system password";
         until curl -s -X POST --cacert config/certs/ca/ca.crt -u "elastic:${ELASTIC_PASSWORD}" -H "Content-Type: application/json" https://elasticsearch:9200/_security/user/kibana_system/_password -d "{\"password\":\"${KIBANA_PASSWORD}\"}" | grep -q "^{}"; do sleep 10; done;
+        echo "Waiting for Kibana to become available";
+        until curl -s --cacert config/certs/ca/ca.crt -u "elastic:${ELASTIC_PASSWORD}" https://kibana:5601/api/status > /dev/null; do
+          echo "Kibana not available yet, retrying in 5 seconds...";
+          sleep 5;
+        done;
+
+        echo "Kibana is available, waiting for full initialization...";
+        
+        # Wait for additional time to ensure all plugins and services in Kibana are ready
+        sleep 30
+        
+        response=$(curl -s -X POST --cacert config/certs/ca/ca.crt "https://kibana:5601/api/data_views/data_view" \
+          -H "kbn-xsrf: true" \
+          -H "Content-Type: application/json" \
+          -u "elastic:${ELASTIC_PASSWORD}" \
+          -d "{\"data_view\": {\"title\": \"backend-logs-*\", \"timeFieldName\": \"@timestamp\"}}")
+        if [ -z "$response" ]; then
+          echo "Failed to create backend-logs-* data view or no response from Kibana"
+        else
+          echo "Response from creating backend-logs-* data view: $response"
+        fi
+        
+        response=$(curl -s -X POST --cacert config/certs/ca/ca.crt "https://kibana:5601/api/data_views/data_view" \
+          -H "kbn-xsrf: true" \
+          -H "Content-Type: application/json" \
+          -u "elastic:${ELASTIC_PASSWORD}" \
+          -d "{\"data_view\": {\"title\": \"nginx-logs-*\", \"timeFieldName\": \"@timestamp\"}}")
+        if [ -z "$response" ]; then
+          echo "Failed to create nginx-logs-* data view or no response from Kibana"
+        else
+          echo "Response from creating nginx-logs-* data view: $response"
+        fi
+        
+        response=$(curl -s -X POST --cacert config/certs/ca/ca.crt "https://kibana:5601/api/data_views/data_view" \
+          -H "kbn-xsrf: true" \
+          -H "Content-Type: application/json" \
+          -u "elastic:${ELASTIC_PASSWORD}" \
+          -d "{\"data_view\": {\"title\": \"postgres-logs-*\", \"timeFieldName\": \"@timestamp\"}}")
+        if [ -z "$response" ]; then
+          echo "Failed to create postgres-logs-* data view or no response from Kibana"
+        else
+          echo "Response from creating postgres-logs-* data view: $response"
+        fi
+        
+        response=$(curl -s -X POST --cacert config/certs/ca/ca.crt "https://kibana:5601/api/data_views/data_view" \
+          -H "kbn-xsrf: true" \
+          -H "Content-Type: application/json" \
+          -u "elastic:${ELASTIC_PASSWORD}" \
+          -d "{\"data_view\": {\"title\": \"metricbeat-*\", \"timeFieldName\": \"@timestamp\"}}")
+        if [ -z "$response" ]; then
+          echo "Failed to create metricbeat-* data view or no response from Kibana"
+        else
+          echo "Response from creating metricbeat-* data view: $response"
+        fi
+        
         echo "All done!";
+
       '
     healthcheck:
       test: ["CMD-SHELL", "[ -f config/certs/elasticsearch/elasticsearch.crt ]"]
@@ -237,7 +293,6 @@ services:
       - SERVER_SSL_CERTIFICATE=config/certs/kibana/kibana.crt
       - SERVER_SSL_KEY=config/certs/kibana/kibana.key
       - SERVER_SSL_CERTIFICATEAUTHORITIES=config/certs/ca/ca.crt
-      - ELASTIC_APM_SECRET_TOKEN=${ELASTIC_APM_SECRET_TOKEN}
     mem_limit: ${KB_MEM_LIMIT}
     healthcheck:
       test:
