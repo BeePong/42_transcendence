@@ -21,7 +21,7 @@ up_db:
 	docker compose -f ./docker-compose.yml up --build -d db
 
 up_elk:
-	docker compose -f ./docker-compose.yml up --build -d elasticsearch kibana logstash filebeat metricbeat
+	docker compose -f ./docker-compose.yml up --build -d elasticsearch kibana logstash metricbeat
 
 ################################################################################
 # Clean and Remove
@@ -106,7 +106,7 @@ logs_db:
 	docker compose -f ./docker-compose.yml logs -f db
 
 logs_elk:
-	docker compose -f ./docker-compose.yml logs -f elasticsearch kibana logstash filebeat metricbeat dashboard_import
+	docker compose -f ./docker-compose.yml logs -f elasticsearch kibana logstash metricbeat dashboard_import
 
 # Tail all logs with timestamps
 logs:
