@@ -35,6 +35,12 @@ services:
       - postgres_data:/var/lib/postgresql/data/
     ports:
       - "5432:5432"
+    logging:
+      driver: gelf
+      options:
+        gelf-address: udp://localhost:12202
+        tag: "postgres"
+        env: ".env"
     env_file:
       - .env
     restart: on-failure
@@ -56,6 +62,12 @@ services:
       - .env
     ports:
       - "8000:8000"
+    logging:
+      driver: gelf
+      options:
+        gelf-address: udp://localhost:12201
+        tag: "backend_dummy"
+        env: ".env"
     depends_on:
       db:
         condition: service_healthy
@@ -72,9 +84,15 @@ services:
       context: ./srcs/nginx
     volumes:
       - ./srcs/frontend:/var/www/html
-      - nginx_logs:/var/log/nginx  # Mount the nginx_logs volume
+      - nginx_logs:/var/log/nginx 
     ports:
       - 443:443
+    logging:
+      driver: gelf
+      options:
+        gelf-address: udp://localhost:12201
+        tag: "nginx"
+        env: ".env"
     restart: on-failure
     depends_on:
       backend_dummy:
@@ -262,32 +280,6 @@ services:
     command:
       -strict.perms=false        
 
-  filebeat:
-    container_name: beepong-filebeat
-    depends_on:
-      elasticsearch:
-        condition: service_healthy
-    image: docker.elastic.co/beats/filebeat:${STACK_VERSION}
-    user: root
-    volumes:
-      - certs:/usr/share/filebeat/certs
-      - filebeat_data:/usr/share/filebeat/data
-      - "./elk/filebeat_ingest_data/:/usr/share/filebeat/ingest_data/"
-      - "./elk/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro"
-      - "/var/lib/docker/containers:/var/lib/docker/containers:ro"
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
-      - nginx_logs:/usr/share/filebeat/nginx_logs  # Mount the nginx_logs volume
-      - app_logs:/usr/share/filebeat/app_logs  # Mount the application logs volume
-    environment:
-      - ELASTIC_USER=elastic
-      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
-      - ELASTIC_HOSTS=https://elasticsearch:9200
-      - KIBANA_HOSTS=https://kibana:5601
-      - LOGSTASH_HOSTS=http://logstash:9600
-      - CA_CERT=certs/ca/ca.crt
-    command:
-      -strict.perms=false
-
   logstash:
     container_name: beepong-logstash
     depends_on:
@@ -299,10 +291,12 @@ services:
     labels:
       co.elastic.logs/module: logstash
     user: root
+    ports:
+      - "12201:12201/udp"
     volumes:
       - certs:/usr/share/logstash/certs
       - logstash_data:/usr/share/logstash/data
-      - "./elk/logstash_ingest_data/:/usr/share/logstash/ingest_data/"
+      - nginx_logs:/usr/share/logstash/ingest_data/
       - "./elk/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro"
     environment:
       - xpack.monitoring.enabled=false

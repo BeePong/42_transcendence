@@ -106,7 +106,7 @@ logs_db:
 	docker compose -f ./docker-compose.yml logs -f db
 
 logs_elk:
-	docker compose -f ./docker-compose.yml logs -f elasticsearch kibana logstash filebeat metricbeat
+	docker compose -f ./docker-compose.yml logs -f elasticsearch kibana logstash filebeat metricbeat dashboard_import
 
 # Tail all logs with timestamps
 logs:
