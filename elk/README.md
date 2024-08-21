@@ -40,20 +40,14 @@ The ELK stack consists of Elasticsearch, Logstash, and Kibana, supplemented by M
 - **Configuration**: Configured to collect metrics from Docker containers, host systems, and other supported modules.
 - **Configuration File**: Uses `metricbeat.yml` to define modules and metricsets for data collection.
 
-### 5. Filebeat
-
-- **Role**: Filebeat is a lightweight shipper that forwards and centralizes log data. It collects logs from various sources, such as application logs and Nginx logs, and sends them to Logstash or Elasticsearch.
-- **Configuration**: Monitors log files and Docker logs, sending them to Logstash for further processing.
-- **Configuration File**: Uses `filebeat.yml` to define inputs and output configurations.
-
-### 6. Setup
+## 5. Setup
 
 - **Role**: The setup service is a temporary container used to generate and configure SSL/TLS certificates for Elasticsearch and Kibana. It creates certificate authority (CA) files and certificates necessary for secure communication between components.
 - **Operation**: Runs a setup script that checks for existing certificates, generates new ones if needed, and sets passwords for the `elastic` and `kibana_system` users.
 
 ## How to Run the ELK Stack
 
-### Prerequisites
+### Prerequisites:
 
 - **Docker**: Ensure Docker and Docker Compose are installed on your system.
 - **Environment Variables**: Configure the `.env` file with necessary environment variables, including passwords and configuration settings.
@@ -63,7 +57,7 @@ The ELK stack consists of Elasticsearch, Logstash, and Kibana, supplemented by M
 To start the ELK stack to monitor the BeePong project, use the following command:
 
 ```bash
-make up_elk
+make up_all_elk
 ```
 
 This command will build and start the following services additionaly to the BeePong services:
@@ -72,7 +66,6 @@ This command will build and start the following services additionaly to the BeeP
 - **Kibana**
 - **Logstash**
 - **Metricbeat**
-- **Filebeat**
 - **setup:** service will also run initially to generate necessary certificates.
 
 ### Verify the Services
@@ -111,8 +104,41 @@ docker-compose -f ./docker-compose.yml logs -f setup
 docker-compose -f ./docker-compose.yml logs -f elasticsearch
 docker-compose -f ./docker-compose.yml logs -f logstash
 docker-compose -f ./docker-compose.yml logs -f metricbeat
-docker-compose -f ./docker-compose.yml logs -f filebeat
 ```
+
+## Index Lifecycle Management
+
+### Create Policy
+In Kibana's left pane go to `Management / Stack  Management`:
+- in `Index Lifecycle Management` click on `Create Policy`:
+    - **Name** the policy
+    - Configure `Hot Phase` for **testing purposes**:
+        - Untick `recommended defaults`, set `Maximum age` to 5 minutes and unset other defaults
+        - Click on `Keep data in this phase forever` to switch it to `Delete data after this phase`
+    - A new `Delete phase` is now availabel at the bottom of the page, change the `Move data into phase when` set at 365 days to 2 days
+    - `Save Policy`
+
+### Create Template
+In Kibana's left pane go to `Management / Stack  Management`:
+- in `Index Management / Index Template` click on `Create Template`:
+    - `Name` your template
+    - Add your indexes into `Index patterns` (in the form: whatever-*) 
+    - Untick `Create data stream` 
+    - `Next` until definition of `Index settings`: 
+    ```
+       {
+         "index": {
+           "lifecycle": {
+             "name": "Name of choosen policy",
+               "rollover_alias": "ilm_rollover_alias defined in output of logstash.conf"
+           }
+         }
+       }
+    ```
+    - `Next`
+    - Aliases will be defined in logstash.conf directly.
+    - `Review template` and `Create template`
+    
 
 ## Future Improvements
 - **Enhanced Security:** Implement additional security measures, such as RBAC, IP whitelisting, and encrypted data storage.
