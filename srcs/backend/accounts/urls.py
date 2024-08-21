@@ -16,4 +16,5 @@ urlpatterns = [
     path('login/', views.custom_login, name='login'),
     path('logout/', views.custom_logout, name='logout'),
     path('oauth_token/', views.oauth_token, name='oauth_token'),
+    path('oauth_error/', views.oauth_error, name='oauth_error'),
 ]

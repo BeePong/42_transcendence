@@ -45,14 +45,13 @@ services:
         env: ".env"
     restart: on-failure
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
-      interval: 10s
+      test: ["CMD-SHELL", "psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} --password ${POSTGRES_PASSWORD}"] 
+      # interval: 10s
       timeout: 5s
       retries: 5
 
   backend_dummy:
     container_name: beepong-backendDummy
-    command: ["sh", "-c", "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"]
     build:
       context: ./srcs/backend
     volumes:
@@ -73,7 +72,7 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8000/health/ || exit 1"]
-      interval: 30s
+      # interval: 30s
       timeout: 10s
       retries: 5
     restart: on-failure
