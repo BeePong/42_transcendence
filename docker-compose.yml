@@ -113,6 +113,7 @@ services:
     image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
     volumes:
       - certs:/usr/share/elasticsearch/config/certs
+      - ./elk/index_policies:/policies
     user: "0"
     command: >
       bash -c '
@@ -166,53 +167,56 @@ services:
         
         # Wait for additional time to ensure all plugins and services in Kibana are ready
         sleep 30
-        
-        response=$(curl -s -X POST --cacert config/certs/ca/ca.crt "https://kibana:5601/api/data_views/data_view" \
-          -H "kbn-xsrf: true" \
-          -H "Content-Type: application/json" \
-          -u "elastic:${ELASTIC_PASSWORD}" \
-          -d "{\"data_view\": {\"title\": \"backend-logs-*\", \"timeFieldName\": \"@timestamp\"}}")
-        if [ -z "$response" ]; then
-          echo "Failed to create backend-logs-* data view or no response from Kibana"
-        else
-          echo "Response from creating backend-logs-* data view: $response"
-        fi
-        
-        response=$(curl -s -X POST --cacert config/certs/ca/ca.crt "https://kibana:5601/api/data_views/data_view" \
-          -H "kbn-xsrf: true" \
-          -H "Content-Type: application/json" \
-          -u "elastic:${ELASTIC_PASSWORD}" \
-          -d "{\"data_view\": {\"title\": \"nginx-logs-*\", \"timeFieldName\": \"@timestamp\"}}")
-        if [ -z "$response" ]; then
-          echo "Failed to create nginx-logs-* data view or no response from Kibana"
-        else
-          echo "Response from creating nginx-logs-* data view: $response"
-        fi
-        
-        response=$(curl -s -X POST --cacert config/certs/ca/ca.crt "https://kibana:5601/api/data_views/data_view" \
-          -H "kbn-xsrf: true" \
-          -H "Content-Type: application/json" \
-          -u "elastic:${ELASTIC_PASSWORD}" \
-          -d "{\"data_view\": {\"title\": \"postgres-logs-*\", \"timeFieldName\": \"@timestamp\"}}")
-        if [ -z "$response" ]; then
-          echo "Failed to create postgres-logs-* data view or no response from Kibana"
-        else
-          echo "Response from creating postgres-logs-* data view: $response"
-        fi
-        
-        response=$(curl -s -X POST --cacert config/certs/ca/ca.crt "https://kibana:5601/api/data_views/data_view" \
-          -H "kbn-xsrf: true" \
-          -H "Content-Type: application/json" \
-          -u "elastic:${ELASTIC_PASSWORD}" \
-          -d "{\"data_view\": {\"title\": \"metricbeat-*\", \"timeFieldName\": \"@timestamp\"}}")
-        if [ -z "$response" ]; then
-          echo "Failed to create metricbeat-* data view or no response from Kibana"
-        else
-          echo "Response from creating metricbeat-* data view: $response"
-        fi
-        
-        echo "All done!";
 
+        echo ""
+        echo "Creating ILM policies:"
+        curl -X PUT "https://elasticsearch:9200/_ilm/policy/Backend-logs-index-policy" \
+          -H "Content-Type: application/json" \
+          -u "elastic:${ELASTIC_PASSWORD}" \
+          --cacert config/certs/ca/ca.crt \
+          -d @/policies/backend_policy.json
+  
+        curl -X PUT "https://elasticsearch:9200/_ilm/policy/Nginx-logs-index-policy" \
+          -H "Content-Type: application/json" \
+          -u "elastic:${ELASTIC_PASSWORD}" \
+          --cacert config/certs/ca/ca.crt \
+          -d @/policies/nginx_policy.json
+  
+        curl -X PUT "https://elasticsearch:9200/_ilm/policy/Postgres-logs-index-policy" \
+          -H "Content-Type: application/json" \
+          -u "elastic:${ELASTIC_PASSWORD}" \
+          --cacert config/certs/ca/ca.crt \
+          -d @/policies/postgres_policy.json
+
+        echo ""
+        echo "Creating Kibana data views:"
+        curl -s -X POST --cacert config/certs/ca/ca.crt "https://kibana:5601/api/data_views/data_view" \
+          -H "kbn-xsrf: true" \
+          -H "Content-Type: application/json" \
+          -u "elastic:${ELASTIC_PASSWORD}" \
+          -d "{\"data_view\": {\"title\": \"backend-logs-*\", \"timeFieldName\": \"@timestamp\"}}"
+        
+        curl -s -X POST --cacert config/certs/ca/ca.crt "https://kibana:5601/api/data_views/data_view" \
+          -H "kbn-xsrf: true" \
+          -H "Content-Type: application/json" \
+          -u "elastic:${ELASTIC_PASSWORD}" \
+          -d "{\"data_view\": {\"title\": \"nginx-logs-*\", \"timeFieldName\": \"@timestamp\"}}"
+        
+        curl -s -X POST --cacert config/certs/ca/ca.crt "https://kibana:5601/api/data_views/data_view" \
+          -H "kbn-xsrf: true" \
+          -H "Content-Type: application/json" \
+          -u "elastic:${ELASTIC_PASSWORD}" \
+          -d "{\"data_view\": {\"title\": \"postgres-logs-*\", \"timeFieldName\": \"@timestamp\"}}"
+        
+        curl -s -X POST --cacert config/certs/ca/ca.crt "https://kibana:5601/api/data_views/data_view" \
+          -H "kbn-xsrf: true" \
+          -H "Content-Type: application/json" \
+          -u "elastic:${ELASTIC_PASSWORD}" \
+          -d "{\"data_view\": {\"title\": \"metricbeat-*\", \"timeFieldName\": \"@timestamp\"}}"
+        
+        echo ""
+        echo "All done!";
+        echo ""
       '
     healthcheck:
       test: ["CMD-SHELL", "[ -f config/certs/elasticsearch/elasticsearch.crt ]"]
