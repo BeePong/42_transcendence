@@ -52,8 +52,14 @@ async function loadPage(path, redirectUrl = '/', fromNavigate = false, queryStri
 					changeRedirectUrlandOauthState(redirectUrl);
 
 				// perform countdown in tournmament lobby if the list is full. Otherwise, wait for other players.
-				if (/^\/tournament\/\d+\/lobby$/.test(page))
-					document.querySelector('.full') ? tournamentLobbyCountdown() : mockWebSocket(); //TODO: open websocket
+				if (/^\/tournament\/\d+\/lobby$/.test(page)) {
+					if (document.querySelector('.full')) {
+						if (!document.querySelector('.winner'))
+							tournamentLobbyCountdown()
+					}
+					else
+						mockWebSocket(); //TODO: open websocket
+				}
 			}
 	} catch (error) {
 			console.error('There was a problem with the fetch operation:', error);

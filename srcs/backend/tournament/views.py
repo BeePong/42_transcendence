@@ -165,12 +165,15 @@ def tournament_lobby(request, tournament_id):
                    tournament.state = 'READY'
                tournament.save()
 
-        matches = Match.objects.filter(tournament=tournament) # Retrieve all matches associated with the tournament
-        lose_players = [match.determine_loser().alias for match in matches]
-        if tournament.state == 'READY':
-            return render(request, 'tournament/tournament_full_lobby.html', {'match_players': tournament.players, 'players_in_lobby': tournament.players, 'num_players': tournament.num_players, 'lose_players': lose_players})
-        else:
+        if tournament.state != 'READY' and tournament.num_players_in < tournament.num_players:
             return render(request, 'tournament/tournament_waiting_lobby.html', {'players_in_lobby': tournament.players, 'num_players': tournament.num_players})
+        
+        matches = Match.objects.filter(tournament=tournament) # Retrieve all matches associated with the tournament
+        lose_players = [match.determine_loser().username for match in matches] #TODO: replace username with alias
+        if tournament.winner:
+            return render(request, 'tournament/tournament_winner.html', {'players_in_lobby': tournament.players, 'num_players': tournament.num_players, 'lose_players': lose_players})
+        else:
+            return render(request, 'tournament/tournament_full_lobby.html', {'match_players': tournament.players, 'players_in_lobby': tournament.players, 'num_players': tournament.num_players, 'lose_players': lose_players, 'is_final': tournament.is_final})
     except Exception as error:
         return JsonResponse({'success': False, 'error': error}, status=404)
 ##TODO: only players in the tournament can access its lobby page

@@ -1,5 +1,5 @@
 <section id="tournament-lobby-section" class="full {% if num_players == 2 %}two-players{% endif %}">
-  {% if lose_players|length == 2 %}
+  {% if is_final %}
     <h1 class="tournament_lobby__header">BEEPONG CUP FINALS STARTING IN <span id="countdown">3</span>...</h1>
   {% else %}
     <h1 class="tournament_lobby__header">BEEPONG CUP IS STARTING IN <span id="countdown">3</span>...</h1>
