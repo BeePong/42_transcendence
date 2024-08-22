@@ -86,19 +86,23 @@ class PongConsumer(WebsocketConsumer):
     def handle_tournament_message(self, message):
         self.send_message('Received tournament message: ' + str(message))
 
+    def handle_key_event(self, key, keyAction, player_field):
+        if key == 'ArrowUp':
+            print("ArrowUp")
+            self.game_state[player_field]['up_pressed'] = keyAction == 'keydown'
+        elif key == 'ArrowDown':
+            print("ArrowDown")
+            self.game_state[player_field]['down_pressed'] = keyAction == 'keydown'
+
     def handle_game_message(self, message):
-        # player_id = self.scope['user'].id
+        player = self.scope['user']
         key = message['key']
         keyAction = message['keyAction']
         # Update the game state based on the key and action
-
-        # Send the updated game state to all players
-        if key == 'ArrowUp':
-            print("ArrowUp")
-            self.game_state['player1']['up_pressed'] = keyAction == 'keydown'
-        elif key == 'ArrowDown':
-            print("ArrowDown")
-            self.game_state['player1']['down_pressed'] = keyAction == 'keydown'
+        if player.id == self.game_state['player1']['player_id']:
+            self.handle_key_event(key, keyAction, 'player1')
+        elif player.id == self.game_state['player2']['player_id']:
+            self.handle_key_event(key, keyAction, 'player2')
     
     # game loop should be off between games, instead just render pages
     def game_loop(self):
@@ -127,6 +131,7 @@ class PongConsumer(WebsocketConsumer):
                         else:
                             self.game_state[player_id]['y'] = new_y
                 
+                # Calculate next position of the ball
                 ball_new_x = self.game_state['ball']['x'] + self.game_state['ball_speed'] * self.game_state['ball_vector']['x']
                 ball_new_y = self.game_state['ball']['y'] + self.game_state['ball_speed'] * self.game_state['ball_vector']['y']
                 
@@ -172,9 +177,21 @@ class PongConsumer(WebsocketConsumer):
                     # Move the ball the remaining distance in the new direction
                     ball_new_x = self.game_state['ball']['x'] - remaining_movement * self.game_state['ball_vector']['x']
 
+                # Check for scoring
+                if ball_new_x >= self.FIELD_WIDTH - self.BALL_RADIUS:
+                    self.game_state['player1']['score'] += 1
+                    ball_new_x = self.FIELD_WIDTH/2
+                    ball_new_y = self.FIELD_HEIGHT/2
+                    self.game_state['state'] = GameState.COUNTDOWN.value
+                    self.game_state['round_start_time'] = time.time()
+                    self.game_state['countdown'] = 3
+                    self.game_state['ball_vector'] = self.normalize_vector(random.uniform(-1, 1), self.get_random_y())
+
                 # Update the ball's position
                 self.game_state['ball']['x'] = ball_new_x
                 self.game_state['ball']['y'] = ball_new_y
+                
+
 
                 # Send the updated game state to all players
             self.send(text_data=json.dumps(self.game_state))

@@ -1,7 +1,7 @@
 import { webSocketTest } from "./websockets.js";
 
 // Handle navigation based on path or event
-function navigate(eventOrPath, redirectUrl = "/") {
+window.navigate = function navigate(eventOrPath, redirectUrl = "/") {
   let path;
   if (typeof eventOrPath === "string") path = eventOrPath;
   else {
@@ -13,7 +13,7 @@ function navigate(eventOrPath, redirectUrl = "/") {
   if (window.location.pathname === path) return;
 
   loadPage(path, redirectUrl, true);
-}
+};
 
 // Load content based on the path, and add the redirect url for login and register page
 async function loadPage(path, redirectUrl = "/", fromNavigate = false) {
@@ -209,4 +209,4 @@ document.addEventListener('DOMContentLoaded', () => {
 	loadPage(window.location.pathname, '/', false, window.location.search);
 });
 
-export { navigate, loadPage, redirectToLoginPage, mockWebSocket };
+export { loadNavBar };
