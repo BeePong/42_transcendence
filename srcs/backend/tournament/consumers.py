@@ -24,7 +24,7 @@ class PongConsumer(WebsocketConsumer):
     UPPER_LIMIT = PADDING_THICKNESS + PADDLE_HEIGHT / 2
     LOWER_LIMIT = FIELD_HEIGHT - PADDING_THICKNESS - PADDLE_HEIGHT / 2
 
-    def get_random_y(self):
+    def get_larger_random(self):
         y = 0
         while abs(y) < 0.2:
             y = random.uniform(-1, 1)
@@ -42,7 +42,7 @@ class PongConsumer(WebsocketConsumer):
             'countdown': 3,
             'ball': {'x': self.FIELD_WIDTH/2, 'y': self.FIELD_HEIGHT/2},
             'ball_speed': 10,
-            'ball_vector': self.normalize_vector(random.uniform(-1, 1), self.get_random_y()),
+            'ball_vector': self.normalize_vector(self.get_larger_random(), random.uniform(-1, 1)),
             'player1': {
                 'player_id': None,
                 'score': 0,
@@ -180,8 +180,8 @@ class PongConsumer(WebsocketConsumer):
                     self.game_state['state'] = GameState.COUNTDOWN.value
                     self.game_state['round_start_time'] = time.time()
                     self.game_state['countdown'] = 3
-                    self.game_state['ball_vector'] = self.normalize_vector(random.uniform(-1, 1), self.get_random_y())
-                    print("Game state initialized, vector:", self.game_state['ball_vector'])
+                    self.game_state['ball_vector'] = self.normalize_vector(self.get_larger_random(), random.uniform(-1, 1))
+                    print("Fresh game state initialized, vector:", self.game_state['ball_vector'])
                     print("vector length: ", math.sqrt(self.game_state['ball_vector']['x']**2 + self.game_state['ball_vector']['y']**2))
 
                 # Update the ball's position
@@ -192,7 +192,7 @@ class PongConsumer(WebsocketConsumer):
             self.send(text_data=json.dumps(self.game_state))
 
     def receive(self, text_data):
-        # TODO: only receive data from users who are playing the current game, ignore everyone else - it's done in handle_game_message function now, but thin function would be a better place for this
+        # TODO: only receive data from users who are playing the current game, ignore everyone else - it's done in handle_game_message function now, but this function would be a better place for this
         text_data_json = json.loads(text_data)
         message = text_data_json['message']
         message_type = text_data_json['type']
