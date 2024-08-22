@@ -54,7 +54,7 @@ class PongConsumer(WebsocketConsumer):
                 'down_pressed': False
             },
             'player2': {
-                'player_id': 'player2',
+                'player_id': None,
                 'score': 0,
                 'y': self.FIELD_HEIGHT/2,
                 'up_pressed': False,
@@ -75,6 +75,7 @@ class PongConsumer(WebsocketConsumer):
         self.accept()
         print("USER CONNECTED: ", self.scope['user'])
         self.game_state['player1']['player_id'] = self.scope['user'].id if self.scope['user'].is_authenticated else self.scope['user'];
+        self.game_state['player2']['player_id'] = "player2";
         if self.scope['user'].is_authenticated:
             print("user id: ", self.scope['user'].id)
             print("user name: ", self.scope['user'].username)
