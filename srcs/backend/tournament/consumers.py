@@ -42,10 +42,7 @@ class PongConsumer(WebsocketConsumer):
             'countdown': 3,
             'ball': {'x': self.FIELD_WIDTH/2, 'y': self.FIELD_HEIGHT/2},
             'ball_speed': 10,
-            'ball_vector': {
-                'x': random.uniform(-1, 1),
-                'y': self.get_random_y(),
-            },
+            'ball_vector': self.normalize_vector(random.uniform(-1, 1), self.get_random_y()),
             'player1': {
                 'player_id': None,
                 'score': 0,
@@ -64,7 +61,7 @@ class PongConsumer(WebsocketConsumer):
         }
         self.game_thread = threading.Thread(target=self.game_loop)
         self.game_thread.start()
-        print("Game state initialized, thread:", self.game_thread)
+        
     
     def send_message(self, message):
         self.send(text_data=json.dumps({
@@ -88,10 +85,8 @@ class PongConsumer(WebsocketConsumer):
 
     def handle_key_event(self, key, keyAction, player_field):
         if key == 'ArrowUp':
-            print("ArrowUp")
             self.game_state[player_field]['up_pressed'] = keyAction == 'keydown'
         elif key == 'ArrowDown':
-            print("ArrowDown")
             self.game_state[player_field]['down_pressed'] = keyAction == 'keydown'
 
     def handle_game_message(self, message):
@@ -186,18 +181,18 @@ class PongConsumer(WebsocketConsumer):
                     self.game_state['round_start_time'] = time.time()
                     self.game_state['countdown'] = 3
                     self.game_state['ball_vector'] = self.normalize_vector(random.uniform(-1, 1), self.get_random_y())
+                    print("Game state initialized, vector:", self.game_state['ball_vector'])
+                    print("vector length: ", math.sqrt(self.game_state['ball_vector']['x']**2 + self.game_state['ball_vector']['y']**2))
 
                 # Update the ball's position
                 self.game_state['ball']['x'] = ball_new_x
                 self.game_state['ball']['y'] = ball_new_y
                 
-
-
-                # Send the updated game state to all players
+            # Send the updated game state to all players
             self.send(text_data=json.dumps(self.game_state))
 
     def receive(self, text_data):
-        # TODO: only receive data from users who are playing the current game, ignore everyone else
+        # TODO: only receive data from users who are playing the current game, ignore everyone else - it's done in handle_game_message function now, but thin function would be a better place for this
         text_data_json = json.loads(text_data)
         message = text_data_json['message']
         message_type = text_data_json['type']
