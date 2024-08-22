@@ -28,8 +28,8 @@ services:
       - ./srcs/backend/beePong:/usr/src/backend/beePong
     env_file:
       - .env
-    # ports:
-      # - "8000:8000"
+    ports:
+      - "8000:8000"
     depends_on:
       db:
         condition: service_healthy
