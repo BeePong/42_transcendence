@@ -70,6 +70,9 @@ def tournament(request):
             return JsonResponse({'success': False, 'errors': form.errors}, status=400)
     return render(request, 'tournament/tournament.html', {'tournaments': tournaments, 'form': form, 'form_action': '/tournament/'})
 
+def solo_game(request):
+    return render(request, 'tournament/solo_game.html')
+
 @login_required_json
 def create_tournament(request):
     """The create tournament page for BeePong."""

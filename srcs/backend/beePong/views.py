@@ -34,6 +34,9 @@ def about(request):
     """The about page for BeePong."""
     return render(request, 'beePong/about.html')
 
+""" def solo_game(request):
+    return render(request, 'tournament/solo_game.html') """
+
 def game(request):
     """The game page for BeePong."""
     return render(request, 'beePong/game.html')

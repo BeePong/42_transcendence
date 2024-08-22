@@ -146,3 +146,15 @@ LOGIN_URL = 'accounts:login'
 # Requests from these origins will be allowed to bypass the CSRF protection
 CSRF_TRUSTED_ORIGINS = ['https://localhost']
 
+# Game settings TODO: use them in front-end and back-end
+""" FIELD_WIDTH = 800
+FIELD_HEIGHT = 500
+PADDLE_HEIGHT = 100
+PADDLE_WIDTH = 26
+PADDLE_SPEED = 10
+BALL_RADIUS = 15
+FPS = 30
+PADDING_THICKNESS = 7
+THICK_BORDER_THICKNESS = 5
+UPPER_LIMIT = PADDING_THICKNESS + PADDLE_HEIGHT / 2
+LOWER_LIMIT = FIELD_HEIGHT - PADDING_THICKNESS - PADDLE_HEIGHT / 2 """
