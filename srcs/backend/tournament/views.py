@@ -103,6 +103,9 @@ def tournament(request):
     )
 
 
+def solo_game(request):
+    return render(request, 'tournament/solo_game.html')
+
 @login_required_json
 def create_tournament(request):
     """The create tournament page for BeePong."""
