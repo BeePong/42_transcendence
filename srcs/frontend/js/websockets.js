@@ -60,14 +60,13 @@ function webSocketTest(tournament_id) {
     document.getElementById("score-player2").textContent = player2_score;
   };
 
-  const drawPaddle = (y) => {
+  const drawPaddle = (y, player_type) => {
+    const x =
+      player_type === "player1"
+        ? canvas_width - padding_thickness - paddle_width
+        : padding_thickness;
     context.fillStyle = "white";
-    context.fillRect(
-      canvas_width - padding_thickness - paddle_width,
-      y - paddle_height / 2,
-      paddle_width,
-      paddle_height
-    );
+    context.fillRect(x, y - paddle_height / 2, paddle_width, paddle_height);
   };
 
   var backgroundColor = getComputedStyle(
@@ -104,7 +103,6 @@ function webSocketTest(tournament_id) {
         message: {
           key: key,
           keyAction: keyAction,
-          player_id: "player1",
         },
         type: "game",
       })
@@ -124,6 +122,12 @@ function webSocketTest(tournament_id) {
   });
 
   function updateCanvas(game_data) {
+    insertScores(game_data.player1.score, game_data.player2.score);
+    if (game_data.state === "finished") {
+      console.log("winner is", game_data.winner);
+      socket.close();
+      return;
+    }
     //console.log("updateCanvas game_data", game_data);
     context.fillStyle = backgroundColor;
     context.fillRect(0, 0, canvas_width, canvas_height);
@@ -132,8 +136,8 @@ function webSocketTest(tournament_id) {
     if (game_data.state === "countdown") {
       drawCountdown(game_data.countdown, game_data.ball.x, game_data.ball.y);
     }
-    insertScores(game_data.player1.score, game_data.player2.score);
-    drawPaddle(game_data.player1.y);
+    drawPaddle(game_data.player1.y, "player1");
+    drawPaddle(game_data.player2.y, "player2");
   }
 }
 

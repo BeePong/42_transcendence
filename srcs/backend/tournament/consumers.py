@@ -17,6 +17,7 @@ class PongConsumer(WebsocketConsumer):
     PADDLE_HEIGHT = 100
     PADDLE_WIDTH = 26
     PADDLE_SPEED = 10
+    MAX_SCORE = 3
     BALL_RADIUS = 15
     FPS = 30
     PADDING_THICKNESS = 7
@@ -42,6 +43,7 @@ class PongConsumer(WebsocketConsumer):
             'countdown': 3,
             'ball': {'x': self.FIELD_WIDTH/2, 'y': self.FIELD_HEIGHT/2},
             'ball_speed': 10,
+            'hit_count': 0,
             'ball_vector': self.normalize_vector(self.get_larger_random(), random.uniform(-1, 1)),
             'player1': {
                 'player_id': None,
@@ -70,9 +72,10 @@ class PongConsumer(WebsocketConsumer):
     
     def connect(self):
         self.accept()
+        # TODO: change this to the actual player id, now latest person who joins is the main player, the other one is dummy
+        self.game_state['player2']['player_id'] = self.scope['user'].id if self.scope['user'].is_authenticated else self.scope['user']
+        self.game_state['player1']['player_id'] = "dummy_player"
         print("USER CONNECTED: ", self.scope['user'])
-        self.game_state['player1']['player_id'] = self.scope['user'].id if self.scope['user'].is_authenticated else self.scope['user'];
-        self.game_state['player2']['player_id'] = "player2";
         if self.scope['user'].is_authenticated:
             print("user id: ", self.scope['user'].id)
             print("user name: ", self.scope['user'].username)
@@ -98,6 +101,13 @@ class PongConsumer(WebsocketConsumer):
             self.handle_key_event(key, keyAction, 'player1')
         elif player.id == self.game_state['player2']['player_id']:
             self.handle_key_event(key, keyAction, 'player2')
+
+    def init_new_round(self):
+        self.game_state['round_start_time'] = time.time()
+        self.game_state['state'] = GameState.COUNTDOWN.value
+        self.game_state['countdown'] = 3
+        self.game_state['ball'] = {'x': self.FIELD_WIDTH/2, 'y': self.FIELD_HEIGHT/2}
+        self.game_state['ball_vector'] = self.normalize_vector(self.get_larger_random(), random.uniform(-1, 1))
     
     # game loop should be off between games, instead just render pages
     def game_loop(self):
@@ -148,23 +158,25 @@ class PongConsumer(WebsocketConsumer):
 
                 # instead of left paddle place another wall for debugging
                 # handle collisions with left wall
-                if ball_new_x <= self.BALL_RADIUS:
+                #if ball_new_x <= self.BALL_RADIUS:
                     # Calculate the remaining movement after the ball hits the wall
-                    remaining_movement = self.BALL_RADIUS - self.game_state['ball']['x']
+                    #remaining_movement = self.BALL_RADIUS - self.game_state['ball']['x']
                     # Reverse the x-component of the ball's direction vector
-                    self.game_state['ball_vector']['x'] *= -1
+                    #self.game_state['ball_vector']['x'] *= -1
                     # Move the ball the remaining distance in the new direction
-                    ball_new_x = self.game_state['ball']['x'] + remaining_movement * self.game_state['ball_vector']['x']
+                    #ball_new_x = self.game_state['ball']['x'] + remaining_movement * self.game_state['ball_vector']['x']
 
                 # Collisions with the paddles
-                '''if ball_new_x <= self.PADDING_THICKNESS + self.PADDLE_WIDTH and self.game_state['player2']['y'] - self.PADDLE_HEIGHT / 2 <= ball_new_y <= self.game_state['player2']['y'] + self.PADDLE_HEIGHT / 2:
+                if ball_new_x < self.PADDING_THICKNESS + self.PADDLE_WIDTH + self.BALL_RADIUS and self.game_state['player2']['y'] - self.PADDLE_HEIGHT / 2 - self.BALL_RADIUS <= ball_new_y <= self.game_state['player2']['y'] + self.PADDLE_HEIGHT / 2 + self.BALL_RADIUS:
+                    self.game_state['hit_count'] += 1
                     # Calculate the remaining movement after the ball hits the wall
                     remaining_movement = self.PADDING_THICKNESS + self.PADDLE_WIDTH - self.game_state['ball']['x']
                     # Reverse the x-component of the ball's direction vector
                     self.game_state['ball_vector']['x'] *= -1
                     # Move the ball the remaining distance in the new direction
-                    ball_new_x = self.game_state['ball']['x'] + remaining_movement * self.game_state['ball_vector']['x']'''
-                if ball_new_x >= self.FIELD_WIDTH - self.PADDING_THICKNESS - self.PADDLE_WIDTH - self.BALL_RADIUS and self.game_state['player1']['y'] - self.PADDLE_HEIGHT / 2 <= ball_new_y <= self.game_state['player1']['y'] + self.PADDLE_HEIGHT / 2:
+                    ball_new_x = self.game_state['ball']['x'] + remaining_movement * self.game_state['ball_vector']['x']
+                if ball_new_x > self.FIELD_WIDTH - self.PADDING_THICKNESS - self.PADDLE_WIDTH - self.BALL_RADIUS and self.game_state['player1']['y'] - self.PADDLE_HEIGHT / 2 - self.BALL_RADIUS <= ball_new_y <= self.game_state['player1']['y'] + self.PADDLE_HEIGHT / 2  + self.BALL_RADIUS:
+                    self.game_state['hit_count'] += 1
                     # Calculate the remaining movement after the ball hits the wall
                     remaining_movement = self.game_state['ball']['x'] + self.BALL_RADIUS - (self.FIELD_WIDTH - self.PADDING_THICKNESS - self.PADDLE_WIDTH)
                     # Reverse the x-component of the ball's direction vector
@@ -172,22 +184,25 @@ class PongConsumer(WebsocketConsumer):
                     # Move the ball the remaining distance in the new direction
                     ball_new_x = self.game_state['ball']['x'] - remaining_movement * self.game_state['ball_vector']['x']
 
-                # Check for scoring
-                if ball_new_x >= self.FIELD_WIDTH - self.BALL_RADIUS:
-                    self.game_state['player1']['score'] += 1
-                    ball_new_x = self.FIELD_WIDTH/2
-                    ball_new_y = self.FIELD_HEIGHT/2
-                    self.game_state['state'] = GameState.COUNTDOWN.value
-                    self.game_state['round_start_time'] = time.time()
-                    self.game_state['countdown'] = 3
-                    self.game_state['ball_vector'] = self.normalize_vector(self.get_larger_random(), random.uniform(-1, 1))
-                    print("Fresh game state initialized, vector:", self.game_state['ball_vector'])
-                    print("vector length: ", math.sqrt(self.game_state['ball_vector']['x']**2 + self.game_state['ball_vector']['y']**2))
-
                 # Update the ball's position
                 self.game_state['ball']['x'] = ball_new_x
                 self.game_state['ball']['y'] = ball_new_y
-                
+
+                # Check for scoring
+                if ball_new_x >= self.FIELD_WIDTH - self.BALL_RADIUS:
+                    self.game_state['player1']['score'] += 1
+                    if (self.game_state['player1']['score'] == self.MAX_SCORE):
+                        self.game_state['winner'] = self.game_state['player1']['player_id']
+                        self.game_state['state'] = GameState.FINISHED.value
+                    else:
+                        self.init_new_round()
+                elif ball_new_x <= self.BALL_RADIUS:
+                    self.game_state['player2']['score'] += 1
+                    if (self.game_state['player2']['score'] == self.MAX_SCORE):
+                        self.game_state['winner'] = self.game_state['player2']['player_id']
+                        self.game_state['state'] = GameState.FINISHED.value
+                    else:
+                        self.init_new_round()
             # Send the updated game state to all players
             self.send(text_data=json.dumps(self.game_state))
 

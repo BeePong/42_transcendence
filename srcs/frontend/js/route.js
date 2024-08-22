@@ -44,13 +44,18 @@ async function loadPage(path, redirectUrl = "/", fromNavigate = false) {
       const data = await response.text();
       document.getElementById("content").innerHTML = data;
 
-      // Add the redirect url for login and register page 
-      if ((page === '/accounts/login' || page === '/accounts/register') && redirectUrl !== '/')
-					changeRedirectUrlandOauthState(redirectUrl);
+      // Add the redirect url for login and register page
+      if (
+        (page === "/accounts/login" || page === "/accounts/register") &&
+        redirectUrl !== "/"
+      )
+        changeRedirectUrlandOauthState(redirectUrl);
 
-				// perform countdown in tournmament lobby if the list is full. Otherwise, wait for other players.
-			if (/^\/tournament\/\d+\/lobby$/.test(page))
-					document.querySelector('.full') ? tournamentLobbyCountdown() : mockWebSocket(); //TODO: open websocket
+      // perform countdown in tournmament lobby if the list is full. Otherwise, wait for other players.
+      if (/^\/tournament\/\d+\/lobby$/.test(page))
+        document.querySelector(".full")
+          ? tournamentLobbyCountdown()
+          : mockWebSocket(); //TODO: open websocket
 
       // if url contains "lobby", start mockWebSocket
       var match = page.match(/^\/tournament\/(\d+)\/lobby$/);
@@ -75,34 +80,35 @@ async function redirectToLoginPage(redirectUrl) {
   // update the browser's history to the login path
   history.pushState(null, null, "/accounts/login");
 
-	try {
-		const response = await fetch('/page/accounts/login/');
-		if (!response.ok) {
-				throw new Error('Network response was not ok');
-		}
-		const data = await response.text();
-		document.getElementById('content').innerHTML = data;
+  try {
+    const response = await fetch("/page/accounts/login/");
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    const data = await response.text();
+    document.getElementById("content").innerHTML = data;
 
-		changeRedirectUrlandOauthState(redirectUrl);
-	}
-	catch (error) {
-		console.error('There was a problem with the fetch operation:', error);
-	}
+    changeRedirectUrlandOauthState(redirectUrl);
+  } catch (error) {
+    console.error("There was a problem with the fetch operation:", error);
+  }
 }
 
 // Change the redirect url in the form and the state of the oauth
 function changeRedirectUrlandOauthState(redirectUrl) {
-	// Change the redirect url in the form
-	document.getElementById('redirectUrl').value = redirectUrl;
+  // Change the redirect url in the form
+  document.getElementById("redirectUrl").value = redirectUrl;
 
-	// Change the state of the oauth according to the redirect url
-	const login42UrlElement = document.getElementById('login-42-url');
+  // Change the state of the oauth according to the redirect url
+  const login42UrlElement = document.getElementById("login-42-url");
 
-	const updatedLogin42Url = new URL(login42UrlElement.href);
-	const newStateParam = `qwerty|${encodeURIComponent(`https://localhost${redirectUrl}`)}`;
-	updatedLogin42Url.searchParams.set('state', newStateParam);
+  const updatedLogin42Url = new URL(login42UrlElement.href);
+  const newStateParam = `qwerty|${encodeURIComponent(
+    `https://localhost${redirectUrl}`
+  )}`;
+  updatedLogin42Url.searchParams.set("state", newStateParam);
 
-	login42UrlElement.href = updatedLogin42Url.toString();
+  login42UrlElement.href = updatedLogin42Url.toString();
 }
 
 // TODO: replace by websocket
@@ -204,9 +210,9 @@ window.addEventListener("popstate", () => {
 });
 
 // Initial page load
-document.addEventListener('DOMContentLoaded', () => {
-	loadNavBar();
-	loadPage(window.location.pathname, '/', false, window.location.search);
+document.addEventListener("DOMContentLoaded", () => {
+  loadNavBar();
+  loadPage(window.location.pathname, "/", false, window.location.search);
 });
 
 export { loadNavBar };
