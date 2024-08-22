@@ -325,3 +325,5 @@ document.addEventListener("DOMContentLoaded", () => {
   loadNavBar();
   loadPage(window.location.pathname);
 });
+
+export { navigate, loadPage, redirectToLoginPage, mockWebSocket };
