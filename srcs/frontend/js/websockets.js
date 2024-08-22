@@ -130,7 +130,6 @@ function webSocketTest(tournament_id) {
     drawBorders();
     drawBall(game_data.ball.x, game_data.ball.y);
     if (game_data.state === "countdown") {
-      console.log("countdown", game_data.countdown);
       drawCountdown(game_data.countdown, game_data.ball.x, game_data.ball.y);
     }
     insertScores(game_data.player1.score, game_data.player2.score);

@@ -131,6 +131,7 @@ class PongConsumer(WebsocketConsumer):
                         else:
                             self.game_state[player_id]['y'] = new_y
                 
+                # Calculate next position of the ball
                 ball_new_x = self.game_state['ball']['x'] + self.game_state['ball_speed'] * self.game_state['ball_vector']['x']
                 ball_new_y = self.game_state['ball']['y'] + self.game_state['ball_speed'] * self.game_state['ball_vector']['y']
                 
