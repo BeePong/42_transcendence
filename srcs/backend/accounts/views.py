@@ -5,10 +5,18 @@ from django.http import JsonResponse
 import os
 import requests
 import json
-import urllib.parse
+from urllib.parse import urlencode, unquote, quote
 
 # Create your views here.
 
+login_42_params = {
+    'client_id': os.getenv('FTAPI_UID'),
+    'redirect_uri': os.getenv('FTAPI_REDIR_URL'),
+    'response_type': 'code',
+    'scope': 'public',
+    'state': f'qwerty|{quote("https://localhost")}', # include redirect url to frontend
+}
+login_42_url = f"https://api.intra.42.fr/oauth/authorize?{urlencode(login_42_params)}"
 
 def register(request):
     """Register a new user."""
@@ -44,6 +52,7 @@ def register(request):
         'form_button_text': 'REGISTER',
         'alt_action': 'OR LOGIN',
         'alt_action_url': '/accounts/login/',
+        'login_42_url': login_42_url,
     }
     return render(request, 'registration/form.html', context)
 
@@ -67,6 +76,7 @@ def custom_login(request):
         'form_button_text': 'LOGIN',
         'alt_action': 'OR REGISTER',
         'alt_action_url': '/accounts/register/',
+        'login_42_url': login_42_url,
     }
     return render(request, 'registration/form.html', context)
 
@@ -89,7 +99,18 @@ database, they are logged in. If the user does not exist, a new user is created
 def oauth_token(request):
     code = request.GET.get('code')
     if code is None:
-        return JsonResponse({'success': False, 'error': 'OAuth no code'}, status=400)
+        return redirect('/accounts/oauth_error/?from=oauth_token')
+
+    # Use the redirect url to frontend stored in state
+    state = request.GET.get('state')
+    if not state:
+        return redirect('/accounts/oauth_error/?from=oauth_token')
+    # Split the state to extract the redirect url
+    state_parts = state.split('|')
+    if len(state_parts) < 2:
+        return redirect('/accounts/oauth_error/?from=oauth_token')
+    redirect_url = unquote(state_parts[1])
+
     data = {
         'grant_type': 'authorization_code',
         'client_id': os.getenv('FTAPI_UID'),
@@ -123,6 +144,19 @@ def oauth_token(request):
 
         # Log the user in
         login(request, user)
-        return JsonResponse({'success': True, 'username': user.username}, status=201)
+        return redirect(redirect_url)
     else:
-        return JsonResponse({'success': False, 'error': '42 authentication failed'}, status=401)
+        return redirect('/accounts/oauth_error/?from=oauth_token')
+
+"""
+The oauth_error view handles the display of an OAuth error message.
+It checks if the request is originated from the 'oauth_token' function.
+If the request comes from 'oauth_token', it returns a JSON response with an error message.
+Otherwise, it renders an HTML error page.
+"""
+def oauth_error(request):
+    from_param = request.GET.get('from')
+    if from_param == 'oauth_token':
+        return JsonResponse({'success': False, 'error': '42 Authorization Error'}, status=400)
+    else:
+        return render(request, 'registration/oauth_error.html')

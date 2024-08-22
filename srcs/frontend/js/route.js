@@ -41,10 +41,14 @@ async function loadPage(path, redirectUrl = "/", fromNavigate = false) {
       const data = await response.text();
       document.getElementById("content").innerHTML = data;
 
-      // Add the redirect url for login and register page
-      if (page === "/accounts/login" || page === "/accounts/register")
-        document.getElementById("redirectUrl").value = redirectUrl;
-      // console.log("page", page);
+      // Add the redirect url for login and register page 
+      if ((page === '/accounts/login' || page === '/accounts/register') && redirectUrl !== '/')
+					changeRedirectUrlandOauthState(redirectUrl);
+
+				// perform countdown in tournmament lobby if the list is full. Otherwise, wait for other players.
+			if (/^\/tournament\/\d+\/lobby$/.test(page))
+					document.querySelector('.full') ? tournamentLobbyCountdown() : mockWebSocket(); //TODO: open websocket
+      console.log("page", page);
       if (page === "/tournament/pong") webSocketTest();
     }
   } catch (error) {
@@ -201,23 +205,99 @@ function webSocketTest() {
 //     sendGameData(paddle_y);
 //   }, 1000 / fps);
 // }
+// Load content based on the path, and add the redirect url for login and register page 
+async function loadPage(path, redirectUrl = '/', fromNavigate = false, queryString = '') {
+	// If the path is '/', set page to '/home'.
+	// Otherwise, remove the trailing slash from the path and set page to the resulting string.
+	const page = path === '/' ? '/home' : path.replace(/\/$/, '');
+	try {
+			const response = await fetch(`/page${page}/${queryString}`);
+
+			if (!response.ok) {
+					if (!(response.status === 400 || response.status === 401 || response.status === 404))
+							throw new Error('Network response was not ok');
+			}
+
+			// If the navigation was triggered programmatically (fromNavigate is true) and the response status is not 401 (unauthorized),
+			// update the browser's history to the new path without reloading the page.
+			if (fromNavigate === true && response.status !== 400 && response.status !== 401)
+				history.pushState(null, null, path);
+
+			// Handle 42 authorization error by fetching the error page
+			if (page === '/accounts/oauth_error' && response.status === 400)
+				fetchOauthErrorPage();
+			// Redirect to login page if the user is not login
+			else if (response.status === 401) {
+				const data = await response.json();
+				if (data.authenticated === false) {
+					redirectToLoginPage(redirectUrl);
+				}
+			}
+			else {
+				const data = await response.text();
+				document.getElementById('content').innerHTML = data;
+
+				// Add the redirect url for login and register page 
+				if ((page === '/accounts/login' || page === '/accounts/register') && redirectUrl !== '/')
+					changeRedirectUrlandOauthState(redirectUrl);
+
+				// perform countdown in tournmament lobby if the list is full. Otherwise, wait for other players.
+				if (/^\/tournament\/\d+\/lobby$/.test(page))
+					document.querySelector('.full') ? tournamentLobbyCountdown() : mockWebSocket(); //TODO: open websocket
+			}
+	} catch (error) {
+			console.error('There was a problem with the fetch operation:', error);
+	}
+}
+
+// Fetching the error page for 42 authorization error
+async function fetchOauthErrorPage() {
+	try {
+		const response = await fetch('/page/accounts/oauth_error/');
+		if (!response.ok) {
+				throw new Error('Network response was not ok');
+		}
+		const data = await response.text();
+		document.getElementById('content').innerHTML = data;
+	}
+	catch (error) {
+		console.error('There was a problem with the fetch operation:', error);
+	}
+}
 
 // redirect to login page
 async function redirectToLoginPage(redirectUrl) {
   // update the browser's history to the login path
   history.pushState(null, null, "/accounts/login");
 
-  try {
-    const response = await fetch("/page/accounts/login/");
-    if (!response.ok) {
-      throw new Error("Network response was not ok");
-    }
-    const data = await response.text();
-    document.getElementById("content").innerHTML = data;
-    document.getElementById("redirectUrl").value = redirectUrl;
-  } catch (error) {
-    console.error("There was a problem with the fetch operation:", error);
-  }
+	try {
+		const response = await fetch('/page/accounts/login/');
+		if (!response.ok) {
+				throw new Error('Network response was not ok');
+		}
+		const data = await response.text();
+		document.getElementById('content').innerHTML = data;
+
+		changeRedirectUrlandOauthState(redirectUrl);
+	}
+	catch (error) {
+		console.error('There was a problem with the fetch operation:', error);
+	}
+}
+
+// Change the redirect url in the form and the state of the oauth
+function changeRedirectUrlandOauthState(redirectUrl) {
+	// Change the redirect url in the form
+	document.getElementById('redirectUrl').value = redirectUrl;
+
+	// Change the state of the oauth according to the redirect url
+	const login42UrlElement = document.getElementById('login-42-url');
+
+	const updatedLogin42Url = new URL(login42UrlElement.href);
+	const newStateParam = `qwerty|${encodeURIComponent(`https://localhost${redirectUrl}`)}`;
+	updatedLogin42Url.searchParams.set('state', newStateParam);
+
+	login42UrlElement.href = updatedLogin42Url.toString();
 }
 
 // TODO: replace by websocket
@@ -308,7 +388,7 @@ window.addEventListener("popstate", () => {
 });
 
 // Initial page load
-document.addEventListener("DOMContentLoaded", () => {
-  loadNavBar();
-  loadPage(window.location.pathname);
+document.addEventListener('DOMContentLoaded', () => {
+	loadNavBar();
+	loadPage(window.location.pathname, '/', false, window.location.search);
 });

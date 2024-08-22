@@ -22,6 +22,8 @@ class TournamentForm(forms.ModelForm):
             })
         }
 
+
+
 #TODO: to be replaced by real database
 class AliasForm(forms.ModelForm):
     class Meta:
