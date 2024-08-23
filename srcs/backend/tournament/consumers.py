@@ -5,21 +5,9 @@ import random
 import math
 from channels.generic.websocket import WebsocketConsumer
 from enum import Enum
+from django.conf import settings
 # import asyncio
 # from .ai import ai_bot
-
-FIELD_WIDTH = 800
-FIELD_HEIGHT = 500
-PADDLE_HEIGHT = 100
-PADDLE_WIDTH = 26
-PADDLE_SPEED = 10
-MAX_SCORE = 30
-BALL_RADIUS = 15
-FPS = 30
-PADDING_THICKNESS = 7
-THICK_BORDER_THICKNESS = 5
-UPPER_LIMIT = PADDING_THICKNESS + PADDLE_HEIGHT / 2
-LOWER_LIMIT = FIELD_HEIGHT - PADDING_THICKNESS - PADDLE_HEIGHT / 2
 
 class GameState(Enum):
     COUNTDOWN = 'countdown'
@@ -41,7 +29,7 @@ game_state = {
     'round_start_time': time.time(),
     'state': GameState.COUNTDOWN.value,
     'countdown': 3,
-    'ball': {'x': FIELD_WIDTH/2, 'y': FIELD_HEIGHT/2},
+    'ball': {'x': settings.FIELD_WIDTH/2, 'y': settings.FIELD_HEIGHT/2},
     'ball_speed': 10,
     'hit_count': 0,
     'ball_vector': normalize_vector(get_larger_random(), random.uniform(-1, 1)),
@@ -49,7 +37,7 @@ game_state = {
         'player_id': None,
         'player_name': 'vvagapov',
         'score': 0,
-        'y': FIELD_HEIGHT/2,
+        'y': settings.FIELD_HEIGHT/2,
         'up_pressed': False,
         'down_pressed': False
     },
@@ -57,7 +45,7 @@ game_state = {
         'player_id': None,
         'player_name': 'dummy',
         'score': 0,
-        'y': FIELD_HEIGHT/2,
+        'y': settings.FIELD_HEIGHT/2,
         'up_pressed': False,
         'down_pressed': False
     },
@@ -68,24 +56,13 @@ def init_new_round(game_state):
     game_state['round_start_time'] = time.time()
     game_state['state'] = GameState.COUNTDOWN.value
     game_state['countdown'] = 3
-    game_state['ball'] = {'x': FIELD_WIDTH/2, 'y': FIELD_HEIGHT/2}
+    game_state['hit_count'] = 0
+    game_state['ball'] = {'x': settings.FIELD_WIDTH/2, 'y': settings.FIELD_HEIGHT/2}
     game_state['ball_vector'] = normalize_vector(get_larger_random(), random.uniform(-1, 1))
+    print("NEW ROUND INITIALIZED")
 
 class GameLoop:
 
-    FIELD_WIDTH = 800
-    FIELD_HEIGHT = 500
-    PADDLE_HEIGHT = 100
-    PADDLE_WIDTH = 26
-    PADDLE_SPEED = 10
-    MAX_SCORE = 30
-    BALL_RADIUS = 15
-    FPS = 30
-    PADDING_THICKNESS = 7
-    THICK_BORDER_THICKNESS = 5
-    UPPER_LIMIT = PADDING_THICKNESS + PADDLE_HEIGHT / 2
-    LOWER_LIMIT = FIELD_HEIGHT - PADDING_THICKNESS - PADDLE_HEIGHT / 2
-    
     _instance = None
 
     @classmethod
@@ -108,7 +85,7 @@ class GameLoop:
     def game_loop(self):
         # Your game loop code here, which can use self.game_state
         while True:
-            time.sleep(1/self.FPS)
+            time.sleep(1/settings.FPS)
             if self.game_state['state'] == GameState.COUNTDOWN.value:
                 if (time.time() - self.game_state['round_start_time'] <= 3):
                     self.game_state['countdown'] = 3 - int(time.time() - self.game_state['round_start_time'])
@@ -119,16 +96,16 @@ class GameLoop:
                 # Update the position of the paddles based on the key states
                 for player_id in ['player1', 'player2']:
                     if self.game_state[player_id]['up_pressed']:
-                        new_y = self.game_state[player_id]['y'] - self.PADDLE_SPEED
-                        if new_y < self.UPPER_LIMIT:
-                            self.game_state[player_id]['y'] = self.UPPER_LIMIT
+                        new_y = self.game_state[player_id]['y'] - settings.PADDLE_SPEED
+                        if new_y < settings.UPPER_LIMIT:
+                            self.game_state[player_id]['y'] = settings.UPPER_LIMIT
                         else:
                             self.game_state[player_id]['y'] = new_y
                             
                     elif self.game_state[player_id]['down_pressed']:
-                        new_y = self.game_state[player_id]['y'] + self.PADDLE_SPEED
-                        if new_y > self.LOWER_LIMIT:
-                            self.game_state[player_id]['y'] = self.LOWER_LIMIT
+                        new_y = self.game_state[player_id]['y'] + settings.PADDLE_SPEED
+                        if new_y > settings.LOWER_LIMIT:
+                            self.game_state[player_id]['y'] = settings.LOWER_LIMIT
                         else:
                             self.game_state[player_id]['y'] = new_y
                 
@@ -137,16 +114,16 @@ class GameLoop:
                 ball_new_y = self.game_state['ball']['y'] + self.game_state['ball_speed'] * self.game_state['ball_vector']['y']
                 
                 # Check for collisions with the game boundaries
-                if ball_new_y <= self.THICK_BORDER_THICKNESS + self.BALL_RADIUS:
+                if ball_new_y <= settings.THICK_BORDER_THICKNESS + settings.BALL_RADIUS:
                     # Calculate the remaining movement after the ball hits the wall
-                    remaining_movement = self.THICK_BORDER_THICKNESS + self.BALL_RADIUS - self.game_state['ball']['y']
+                    remaining_movement = settings.THICK_BORDER_THICKNESS + settings.BALL_RADIUS - self.game_state['ball']['y']
                     # Reverse the y-component of the ball's direction vector
                     self.game_state['ball_vector']['y'] *= -1
                     # Move the ball the remaining distance in the new direction
                     ball_new_y = self.game_state['ball']['y'] + remaining_movement * self.game_state['ball_vector']['y']
-                elif ball_new_y >= self.FIELD_HEIGHT - self.THICK_BORDER_THICKNESS - self.BALL_RADIUS:
+                elif ball_new_y >= settings.FIELD_HEIGHT - settings.THICK_BORDER_THICKNESS - settings.BALL_RADIUS:
                     # Calculate the remaining movement after the ball hits the wall
-                    remaining_movement = self.game_state['ball']['y'] + self.BALL_RADIUS - (self.FIELD_HEIGHT - self.THICK_BORDER_THICKNESS)
+                    remaining_movement = self.game_state['ball']['y'] + settings.BALL_RADIUS - (settings.FIELD_HEIGHT - settings.THICK_BORDER_THICKNESS)
                     # Reverse the y-component of the ball's direction vector
                     self.game_state['ball_vector']['y'] *= -1
                     # Move the ball the remaining distance in the new direction
@@ -163,18 +140,18 @@ class GameLoop:
                     #ball_new_x = self.game_state['ball']['x'] + remaining_movement * self.game_state['ball_vector']['x']
 
                 # Collisions with the paddles
-                if ball_new_x < self.PADDING_THICKNESS + self.PADDLE_WIDTH + self.BALL_RADIUS and self.game_state['player2']['y'] - self.PADDLE_HEIGHT / 2 - self.BALL_RADIUS <= ball_new_y <= self.game_state['player2']['y'] + self.PADDLE_HEIGHT / 2 + self.BALL_RADIUS:
+                if ball_new_x < settings.PADDING_THICKNESS + settings.PADDLE_WIDTH + settings.BALL_RADIUS and self.game_state['player2']['y'] - settings.PADDLE_HEIGHT / 2 - settings.BALL_RADIUS <= ball_new_y <= self.game_state['player2']['y'] + settings.PADDLE_HEIGHT / 2 + settings.BALL_RADIUS:
                     self.game_state['hit_count'] += 1
                     # Calculate the remaining movement after the ball hits the wall
-                    remaining_movement = self.PADDING_THICKNESS + self.PADDLE_WIDTH - self.game_state['ball']['x']
+                    remaining_movement = settings.PADDING_THICKNESS + settings.PADDLE_WIDTH - self.game_state['ball']['x']
                     # Reverse the x-component of the ball's direction vector
                     self.game_state['ball_vector']['x'] *= -1
                     # Move the ball the remaining distance in the new direction
                     ball_new_x = self.game_state['ball']['x'] + remaining_movement * self.game_state['ball_vector']['x']
-                if ball_new_x > self.FIELD_WIDTH - self.PADDING_THICKNESS - self.PADDLE_WIDTH - self.BALL_RADIUS and self.game_state['player1']['y'] - self.PADDLE_HEIGHT / 2 - self.BALL_RADIUS <= ball_new_y <= self.game_state['player1']['y'] + self.PADDLE_HEIGHT / 2  + self.BALL_RADIUS:
+                if ball_new_x > settings.FIELD_WIDTH - settings.PADDING_THICKNESS - settings.PADDLE_WIDTH - settings.BALL_RADIUS and self.game_state['player1']['y'] - settings.PADDLE_HEIGHT / 2 - settings.BALL_RADIUS <= ball_new_y <= self.game_state['player1']['y'] + settings.PADDLE_HEIGHT / 2  + settings.BALL_RADIUS:
                     self.game_state['hit_count'] += 1
                     # Calculate the remaining movement after the ball hits the wall
-                    remaining_movement = self.game_state['ball']['x'] + self.BALL_RADIUS - (self.FIELD_WIDTH - self.PADDING_THICKNESS - self.PADDLE_WIDTH)
+                    remaining_movement = self.game_state['ball']['x'] + settings.BALL_RADIUS - (settings.FIELD_WIDTH - settings.PADDING_THICKNESS - settings.PADDLE_WIDTH)
                     # Reverse the x-component of the ball's direction vector
                     self.game_state['ball_vector']['x'] *= -1
                     # Move the ball the remaining distance in the new direction
@@ -185,18 +162,18 @@ class GameLoop:
                 self.game_state['ball']['y'] = ball_new_y
 
                 # Check for scoring
-                if ball_new_x >= self.FIELD_WIDTH - self.BALL_RADIUS:
+                if ball_new_x >= settings.FIELD_WIDTH - settings.BALL_RADIUS:
                     self.game_state['player1']['score'] += 1
                     init_new_round(game_state)
-                    if (self.game_state['player1']['score'] == self.MAX_SCORE):
+                    if (self.game_state['player1']['score'] == settings.MAX_SCORE):
                         self.game_state['winner'] = self.game_state['player1']['player_id']
                         self.game_state['state'] = GameState.COUNTDOWN.value
                         self.game_state['player2']['score'] = 0
                         self.game_state['player1']['score'] = 0
-                elif ball_new_x <= self.BALL_RADIUS:
+                elif ball_new_x <= settings.BALL_RADIUS:
                     self.game_state['player2']['score'] += 1
                     init_new_round(game_state)
-                    if (self.game_state['player2']['score'] == self.MAX_SCORE):
+                    if (self.game_state['player2']['score'] == settings.MAX_SCORE):
                         self.game_state['winner'] = self.game_state['player2']['player_id']
                         self.game_state['state'] = GameState.COUNTDOWN.value
                         self.game_state['player2']['score'] = 0
@@ -205,28 +182,18 @@ class GameLoop:
             
 
 class PongConsumer(WebsocketConsumer):
-    FIELD_WIDTH = 800
-    FIELD_HEIGHT = 500
-    PADDLE_HEIGHT = 100
-    PADDLE_WIDTH = 26
-    PADDLE_SPEED = 10
-    MAX_SCORE = 30
-    BALL_RADIUS = 15
-    FPS = 30
-    PADDING_THICKNESS = 7
-    THICK_BORDER_THICKNESS = 5
-    UPPER_LIMIT = PADDING_THICKNESS + PADDLE_HEIGHT / 2
-    LOWER_LIMIT = FIELD_HEIGHT - PADDING_THICKNESS - PADDLE_HEIGHT / 2
 
     consumers = []
     
     game_loop = GameLoop.get_instance(game_state)
     game_thread = threading.Thread(target=game_loop.loop)
     game_thread.start()
+    print("GAME THREAD STARTED")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.__class__.consumers.append(self)
+        print("CONSUMERS: ", self.__class__.consumers)
         
     def get_player_by_user(self, user):
         if user.username == game_state['player1']['player_name']:
@@ -290,6 +257,7 @@ class PongConsumer(WebsocketConsumer):
 
     @classmethod
     def send_game_state_to_all(cls):
+        print("SENDING GAME STATE TO ALL")
         for consumer in cls.consumers:
             consumer.send_game_state()
     
