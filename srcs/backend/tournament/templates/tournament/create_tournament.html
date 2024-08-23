@@ -18,7 +18,14 @@
 											<div class="radio-group" id="id_title">
 													{% for id, label in form.num_players.field.choices %}
 													<div>
-													<input type="radio" id="id_num_players_{{ forloop.counter0 }}" name="num_players" value="{{ id }}" class="radio-input">
+													<input
+															type="radio"
+															id="id_num_players_{{ forloop.counter0 }}"
+															name="num_players"
+															value="{{ id }}"
+															class="radio-input"
+															{% if forloop.first %} checked {% endif %}
+													>
 													<label class="radio-label" for="id_num_players_{{ forloop.counter0 }}">
 															<span>{{ label }}</span>
 													</label>
