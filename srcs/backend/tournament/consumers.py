@@ -187,18 +187,20 @@ class GameLoop:
                 # Check for scoring
                 if ball_new_x >= self.FIELD_WIDTH - self.BALL_RADIUS:
                     self.game_state['player1']['score'] += 1
+                    init_new_round(game_state)
                     if (self.game_state['player1']['score'] == self.MAX_SCORE):
                         self.game_state['winner'] = self.game_state['player1']['player_id']
-                        self.game_state['state'] = GameState.FINISHED.value
-                    else:
-                        init_new_round(game_state)
+                        self.game_state['state'] = GameState.COUNTDOWN.value
+                        self.game_state['player2']['score'] = 0
+                        self.game_state['player1']['score'] = 0
                 elif ball_new_x <= self.BALL_RADIUS:
                     self.game_state['player2']['score'] += 1
+                    init_new_round(game_state)
                     if (self.game_state['player2']['score'] == self.MAX_SCORE):
                         self.game_state['winner'] = self.game_state['player2']['player_id']
-                        self.game_state['state'] = GameState.FINISHED.value
-                    else:
-                        init_new_round(game_state)
+                        self.game_state['state'] = GameState.COUNTDOWN.value
+                        self.game_state['player2']['score'] = 0
+                        self.game_state['player1']['score'] = 0
             PongConsumer.send_game_state_to_all()
             
 
