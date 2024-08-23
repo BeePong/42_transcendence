@@ -166,7 +166,7 @@ services:
         echo "Kibana is available, waiting for full initialization...";
         
         # Wait for additional time to ensure all plugins and services in Kibana are ready
-        sleep 30
+        sleep 20
 
         echo ""
         echo "Creating ILM policies:"
@@ -188,6 +188,7 @@ services:
           --cacert config/certs/ca/ca.crt \
           -d @/policies/postgres_policy.json
 
+        sleep 10
         echo ""
         echo "Creating Kibana data views:"
         curl -s -X POST --cacert config/certs/ca/ca.crt "https://kibana:5601/api/data_views/data_view" \
@@ -361,4 +362,11 @@ services:
       - ELASTIC_USER=elastic
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
       - ELASTIC_HOSTS=https://elasticsearch:9200
-
+    entrypoint: >
+      bash -c 'for policy in Backend-logs-index-policy Nginx-logs-index-policy Postgres-logs-index-policy; do
+        until curl -s --cacert /usr/share/logstash/certs/ca/ca.crt -u "elastic:${ELASTIC_PASSWORD}" https://elasticsearch:9200/_ilm/policy/$policy | grep -q "$policy"; do
+          echo "Waiting for $policy to be created..."
+          sleep 5
+        done
+      done;
+      exec /usr/local/bin/docker-entrypoint'
