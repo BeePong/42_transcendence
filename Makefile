@@ -86,11 +86,18 @@ re: clean_orphans clean_images up_no_elk
 # Rebuild and start all services including ELK stack without removing volumes
 re_elk: clean_orphans clean_images up_all
 
+# Rebuild and start all services: clean orphans and volumes, keep images
+re_keep_img: clean_orphans clean_volumes up_no_elk
+
+# Rebuild and start all services including ELK stack: clean orphans and volumes, keep images
+re_elk_keep_img: clean_orphans clean_volumes up_all
+
 # Rebuild and start all services with a full cleanup including volumes
 re_all: clean_all up_no_elk
 
 # Rebuild and start all services including ELK stack with a full cleanup including volumes
 re_all_elk: clean_all up_all
+
 
 ################################################################################
 # Logging
@@ -106,7 +113,6 @@ logs_db:
 	docker compose -f ./docker-compose.yml logs -f db
 
 logs_elk:
-	docker compose -f ./docker-compose.yml logs -f elasticsearch kibana logstash metricbeat dashboard_import
 	docker compose -f ./docker-compose.yml logs -f elasticsearch kibana logstash metricbeat 
 
 # Tail all logs with timestamps
@@ -206,6 +212,8 @@ help:
 	@echo "Rebuild and Restart:"
 	@echo "  re             Rebuild and start all services without removing volumes"
 	@echo "  re_elk         Rebuild and start all services including ELK stack without removing volumes"
+	@echo "  re_keep_img    Rebuild and start all services, keep images "
+	@echo "  re_elk_keep_img Rebuild and start all services including ELK, keep images "
 	@echo "  re_all         Rebuild and start all services with a full cleanup including volumes"
 	@echo "  re_all_elk     Rebuild and start all services including ELK stack with a full cleanup including volumes"
 	@echo ""
