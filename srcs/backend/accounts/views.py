@@ -84,7 +84,7 @@ def custom_logout(request):
     if request.method == 'POST':
         if request.user.is_authenticated:
             logout(request)
-            return JsonResponse({'success': True})
+            return JsonResponse({'success': True, 'redirect': '/'})
         else:
             return JsonResponse({'success': False, 'error': 'User not authenticated'}, status=401)
     return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=405)
