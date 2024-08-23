@@ -63,12 +63,12 @@ function webSocketTest(tournament_id) {
     if (score2) score2.textContent = player2_score;
   };
 
-  const drawPaddle = (y, player_type) => {
+  const drawPaddle = (y, player_type, controlling) => {
     const x =
       player_type === "player1"
         ? canvas_width - padding_thickness - paddle_width
         : padding_thickness;
-    context.fillStyle = "white";
+    context.fillStyle = controlling ? "yellow" : "white";
     context.fillRect(x, y - paddle_height / 2, paddle_width, paddle_height);
   };
 
@@ -139,6 +139,7 @@ function webSocketTest(tournament_id) {
     if (game_data.state === "countdown") {
       drawCountdown(game_data.countdown, game_data.ball.x, game_data.ball.y);
     }
+    // TODO: pass controlling param to drawPaddle
     drawPaddle(game_data.player1.y, "player1");
     drawPaddle(game_data.player2.y, "player2");
   }
