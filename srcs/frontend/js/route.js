@@ -3,18 +3,12 @@ import { tournamentLobbyCountdown } from "./tournament.js";
 
 // Handle navigation based on path or event 
 function navigate(eventOrPath, redirectUrl = '/') {
-	let path;
-	if (typeof eventOrPath === 'string')
-			path = eventOrPath;
-	else {
-			eventOrPath.preventDefault();
-			path = eventOrPath.currentTarget.getAttribute('href');
-	}
+	const path = typeof eventOrPath === 'string' 
+		? eventOrPath 
+		: (eventOrPath.preventDefault(), eventOrPath.currentTarget.getAttribute('href'));
 
-	if (window.location.pathname === path) // Do not render again for the same path
-			return;
-
-	loadPage(path, redirectUrl, true);
+	if (window.location.pathname !== path) // Do not render again for the same path
+		loadPage(path, redirectUrl, true);
 }
 
 // Load content based on the path
@@ -25,24 +19,23 @@ export async function loadPage(path, redirectUrl = '/', fromNavigate = false, qu
 	try {
 			const response = await fetch(`/page${page}/${queryString}`);
 
-			if (!response.ok) {
-					if (!(response.status === 400 || response.status === 401 || response.status === 404))
-							throw new Error('Network response was not ok');
+			if (!response.ok && response.status !== 404) {
+					if (response.status === 400 || response.status === 401) {
+						if (response.status === 400)
+							return loadPage('/accounts/oauth_error'); // Handle oauth error response by fetching the error page
+						else
+							return navigate('/accounts/login', redirectUrl); // Redirect to login page if the user is not authenticated	
+					}
+					else {
+						throw new Error('Network response was not ok');
+					}
 			}
 
-			// If this function is called by navigate() and the response status is not 400 or 401,
-			// update the browser's history to the new path without reloading the page.
-			if (fromNavigate === true && response.status !== 400 && response.status !== 401)
+			if (fromNavigate === true) // If this function is called by navigate(), update the browser's history to the new path without reloading the page
 				history.pushState(null, null, path);
 
-			if (page === '/accounts/oauth_error' && response.status === 400) // Handle oauth error response by fetching the error page
-				loadPage('/accounts/oauth_error');
-			else if (response.status === 401)  // Redirect to login page if the user is not authenticated
-				navigate('/accounts/login', redirectUrl);
-			else {
-				const data = await response.text();
-				updatePageContent(data, page, redirectUrl); // Handle content updates
-			}
+			const data = await response.text();
+			updatePageContent(data, page, redirectUrl); // Handle content updates
 	} catch (error) {
 			console.error('There was a problem with the fetch operation:', error);
 	}
@@ -55,9 +48,7 @@ function updatePageContent(data, page, redirectUrl) {
 	// Add the redirect URL for login and register pages
 	if ((page === '/accounts/login' || page === '/accounts/register') && redirectUrl !== '/')
 		changeRedirectUrlandOauthState(redirectUrl); 
-
-	// Perform countdown in tournament lobby if the list is full. Otherwise, wait for other players.
-	if (/^\/tournament\/\d+\/lobby$/.test(page)) {
+	else if (/^\/tournament\/\d+\/lobby$/.test(page)) { // Perform countdown in tournament lobby if the list is full. Otherwise, wait for other players.
 		if (document.querySelector('.full')) {
 			if (!document.querySelector('.winner')) {
 				tournamentLobbyCountdown();
@@ -75,7 +66,6 @@ function changeRedirectUrlandOauthState(redirectUrl) {
 
 	// Change the state of the oauth according to the redirect url
 	const login42UrlElement = document.getElementById('login-42-url');
-
 	const updatedLogin42Url = new URL(login42UrlElement.href);
 	const newStateParam = `qwerty|${encodeURIComponent(`https://localhost${redirectUrl}`)}`;
 	updatedLogin42Url.searchParams.set('state', newStateParam);
@@ -83,5 +73,5 @@ function changeRedirectUrlandOauthState(redirectUrl) {
 	login42UrlElement.href = updatedLogin42Url.toString();
 }
 
-// Ensure `navigate` is accessible in the global scope
+// Attach navigate to the global window object for use in inline event handlers
 window.navigate = navigate;

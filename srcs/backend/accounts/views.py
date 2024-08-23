@@ -159,4 +159,4 @@ def oauth_error(request):
     if from_param == 'oauth_token':
         return JsonResponse({'success': False, 'error': '42 Authorization Error'}, status=400)
     else:
-        return render(request, 'registration/oauth_error.html')
+        return render(request, 'registration/form_error.html', {'error_message': '42 Authorization Error'})
