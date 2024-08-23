@@ -199,6 +199,7 @@ class GameLoop:
                         self.game_state['state'] = GameState.FINISHED.value
                     else:
                         init_new_round(game_state)
+            PongConsumer.send_game_state_to_all()
             
 
 class PongConsumer(WebsocketConsumer):
@@ -215,6 +216,7 @@ class PongConsumer(WebsocketConsumer):
     UPPER_LIMIT = PADDING_THICKNESS + PADDLE_HEIGHT / 2
     LOWER_LIMIT = FIELD_HEIGHT - PADDING_THICKNESS - PADDLE_HEIGHT / 2
 
+    consumers = []
     
     game_loop = GameLoop.get_instance(game_state)
     game_thread = threading.Thread(target=game_loop.loop)
@@ -222,6 +224,7 @@ class PongConsumer(WebsocketConsumer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.__class__.consumers.append(self)
         
     def get_player_by_user(self, user):
         if user.username == game_state['player1']['player_name']:
@@ -257,7 +260,7 @@ class PongConsumer(WebsocketConsumer):
         print ("GAME STATE: ", game_state)
 
     def disconnect(self, close_code):
-        pass
+        self.__class__.consumers.remove(self)
 
     def handle_tournament_message(self, message):
         self.send_message('Received tournament message: ' + str(message))
@@ -279,10 +282,14 @@ class PongConsumer(WebsocketConsumer):
             self.handle_key_event(key, keyAction, 'player2')
 
     
-    
     def send_game_state(self):
         # Send the updated game state to all players
         self.send(text_data=json.dumps(game_state))
+
+    @classmethod
+    def send_game_state_to_all(cls):
+        for consumer in cls.consumers:
+            consumer.send_game_state()
     
     def receive(self, text_data):
         # TODO: only receive data from users who are playing the current game, ignore everyone else - it's done in handle_game_message function now, but this function would be a better place for this
