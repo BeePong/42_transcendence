@@ -53,9 +53,12 @@ async function loadPage(path, redirectUrl = "/", fromNavigate = false) {
 
       // perform countdown in tournmament lobby if the list is full. Otherwise, wait for other players.
       if (/^\/tournament\/\d+\/lobby$/.test(page))
+        document.querySelector(".full");
+      mockWebSocket();
+      /* if (/^\/tournament\/\d+\/lobby$/.test(page))
         document.querySelector(".full")
           ? tournamentLobbyCountdown()
-          : mockWebSocket(); //TODO: open websocket
+          : mockWebSocket(); */ //TODO: open websocket
 
       // if url contains "lobby", start mockWebSocket
       var match = page.match(/^\/tournament\/(\d+)\/lobby$/);
@@ -171,7 +174,7 @@ function handleFullTournamentLobby() {
 }
 
 // Countdown in lobby page and navigate to the game page after countdown
-function tournamentLobbyCountdown() {
+/* function tournamentLobbyCountdown() {
   let countdownValue = 3;
   const countdownElement = document.getElementById("countdown");
 
@@ -188,7 +191,7 @@ function tournamentLobbyCountdown() {
       } else clearInterval(countdownInterval);
     }, 1000);
   }, 500);
-}
+} */
 
 // Load navbar
 async function loadNavBar() {

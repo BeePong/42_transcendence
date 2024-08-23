@@ -5,6 +5,8 @@ import random
 import math
 from channels.generic.websocket import WebsocketConsumer
 from enum import Enum
+# import asyncio
+# from .ai import ai_bot
 
 class GameState(Enum):
     COUNTDOWN = 'countdown'
@@ -47,6 +49,7 @@ class PongConsumer(WebsocketConsumer):
             'ball_vector': self.normalize_vector(self.get_larger_random(), random.uniform(-1, 1)),
             'player1': {
                 'player_id': None,
+                'player_name': 'vvagapov',
                 'score': 0,
                 'y': self.FIELD_HEIGHT/2,
                 'up_pressed': False,
@@ -54,6 +57,7 @@ class PongConsumer(WebsocketConsumer):
             },
             'player2': {
                 'player_id': None,
+                'player_name': 'dummy',
                 'score': 0,
                 'y': self.FIELD_HEIGHT/2,
                 'up_pressed': False,
@@ -64,7 +68,14 @@ class PongConsumer(WebsocketConsumer):
         self.game_thread = threading.Thread(target=self.game_loop)
         self.game_thread.start()
         
-    
+    def get_player_by_user(self, user):
+        if user.username == self.game_state['player1']['player_name']:
+            return 'player1'
+        elif user.username == self.game_state['player2']['player_name']:
+            return 'player2'
+        else:
+            return None
+
     def send_message(self, message):
         self.send(text_data=json.dumps({
             'message': message
@@ -72,13 +83,22 @@ class PongConsumer(WebsocketConsumer):
     
     def connect(self):
         self.accept()
+        is_bot = self.scope['query_string'].decode().split('=')[1] == 'True'
+        if is_bot:
+            user = {'id': 0, 'username': 'ai_bot'}
+        else:
+            user = self.scope['user']
         # TODO: change this to the actual player id, now latest person who joins is the main player, the other one is dummy
-        self.game_state['player2']['player_id'] = self.scope['user'].id if self.scope['user'].is_authenticated else self.scope['user']
-        self.game_state['player1']['player_id'] = "dummy_player"
-        print("USER CONNECTED: ", self.scope['user'])
+        player = self.get_player_by_user(user)
+        if not player is None:
+            self.game_state[player]['player_id'] = user.id
+            print("PLAYER CONNECTED: ", player, user)
+        print("USER CONNECTED: ", user)
+        if player is None:
+            print("User is not playing this game, they are a viewer")
         if self.scope['user'].is_authenticated:
-            print("user id: ", self.scope['user'].id)
-            print("user name: ", self.scope['user'].username)
+            print("authenticated user id: ", self.scope['user'].id)
+            print("authenticated user name: ", self.scope['user'].username)
 
     def disconnect(self, close_code):
         pass

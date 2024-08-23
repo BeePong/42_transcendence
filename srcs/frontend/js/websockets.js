@@ -12,12 +12,13 @@ function webSocketTest(tournament_id) {
     window.location.host +
     "/ws/pong/" +
     tournament_id +
-    "/";
+    "/" +
+    "?is_bot=False";
 
   console.log("Starting WebSocket on URL: ", url);
   var socket = new WebSocket(url);
   // TODO: remember to close websocket after the tournament is over
-  var canvas = document.getElementById("gameCanvas");
+  var canvas = document.getElementById("game_canvas");
   var context = canvas.getContext("2d");
 
   const drawBorders = () => {
@@ -56,8 +57,10 @@ function webSocketTest(tournament_id) {
   };
 
   const insertScores = (player1_score, player2_score) => {
-    document.getElementById("score-player1").textContent = player1_score;
-    document.getElementById("score-player2").textContent = player2_score;
+    const score1 = document.getElementById("score-player1");
+    if (score1) score1.textContent = player1_score;
+    const score2 = document.getElementById("score-player2");
+    if (score2) score2.textContent = player2_score;
   };
 
   const drawPaddle = (y, player_type) => {
