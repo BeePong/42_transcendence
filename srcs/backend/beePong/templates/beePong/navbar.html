@@ -9,13 +9,13 @@
 	<span>{{ user.username }}</span>
 </li>
 <li>
-	<form action="{% url 'accounts:logout' %}" onsubmit=handleFormSubmit(event)>
+	<form action="{% url 'accounts:logout' %}" onsubmit="handleFormSubmit(event)">
 		{% csrf_token %}
 		<button class="button--tertiary" type="submit">LOG OUT</button>
 	</form>
 </li>
 {% else %}
 <li>
-	<button class="button--tertiary" onclick="navigate('/accounts/login', '/')">LOGIN</button>
+	<button class="button--tertiary" onclick="navigate(`{% url 'accounts:login' %}`)">LOGIN</button>
 </li>
 {% endif %}

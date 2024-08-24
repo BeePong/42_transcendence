@@ -19,7 +19,7 @@ async function handleFormSubmit(event) {
 
 		if (result.success) { // Handle redirection
 			navigate(result.redirect);
-			if (url.pathname === '/accounts/login/' || url.pathname === '/accounts/logout/')
+			if (url.pathname.startsWith('/accounts/'))
 				loadNavBar();
 		}
 		else { // Display error messages
