@@ -1,24 +1,24 @@
 <section>
 	<div class="card__container">
-			<div class="card">
-					<div class="card__content">
-							<h1 class="card__title">{{ form_title }}</h2>
-							<form onsubmit=handleFormSubmit(event) action="{{ form_action }}">
-									{% csrf_token %}
-									{{ form.as_div }}
-									<input type="hidden" id="redirectUrl" name="redirect_url" value="/"/>
-									<div class="form-actions">
-											<button type="submit" class="button--primary">{{ form_button_text }}</button>
-											<a href="{{ alt_action_url }}" class="font-size--xs" onclick="navigate(event, document.getElementById('redirectUrl').value)">{{ alt_action }}</a>
-									</div>
-							</form>   
+		<div class="card">
+			<div class="card__content">
+				<h1 class="card__title">{{ form_title }}</h1>
+				<form onsubmit=handleFormSubmit(event) action="{{ form_action }}">
+					{% csrf_token %}
+					{{ form.as_div }}
+					<input type="hidden" id="redirectUrl" name="redirect_url" value="/"/>
+					<div class="form-actions">
+						<button type="submit" class="button--primary">{{ form_button_text }}</button>
+						<a href="{{ alt_action_url }}" class="font-size--xs" onclick="navigate(event, document.getElementById('redirectUrl').value)">{{ alt_action }}</a>
 					</div>
+				</form>   
 			</div>
-			<div class="form-error-message">
-			</div>
-			<a id="login-42-url" href="{{ login_42_url }}">
-				<img src="/img/42.png" alt="42 logo" class="fortytwo-icon" width="30" height="30">
-				<span>LOGIN</span>
-			</a>
+		</div>
+		<div class="form-error-message">
+		</div>
+		<a id="login-42-url" href="{{ login_42_url }}">
+			<img src="/img/42.png" alt="42 logo" class="fortytwo-icon" width="30" height="30">
+			<span>LOGIN</span>
+		</a>
 	</div>
 </section>
