@@ -2,14 +2,11 @@
   width: 330px;
 }
 
-.card__container > div {
-  width: 100%;
-}
-
 .card {
 	outline: 1px solid var(--text-color-main);
 	box-shadow: -10px -10px var(--color-primary);
   overflow: hidden;
+  min-height: 330px;
 }
 
 .card--inactive {
