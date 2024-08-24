@@ -144,7 +144,7 @@ LOGIN_URL = 'accounts:login'
 
 # List of trusted origins for CSRF protection
 # Requests from these origins will be allowed to bypass the CSRF protection
-CSRF_TRUSTED_ORIGINS = ['https://localhost']
+CSRF_TRUSTED_ORIGINS = ['https://localhost', 'https://localhost:8443']
 
 # Game settings TODO: use them in front-end and back-end
 FIELD_WIDTH = 800

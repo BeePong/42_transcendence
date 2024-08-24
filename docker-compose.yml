@@ -47,7 +47,7 @@ services:
     volumes:
       - ./srcs/frontend:/var/www/html
     ports:
-      - 443:443
+      - 8443:8443
     restart: on-failure
     depends_on:
       backendummy:
