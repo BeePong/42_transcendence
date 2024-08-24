@@ -13,7 +13,7 @@
   - [x] Avoid "bind-mount volumes" with non-root UIDs in Docker containers.
 
 - [x] **Game Requirements**
-  - [x] {Note: Overridden by remote player module} Allow users to participate in a live Pong game against another player using the same keyboard.
+  - [x] [Note: Overridden by remote player module] Allow users to participate in a live Pong game against another player using the same keyboard.
   - [x] Implement a tournament system for multiple players, displaying the match order.
   - [x] Include a registration system where players input their alias names at the start of a tournament.
   - [x] Implement a matchmaking system for tournament organization.
