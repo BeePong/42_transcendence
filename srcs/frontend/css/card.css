@@ -1,5 +1,5 @@
 .card__container {
-  width: 350px;
+  width: 330px;
 }
 
 .card__container > div {
@@ -11,8 +11,6 @@
 	outline: 1px solid var(--text-color-main);
 	box-shadow: -10px -10px var(--color-primary);
   overflow: hidden;
-  margin: 20px;
-  height: 100%;
 }
 
 .card--inactive {
@@ -28,14 +26,24 @@
 }
 
 .card__content {
-  padding: 40px;
+  padding: 2.5em 3em;
 }
 
 .card__title {
-  margin: 0 0 10px;
+  margin-bottom: 2em;
+  font-size: var(--font-size-base);
 }
 
 .card__text {
-  margin: 0 0 10px;
+  margin-bottom: 2em;
 	font-size: var(--font-size-sm);
+  font-family: var(--font-family-alt);
+  font-variation-settings: "YOPQ" 300;
+}
+
+.card__note {
+  margin-top: 2.5em;
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family-alt);
+  font-variation-settings: "YOPQ" 300;
 }

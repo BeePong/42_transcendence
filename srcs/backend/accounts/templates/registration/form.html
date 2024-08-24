@@ -2,7 +2,7 @@
 	<div class="card__container">
 			<div class="card">
 					<div class="card__content">
-							<h2 class="card__title">{{ form_title }}</h2>
+							<h1 class="card__title">{{ form_title }}</h2>
 							<form onsubmit=handleFormSubmit(event) action="{{ form_action }}">
 									{% csrf_token %}
 									{{ form.as_div }}

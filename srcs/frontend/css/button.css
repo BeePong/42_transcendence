@@ -1,5 +1,5 @@
 button {
-	padding: 0.5em 1em;
+	padding: 0.5em 1.5em;
 	cursor: pointer;
 }
 
@@ -20,42 +20,16 @@ button {
 	width: 100%;
 }
 
-.button--full-width {
-    width: 100%;
-    margin-top: 20px;
-}
-
 .button--with-icon {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
 	text-align: left;
-	padding: 10px;
-}
-
-.button__text {
-	margin-left: 5px;
-	flex: 1;
-}
-
-.arrow-icon {
-	margin-left: 8px;
-	vertical-align: middle;
 }
 
 .fortytwo-icon {
 	margin-right: 8px;
 	vertical-align: middle;
-}
-
-.button-group--horizontal {
-	display: flex;
-	align-items: center;
-	gap: 3em;
-}
-
-.button-group--horizontal button {
-	height: 40px;
 }
 
 .cross-icon {
@@ -74,4 +48,11 @@ button {
 
 .cross-icon::after {
 	transform: translateY(-50%) rotate(-45deg);
+}
+
+.button-group--column {
+  display: flex;
+  flex-direction: column;
+	gap: 1em;
+	margin-bottom: 1em;
 }

@@ -75,9 +75,6 @@ footer {
 
 .font--alt {
   font-family: var(--font-family-alt);
-  font-optical-sizing: auto;
-  font-weight: 400;
-  font-style: normal;
   font-variation-settings: "YOPQ" 300;
 }
 
