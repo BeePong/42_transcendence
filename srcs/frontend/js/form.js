@@ -1,4 +1,4 @@
-import { loadNavBar } from "./navbar.js";
+import { updateNavBar } from "./navbar.js";
 
 // Handle form submission
 async function handleFormSubmit(event) {
@@ -20,7 +20,7 @@ async function handleFormSubmit(event) {
 		if (result.success) { // Handle redirection
 			navigate(result.redirect);
 			if (url.pathname.startsWith('/accounts/'))
-				loadNavBar();
+				updateNavBar();
 		}
 		else { // Display error messages
 			displayFormErrors(result.errors);

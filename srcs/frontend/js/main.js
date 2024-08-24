@@ -1,9 +1,9 @@
-import { loadNavBar } from "./navbar.js";
+import { updateNavBar } from "./navbar.js";
 import { loadPage } from "./route.js";
 
 // Initial page load
 document.addEventListener('DOMContentLoaded', () => {
-	loadNavBar();
+	updateNavBar();
 	loadPage(window.location.pathname, '/', false, window.location.search);
 });
 
