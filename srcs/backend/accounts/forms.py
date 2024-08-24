@@ -11,13 +11,13 @@ class CustomAuthenticationForm(AuthenticationForm):
     username = forms.CharField(
         widget=forms.TextInput(attrs={
             'placeholder': 'USERNAME',
-            'class': 'form-input'
+            'class': 'form__input'
         })
     )
     password = forms.CharField(
         widget=forms.PasswordInput(attrs={
             'placeholder': 'PASSWORD',
-            'class': 'form-input'
+            'class': 'form__input'
         })
     )
 
@@ -25,18 +25,18 @@ class CustomUserCreationForm(UserCreationForm):
     username = forms.CharField(
         widget=forms.TextInput(attrs={
             'placeholder': 'USERNAME',
-            'class': 'form-input'
+            'class': 'form__input'
         })
     )
     password1 = forms.CharField(
         widget=forms.PasswordInput(attrs={
             'placeholder': 'PASSWORD',
-            'class': 'form-input'
+            'class': 'form__input'
         })
     )
     password2 = forms.CharField(
         widget=forms.PasswordInput(attrs={
             'placeholder': 'REPEAT PASSWORD',
-            'class': 'form-input'
+            'class': 'form__input'
         })
     )

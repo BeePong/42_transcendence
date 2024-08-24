@@ -2,38 +2,46 @@ form label {
   display: none;
 }
 
-.form-input {
+.form__input {
 	font-size: var(--font-size-xs);
 	padding: 1em;
-	margin-bottom: 1em;
+	margin-bottom: 1.5em;
 	width: 100%;
 }
 
-.form-actions {
+.form__actions {
 	display: flex;
 	align-items: flex-end;
-	gap: 10px;
 	flex-direction: column;
+	gap: 0.8em;
+	margin-top: 1em;
 }
 
-.form-error-message {
+.form__alt-action {
+	font-size: var(--font-size-sm);
+}
+
+.form__error-message {
 	display: none;
 	background-color: var(--color-secondary);
 	color: var(--text-color-alt);
 	padding: 2em 3em;
-	margin-bottom: 2em;
+	margin: 2em 0;
 	font-family: var(--font-family-alt);
+	font-variation-settings: "YOPQ" 300;
 	font-size: var(--font-size-sm);
+	flex-direction: column;
+	gap: 1em;
 }
 
 .radio-group {
 	display: flex;
-	gap: 1rem;
+	gap: 1em;
+	margin-bottom: 2em;
 }
 
 .radio-input {
-	-webkit-appearance: none;
-	outline: none;
+	display: none;
 }
 
 .radio-label {
@@ -46,7 +54,7 @@ form label {
 	cursor: pointer;
 }
 
-label > span {
+.radio-label > span {
 	position: absolute;
 	top: 50%;
 	left: 50%;

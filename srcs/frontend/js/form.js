@@ -55,11 +55,11 @@ function getFormDataAsUrlEncoded(form) {
 
 // Display error messages in the form
 function displayFormErrors(errors) {
-	const errorContainer = document.querySelector('.form-error-message');
+	const errorContainer = document.querySelector('.form__error-message');
 	errorContainer.innerHTML = ''; // Clear previous errors
 
 	if (errors) {
-		errorContainer.style.display = 'block'; // Show the error container
+		errorContainer.style.display = 'flex'; // Show the error container
 		
 		for (const key in errors) {
 			if (errors.hasOwnProperty(key)) {
