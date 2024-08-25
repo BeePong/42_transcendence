@@ -89,6 +89,8 @@ class GameStateSingleton:
 
 class GameLoop:
 
+    _instance = None
+
     @classmethod
     def get_instance(cls, game_state):
         if cls._instance is None:
@@ -98,19 +100,21 @@ class GameLoop:
 
     def __init__(self, game_state):
         self.game_state = game_state
+        self.running = True
+        self.loop_task = None
         print("GAME LOOP INITIALIZED")
 
     def start(self):
-        self.thread.start()
+        self.loop_task = asyncio.create_task(self.game_loop())
 
-    def loop(self):
-        self.game_loop()
+    async def loop(self):
+        self.loop_task = asyncio.create_task(self.game_loop())
 
     async def game_loop(self):
+        print("GAME LOOP STARTED")
         # Your game loop code here, which can use self.game_state
-        while True:
+        while self.running:
             #time.sleep(1/settings.FPS)
-            
 
             if self.game_state['state'] == GameState.COUNTDOWN.value:
                 if (time.time() - self.game_state['round_start_time'] <= 3):
@@ -189,7 +193,7 @@ class GameLoop:
                     GameStateSingleton.get_instance().init_new_round()
                     if (self.game_state['player1']['score'] == settings.MAX_SCORE):
                         self.game_state['winner'] = self.game_state['player1']['player_id']
-                        self.game_state['state'] = GameState.COUNTDOWN.value
+                        self.game_state['state'] = GameState.FINISHED.value
                         self.game_state['player2']['score'] = 0
                         self.game_state['player1']['score'] = 0
                 elif ball_new_x <= settings.BALL_RADIUS:
@@ -198,11 +202,17 @@ class GameLoop:
                     GameStateSingleton.get_instance().init_new_round()
                     if (self.game_state['player2']['score'] == settings.MAX_SCORE):
                         self.game_state['winner'] = self.game_state['player2']['player_id']
-                        self.game_state['state'] = GameState.COUNTDOWN.value
+                        self.game_state['state'] = GameState.FINISHED.value
                         self.game_state['player2']['score'] = 0
                         self.game_state['player1']['score'] = 0
+
             await PongConsumer.send_game_state_to_all()
             await asyncio.sleep(1/settings.FPS)
+
+    def stop(self):
+        self.running = False
+        if self.loop_task:
+            self.loop_task.cancel()
             
 
 class PongConsumer(AsyncWebsocketConsumer):
@@ -216,6 +226,7 @@ class PongConsumer(AsyncWebsocketConsumer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.__class__.consumers.append(self)
+        
         print("CONSUMERS: ", self.__class__.consumers)
         
     async def get_player_by_user(self, user):
@@ -265,6 +276,7 @@ class PongConsumer(AsyncWebsocketConsumer):
         if player is None:
             print("User is not playing this game, they are a viewer")            
         print ("GAME STATE: ", self.__class__.game_state)
+        await self.__class__.game_loop.loop()
 
     async def disconnect(self, close_code):
         print("DISCONNECTED, close_code: ", close_code)
@@ -291,10 +303,8 @@ class PongConsumer(AsyncWebsocketConsumer):
 
     @classmethod
     async def send_game_state_to_all(cls):
-        print("SENDING GAME STATE TO ALL")
         for consumer in cls.consumers:
             try:
-                print("SENDING GAME STATE TO CONSUMER", consumer)
                 await consumer.send_game_state()
             except ValueError as e:
                 print(f"Error sending game state: {e}")
@@ -306,14 +316,16 @@ class PongConsumer(AsyncWebsocketConsumer):
             print(f"Error sending game state: {e}")
     
     async def receive(self, text_data):
-        # TODO: only receive data from users who are playing the current game, ignore everyone else - it's done in handle_game_message function now, but this function would be a better place for this
+        # TODO: only receive data from users who are playing the current game, ignore everyone else - it's done in handle_game_message function now, but this function would maybe be a better place for this
+        try:
+            text_data_json = json.loads(text_data)
+            message = text_data_json['message']
+            message_type = text_data_json['type']
 
-        print("RECEIVED DATA: ", text_data)
-        text_data_json = json.loads(text_data)
-        message = text_data_json['message']
-        message_type = text_data_json['type']
+            if message_type == 'tournament':
+                await self.handle_tournament_message(message)
+            elif message_type == 'game':
+                await self.handle_game_message(message)
+        except Exception as e:
+            print("Error in receive method: %s", e)
 
-        if message_type == 'tournament':
-            await self.handle_tournament_message(message)
-        elif message_type == 'game':
-            await self.handle_game_message(message)
