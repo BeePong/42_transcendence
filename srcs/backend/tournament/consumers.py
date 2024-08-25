@@ -161,18 +161,22 @@ class GameLoop:
                     self.game_state['hit_count'] += 1
                     # Calculate the remaining movement after the ball hits the wall
                     remaining_movement = settings.PADDING_THICKNESS + settings.PADDLE_WIDTH - self.game_state['ball']['x']
-                    # Reverse the x-component of the ball's direction vector
-                    self.game_state['ball_vector']['x'] *= -1
-                    # Move the ball the remaining distance in the new direction
-                    ball_new_x = self.game_state['ball']['x'] + remaining_movement * self.game_state['ball_vector']['x']
+                    # check if ball is moving towards the paddle
+                    if self.game_state['ball_vector']['x'] < 0:
+                        # Reverse the x-component of the ball's direction vector
+                        self.game_state['ball_vector']['x'] *= -1
+                        # Move the ball the remaining distance in the new direction
+                        ball_new_x = self.game_state['ball']['x'] + remaining_movement * self.game_state['ball_vector']['x']
                 if ball_new_x > settings.FIELD_WIDTH - settings.PADDING_THICKNESS - settings.PADDLE_WIDTH - settings.BALL_RADIUS and self.game_state['player1']['y'] - settings.PADDLE_HEIGHT / 2 - settings.BALL_RADIUS <= ball_new_y <= self.game_state['player1']['y'] + settings.PADDLE_HEIGHT / 2  + settings.BALL_RADIUS:
                     self.game_state['hit_count'] += 1
                     # Calculate the remaining movement after the ball hits the wall
                     remaining_movement = self.game_state['ball']['x'] + settings.BALL_RADIUS - (settings.FIELD_WIDTH - settings.PADDING_THICKNESS - settings.PADDLE_WIDTH)
-                    # Reverse the x-component of the ball's direction vector
-                    self.game_state['ball_vector']['x'] *= -1
-                    # Move the ball the remaining distance in the new direction
-                    ball_new_x = self.game_state['ball']['x'] - remaining_movement * self.game_state['ball_vector']['x']
+                    #check  if ball is moving towards the paddle
+                    if self.game_state['ball_vector']['x'] > 0:
+                        # Reverse the x-component of the ball's direction vector
+                        self.game_state['ball_vector']['x'] *= -1
+                        # Move the ball the remaining distance in the new direction
+                        ball_new_x = self.game_state['ball']['x'] - remaining_movement * self.game_state['ball_vector']['x']
 
                 # Update the ball's position
                 self.game_state['ball']['x'] = ball_new_x
@@ -243,8 +247,11 @@ class PongConsumer(AsyncWebsocketConsumer):
         print("TOURNAMENT OBJECT: ", tournament)
         await self.accept()
         if not(self.scope['user'].is_authenticated):
+            print("User is not authenticated, disconnecting")
             await self.close(code=4004)
-
+        else:
+            print("authenticated user id: ", self.scope['user'].id)
+            print("authenticated user name: ", self.scope['user'].username)
         is_bot = self.scope['query_string'].decode().split('=')[1] == 'True'
         if is_bot:
             user = {'id': 0, 'username': 'ai_bot'}
@@ -256,10 +263,7 @@ class PongConsumer(AsyncWebsocketConsumer):
             print("PLAYER CONNECTED: ", player, user)
         print("USER CONNECTED: ", user)
         if player is None:
-            print("User is not playing this game, they are a viewer")
-        if self.scope['user'].is_authenticated:
-            print("authenticated user id: ", self.scope['user'].id)
-            print("authenticated user name: ", self.scope['user'].username)
+            print("User is not playing this game, they are a viewer")            
         print ("GAME STATE: ", self.__class__.game_state)
 
     async def disconnect(self, close_code):
