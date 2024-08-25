@@ -184,6 +184,7 @@ def tournament_lobby(request, tournament_id):
         )
         # return render(request, 'tournament/tournament_lobby.html')
     except Exception as error:
+        print(error)
         return JsonResponse({"success": False, "error": error}, status=404)
 
 

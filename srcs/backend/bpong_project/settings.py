@@ -153,9 +153,36 @@ PADDLE_HEIGHT = 100
 PADDLE_WIDTH = 26
 PADDLE_SPEED = 10
 BALL_RADIUS = 15
-FPS = 30
+BALL_STARTING_SPEED = 5
+FPS = 15
 MAX_SCORE = 5
 PADDING_THICKNESS = 7
 THICK_BORDER_THICKNESS = 5
 UPPER_LIMIT = PADDING_THICKNESS + PADDLE_HEIGHT / 2
 LOWER_LIMIT = FIELD_HEIGHT - PADDING_THICKNESS - PADDLE_HEIGHT / 2
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "DEBUG",  # Change to DEBUG to increase verbosity
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+            "propagate": False,
+        },
+        "channels": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+            "propagate": True,
+        },
+    },
+}

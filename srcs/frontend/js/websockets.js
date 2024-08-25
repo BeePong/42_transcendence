@@ -87,7 +87,7 @@ function webSocketTest(tournament_id) {
     var data = JSON.parse(e.data);
     //console.log("socket data:", data);
     updateCanvas(data);
-    // Updating our game field will be here
+    return false;
   };
 
   // console.log("webSocketTest SOCKET", socket); // for debugging
