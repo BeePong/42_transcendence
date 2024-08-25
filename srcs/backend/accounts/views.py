@@ -14,7 +14,7 @@ login_42_params = {
     'redirect_uri': os.getenv('FTAPI_REDIR_URL'),
     'response_type': 'code',
     'scope': 'public',
-    'state': f'qwerty|{quote("https://localhost")}', # include redirect url to frontend
+    'state': f'qwerty|{quote("https://localhost:8443")}', # include redirect url to frontend
 }
 login_42_url = f"https://api.intra.42.fr/oauth/authorize?{urlencode(login_42_params)}"
 

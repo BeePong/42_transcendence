@@ -107,7 +107,7 @@ function changeRedirectUrlandOauthState(redirectUrl) {
 
   const updatedLogin42Url = new URL(login42UrlElement.href);
   const newStateParam = `qwerty|${encodeURIComponent(
-    `https://localhost${redirectUrl}`
+    `https://localhost:8443${redirectUrl}`
   )}`;
   updatedLogin42Url.searchParams.set("state", newStateParam);
 

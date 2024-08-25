@@ -3,6 +3,9 @@ import asyncio
 import websockets
 import ssl
 from bs4 import BeautifulSoup
+import json
+import random
+import time
 
 
 # Step 1: Log in to the website
@@ -10,7 +13,7 @@ def login():
     session = requests.Session()
 
     # Step 1a: Get the CSRF token by visiting the login page
-    login_page_url = "https://nginx/page/accounts/login/"
+    login_page_url = "https://nginx:8443/page/accounts/login/"
     response = session.get(login_page_url, verify=False)
     if response.status_code != 200:
         print("Failed to load login page.")
@@ -21,7 +24,7 @@ def login():
     csrf_token = soup.find("input", {"name": "csrfmiddlewaretoken"}).get("value")
 
     # Step 1b: Submit the login form with the CSRF token
-    login_url = "https://nginx/page/accounts/login/"
+    login_url = "https://nginx:8443/page/accounts/login/"
     payload = {
         "username": "ai_bot",  # Replace with your actual username
         "password": "test123!",  # Replace with your actual password
@@ -45,7 +48,7 @@ def login():
 # Step 2: Use the session to establish a WebSocket connection
 async def ai_bot(session):
     # Define the WebSocket URL
-    url = "wss://nginx/ws/pong/1/?is_bot=True"
+    url = "wss://nginx:8443/ws/pong/1/?is_bot=True"
 
     # Extract the session cookie
     cookies = session.cookies.get_dict()
@@ -62,13 +65,59 @@ async def ai_bot(session):
         "Origin": "https://nginx",
     }
 
-    # Connect to the WebSocket using the session cookie
     async with websockets.connect(
-        url, ssl=ssl_context, extra_headers=headers
+        url, ssl=ssl_context, extra_headers=headers, ping_interval=20, ping_timeout=10
     ) as websocket:
-        await websocket.send("Hello, I'm an AI bot!")
-        response = await websocket.recv()
-        print(f"Received: {response}")
+        print("WebSocket connection established.")
+
+        # Function to send game data, similar to the sendGameData function in JavaScript
+        async def send_game_data(key, key_action):
+            message = {
+                "message": {
+                    "key": key,
+                    "keyAction": key_action,
+                },
+                "type": "game",
+            }
+            await websocket.send(json.dumps(message))
+            print(f"Sent: {message}")
+
+        # Example loop to simulate key press and release
+        while True:
+            try:
+                async with websockets.connect(
+                    url,
+                    ssl=ssl_context,
+                    extra_headers=headers,
+                    ping_interval=20,
+                    ping_timeout=10,
+                ) as websocket:
+                    print("WebSocket connection established.")
+
+                    # Example loop to simulate key press and release
+                    while True:
+                        # Randomly choose to press "ArrowUp" or "ArrowDown"
+                        key = random.choice(["ArrowUp", "ArrowDown"])
+                        await send_game_data(websocket, key, "keydown")
+
+                        # Simulate holding the key down for a short duration
+                        await asyncio.sleep(random.uniform(0.1, 0.5))
+
+                        # Explicit ping to keep the connection alive
+                        await websocket.ping()
+
+                        # Simulate key release
+                        await send_game_data(websocket, key, "keyup")
+
+                        # Wait before pressing a key again
+                        await asyncio.sleep(random.uniform(0.5, 2.0))
+
+            except websockets.ConnectionClosedError as e:
+                print(f"WebSocket connection closed: {e}. Attempting to reconnect...")
+                await asyncio.sleep(5)  # Wait before attempting to reconnect
+            except Exception as e:
+                print(f"Unexpected error: {e}. Attempting to reconnect...")
+                await asyncio.sleep(5)  # Wait before attempting to reconnect
 
 
 # Main execution

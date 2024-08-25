@@ -1,11 +1,18 @@
 import json
-import time
-import threading
-import random
 import math
-from channels.generic.websocket import WebsocketConsumer
+import random
+import threading
+import time
 from enum import Enum
+
+from channels.generic.websocket import WebsocketConsumer
 from django.conf import settings
+
+from . import models
+
+# from django.contrib.auth.models import User
+
+# from .models import Player, Tournament
 
 # import asyncio
 # from .ai import ai_bot
@@ -44,7 +51,7 @@ class GameStateSingleton:
             ),
             "player1": {
                 "player_id": None,
-                "player_name": "vvagapov",
+                "player_name": "thuynguy",
                 "score": 0,
                 "y": settings.FIELD_HEIGHT / 2,
                 "up_pressed": False,
@@ -52,7 +59,7 @@ class GameStateSingleton:
             },
             "player2": {
                 "player_id": None,
-                "player_name": "dummy",
+                "player_name": "ai_bot",
                 "score": 0,
                 "y": settings.FIELD_HEIGHT / 2,
                 "up_pressed": False,
@@ -79,7 +86,7 @@ class GameStateSingleton:
         self.game_state["ball_vector"] = self.normalize_vector(
             self.get_larger_random(), random.uniform(-1, 1)
         )
-        print("NEW ROUND INITIALIZED")
+        # print("NEW ROUND INITIALIZED")
 
 
 class GameLoop:
@@ -300,27 +307,29 @@ class PongConsumer(WebsocketConsumer):
             return "player1"
         elif user.username == self.__class__.game_state["player2"]["player_name"]:
             return "player2"
-        else:
-            return None
+        return None
 
     def send_message(self, message):
         self.send(text_data=json.dumps({"message": message}))
 
     def connect(self):
+        self.user = self.scope["user"]
+        print("USER CONNECTED: ", self.scope["user"])
         print("Attempting to connect...")
         self.accept()
         print("Connection accepted")
-        is_bot = self.scope["query_string"].decode().split("=")[1] == "True"
-        if is_bot:
-            user = {"id": 0, "username": "ai_bot"}
-        else:
-            user = self.scope["user"]
+        # is_bot = self.scope["query_string"].decode().split("=")[1] == "True"
+        # if is_bot:
+        #     user = {"id": 0, "username": "ai_bot"}
+        # else:
+        #     user = self.scope["user"]
         # TODO: change this to the actual player id, now latest person who joins is the main player, the other one is dummy
-        player = self.get_player_by_user(user)
-        if not player is None:
-            self.__class__.game_state[player]["player_id"] = user.id
-            print("PLAYER CONNECTED: ", player, user)
-        print("USER CONNECTED: ", user)
+        # user = self.user
+        player = self.get_player_by_user(self.scope["user"])
+        if player is not None:
+            self.__class__.game_state[player]["player_id"] = self.scope["user"].id
+            print("PLAYER CONNECTED: ", player, self.scope["user"])
+        print("USER CONNECTED: ", self.scope["user"])
         if player is None:
             print("User is not playing this game, they are a viewer")
         if self.scope["user"].is_authenticated:

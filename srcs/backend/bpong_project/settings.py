@@ -176,17 +176,17 @@ LOGGING = {
     },
     "root": {
         "handlers": ["console"],
-        "level": "DEBUG",  # Change to DEBUG to increase verbosity
+        "level": "WARNING",  # Change to DEBUG to increase verbosity
     },
     "loggers": {
         "django": {
             "handlers": ["console"],
-            "level": "DEBUG",
+            "level": "WARNING",
             "propagate": False,
         },
         "channels": {
             "handlers": ["console"],
-            "level": "DEBUG",
+            "level": "WARNING",
             "propagate": True,
         },
     },
