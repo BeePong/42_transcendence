@@ -49,7 +49,7 @@ services:
       - ./srcs/frontend:/var/www/html
       - nginx_ssl_certs:/etc/nginx/ssl  # <-- Share the cert directory with host
     ports:
-      - 443:443
+      - 8443:8443
     restart: on-failure
     depends_on:
       backendummy:

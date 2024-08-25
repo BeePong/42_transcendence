@@ -17,56 +17,69 @@ class GameState(Enum):
     FINISHED = "finished"
 
 
-def get_larger_random():
-    y = 0
-    while abs(y) < 0.2:
-        y = random.uniform(-1, 1)
-    return y
+class GameStateSingleton:
+    _instance = None
 
+    def get_larger_random(self):
+        y = 0
+        while abs(y) < 0.2:
+            y = random.uniform(-1, 1)
+        return y
 
-def normalize_vector(x, y):
-    magnitude = math.sqrt(x**2 + y**2)
-    return {"x": x / magnitude, "y": y / magnitude}
+    def normalize_vector(self, x, y):
+        magnitude = math.sqrt(x**2 + y**2)
+        return {"x": x / magnitude, "y": y / magnitude}
 
+    def __init__(self):
+        self.__class__._instance = self
+        self.game_state = {
+            "round_start_time": time.time(),
+            "state": GameState.COUNTDOWN.value,
+            "countdown": 3,
+            "ball": {"x": settings.FIELD_WIDTH / 2, "y": settings.FIELD_HEIGHT / 2},
+            "ball_speed": 10,
+            "hit_count": 0,
+            "ball_vector": self.normalize_vector(
+                self.get_larger_random(), random.uniform(-1, 1)
+            ),
+            "player1": {
+                "player_id": None,
+                "player_name": "vvagapov",
+                "score": 0,
+                "y": settings.FIELD_HEIGHT / 2,
+                "up_pressed": False,
+                "down_pressed": False,
+            },
+            "player2": {
+                "player_id": None,
+                "player_name": "dummy",
+                "score": 0,
+                "y": settings.FIELD_HEIGHT / 2,
+                "up_pressed": False,
+                "down_pressed": False,
+            },
+            "winner": None,
+        }
 
-game_state = {
-    "round_start_time": time.time(),
-    "state": GameState.COUNTDOWN.value,
-    "countdown": 3,
-    "ball": {"x": settings.FIELD_WIDTH / 2, "y": settings.FIELD_HEIGHT / 2},
-    "ball_speed": 10,
-    "hit_count": 0,
-    "ball_vector": normalize_vector(get_larger_random(), random.uniform(-1, 1)),
-    "player1": {
-        "player_id": None,
-        "player_name": "vvagapov",
-        "score": 0,
-        "y": settings.FIELD_HEIGHT / 2,
-        "up_pressed": False,
-        "down_pressed": False,
-    },
-    "player2": {
-        "player_id": None,
-        "player_name": "dummy",
-        "score": 0,
-        "y": settings.FIELD_HEIGHT / 2,
-        "up_pressed": False,
-        "down_pressed": False,
-    },
-    "winner": None,
-}
+    @classmethod
+    def get_instance(cls):
+        if cls._instance is None:
+            cls._instance = cls()
+        return cls._instance
 
-
-def init_new_round(game_state):
-    game_state["round_start_time"] = time.time()
-    game_state["state"] = GameState.COUNTDOWN.value
-    game_state["countdown"] = 3
-    game_state["hit_count"] = 0
-    game_state["ball"] = {"x": settings.FIELD_WIDTH / 2, "y": settings.FIELD_HEIGHT / 2}
-    game_state["ball_vector"] = normalize_vector(
-        get_larger_random(), random.uniform(-1, 1)
-    )
-    # print("NEW ROUND INITIALIZED")
+    def init_new_round(self):
+        self.game_state["round_start_time"] = time.time()
+        self.game_state["state"] = GameState.COUNTDOWN.value
+        self.game_state["countdown"] = 3
+        self.game_state["hit_count"] = 0
+        self.game_state["ball"] = {
+            "x": settings.FIELD_WIDTH / 2,
+            "y": settings.FIELD_HEIGHT / 2,
+        }
+        self.game_state["ball_vector"] = self.normalize_vector(
+            self.get_larger_random(), random.uniform(-1, 1)
+        )
+        print("NEW ROUND INITIALIZED")
 
 
 class GameLoop:
@@ -94,6 +107,7 @@ class GameLoop:
         # Your game loop code here, which can use self.game_state
         while True:
             time.sleep(1 / settings.FPS)
+
             if self.game_state["state"] == GameState.COUNTDOWN.value:
                 if time.time() - self.game_state["round_start_time"] <= 3:
                     self.game_state["countdown"] = 3 - int(
@@ -102,23 +116,24 @@ class GameLoop:
                 else:
                     self.game_state["countdown"] = 0
                     self.game_state["state"] = GameState.PLAYING.value
-            elif self.game_state["state"] == GameState.PLAYING.value:
-                # Update the position of the paddles based on the key states
-                for player_id in ["player1", "player2"]:
-                    if self.game_state[player_id]["up_pressed"]:
-                        new_y = self.game_state[player_id]["y"] - settings.PADDLE_SPEED
-                        if new_y < settings.UPPER_LIMIT:
-                            self.game_state[player_id]["y"] = settings.UPPER_LIMIT
-                        else:
-                            self.game_state[player_id]["y"] = new_y
 
-                    elif self.game_state[player_id]["down_pressed"]:
-                        new_y = self.game_state[player_id]["y"] + settings.PADDLE_SPEED
-                        if new_y > settings.LOWER_LIMIT:
-                            self.game_state[player_id]["y"] = settings.LOWER_LIMIT
-                        else:
-                            self.game_state[player_id]["y"] = new_y
+            # Update the position of the paddles based on the key states
+            for player_id in ["player1", "player2"]:
+                if self.game_state[player_id]["up_pressed"]:
+                    new_y = self.game_state[player_id]["y"] - settings.PADDLE_SPEED
+                    if new_y < settings.UPPER_LIMIT:
+                        self.game_state[player_id]["y"] = settings.UPPER_LIMIT
+                    else:
+                        self.game_state[player_id]["y"] = new_y
 
+                elif self.game_state[player_id]["down_pressed"]:
+                    new_y = self.game_state[player_id]["y"] + settings.PADDLE_SPEED
+                    if new_y > settings.LOWER_LIMIT:
+                        self.game_state[player_id]["y"] = settings.LOWER_LIMIT
+                    else:
+                        self.game_state[player_id]["y"] = new_y
+
+            if self.game_state["state"] == GameState.PLAYING.value:
                 # Calculate next position of the ball
                 ball_new_x = (
                     self.game_state["ball"]["x"]
@@ -244,7 +259,7 @@ class GameLoop:
                 # Check for scoring
                 if ball_new_x >= settings.FIELD_WIDTH - settings.BALL_RADIUS:
                     self.game_state["player1"]["score"] += 1
-                    init_new_round(game_state)
+                    GameStateSingleton.get_instance().init_new_round()
                     if self.game_state["player1"]["score"] == settings.MAX_SCORE:
                         self.game_state["winner"] = self.game_state["player1"][
                             "player_id"
@@ -254,7 +269,7 @@ class GameLoop:
                         self.game_state["player1"]["score"] = 0
                 elif ball_new_x <= settings.BALL_RADIUS:
                     self.game_state["player2"]["score"] += 1
-                    init_new_round(game_state)
+                    GameStateSingleton.get_instance().init_new_round()
                     if self.game_state["player2"]["score"] == settings.MAX_SCORE:
                         self.game_state["winner"] = self.game_state["player2"][
                             "player_id"
@@ -269,6 +284,7 @@ class PongConsumer(WebsocketConsumer):
 
     consumers = []
 
+    game_state = GameStateSingleton.get_instance().game_state
     game_loop = GameLoop.get_instance(game_state)
     game_thread = threading.Thread(target=game_loop.loop)
     game_thread.start()
@@ -280,9 +296,9 @@ class PongConsumer(WebsocketConsumer):
         print("CONSUMERS: ", self.__class__.consumers)
 
     def get_player_by_user(self, user):
-        if user.username == game_state["player1"]["player_name"]:
+        if user.username == self.__class__.game_state["player1"]["player_name"]:
             return "player1"
-        elif user.username == game_state["player2"]["player_name"]:
+        elif user.username == self.__class__.game_state["player2"]["player_name"]:
             return "player2"
         else:
             return None
@@ -302,7 +318,7 @@ class PongConsumer(WebsocketConsumer):
         # TODO: change this to the actual player id, now latest person who joins is the main player, the other one is dummy
         player = self.get_player_by_user(user)
         if not player is None:
-            game_state[player]["player_id"] = user.id
+            self.__class__.game_state[player]["player_id"] = user.id
             print("PLAYER CONNECTED: ", player, user)
         print("USER CONNECTED: ", user)
         if player is None:
@@ -310,7 +326,7 @@ class PongConsumer(WebsocketConsumer):
         if self.scope["user"].is_authenticated:
             print("authenticated user id: ", self.scope["user"].id)
             print("authenticated user name: ", self.scope["user"].username)
-        print("GAME STATE: ", game_state)
+        print("GAME STATE: ", self.__class__.game_state)
 
     def disconnect(self, close_code):
         self.__class__.consumers.remove(self)
@@ -320,32 +336,36 @@ class PongConsumer(WebsocketConsumer):
 
     def handle_key_event(self, key, keyAction, player_field):
         if key == "ArrowUp":
-            game_state[player_field]["up_pressed"] = keyAction == "keydown"
+            self.__class__.game_state[player_field]["up_pressed"] = (
+                keyAction == "keydown"
+            )
         elif key == "ArrowDown":
-            game_state[player_field]["down_pressed"] = keyAction == "keydown"
+            self.__class__.game_state[player_field]["down_pressed"] = (
+                keyAction == "keydown"
+            )
 
     def handle_game_message(self, message):
         player = self.scope["user"]
         key = message["key"]
         keyAction = message["keyAction"]
         # Update the game state based on the key and action
-        if player.id == game_state["player1"]["player_id"]:
+        if player.id == self.__class__.game_state["player1"]["player_id"]:
             self.handle_key_event(key, keyAction, "player1")
-        elif player.id == game_state["player2"]["player_id"]:
+        elif player.id == self.__class__.game_state["player2"]["player_id"]:
             self.handle_key_event(key, keyAction, "player2")
 
     def send_game_state(self):
         # Send the updated game state to all players
-        self.send(text_data=json.dumps(game_state))
+        self.send(text_data=json.dumps(self.__class__.game_state))
 
     @classmethod
     def send_game_state_to_all(cls):
-        # print("SENDING GAME STATE TO ALL")
         for consumer in cls.consumers:
             consumer.send_game_state()
 
     def receive(self, text_data):
         # TODO: only receive data from users who are playing the current game, ignore everyone else - it's done in handle_game_message function now, but this function would be a better place for this
+
         text_data_json = json.loads(text_data)
         message = text_data_json["message"]
         message_type = text_data_json["type"]

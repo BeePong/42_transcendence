@@ -19,6 +19,6 @@ RUN openssl x509 -in /etc/nginx/ssl/beepong.csr -out /etc/nginx/ssl/beepong.pem 
 
 COPY ./nginx.conf /etc/nginx/http.d/default.conf
 
-EXPOSE 443
+EXPOSE 8443
 
 CMD ["nginx", "-g", "daemon off;"]
