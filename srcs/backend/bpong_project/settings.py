@@ -14,27 +14,28 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure--5o3-*y!2w25g-%9h^8yt!z(!7f^p_xf8+x5u(9z#*^o#pxtq9')
+SECRET_KEY = os.getenv(
+    "DJANGO_SECRET_KEY",
+    "django-insecure--5o3-*y!2w25g-%9h^8yt!z(!7f^p_xf8+x5u(9z#*^o#pxtq9",
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 # DEBUG = False
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'backendummy']
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "backendummy"]
 
 # Application definition
 
 INSTALLED_APPS = [
     # My apps
-    'beePong',
-    'accounts',
-    'tournament',
-
+    "beePong",
+    "accounts",
+    "tournament",
     # Third-party appsx
-    'django_bootstrap5',
+    "django_bootstrap5",
     # 'channels',
-    'daphne',
-
+    "daphne",
     # Django apps
     "django.contrib.admin",
     "django.contrib.auth",
@@ -74,11 +75,20 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "bpong_project.wsgi.application"
 
-ASGI_APPLICATION = 'bpong_project.asgi.application'
+ASGI_APPLICATION = "bpong_project.asgi.application"
+
+# CHANNEL_LAYERS = {
+#     'default': {
+#         'BACKEND': 'channels.layers.InMemoryChannelLayer',
+#     },
+# }
 
 CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels.layers.InMemoryChannelLayer',
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("redis", 6379)],
+        },
     },
 }
 
@@ -86,13 +96,13 @@ CHANNEL_LAYERS = {
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('POSTGRES_DB'),
-        'USER': os.getenv('POSTGRES_USER'),
-        'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
-        'HOST': os.getenv('POSTGRES_HOST'),
-        'PORT': '5432',
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.getenv("POSTGRES_DB"),
+        "USER": os.getenv("POSTGRES_USER"),
+        "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
+        "HOST": os.getenv("POSTGRES_HOST"),
+        "PORT": "5432",
     }
 }
 
@@ -137,14 +147,14 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # My settings
 # Tells Django which URL to redirect to after a successful login attempt.
-LOGIN_REDIRECT_URL = 'beePong:index'
+LOGIN_REDIRECT_URL = "beePong:index"
 # Tells Django to redirect logged-out users back to the home page
-LOGOUT_REDIRECT_URL = 'beePong:index'
-LOGIN_URL = 'accounts:login'
+LOGOUT_REDIRECT_URL = "beePong:index"
+LOGIN_URL = "accounts:login"
 
 # List of trusted origins for CSRF protection
 # Requests from these origins will be allowed to bypass the CSRF protection
-CSRF_TRUSTED_ORIGINS = ['https://localhost', 'https://localhost:8443']
+CSRF_TRUSTED_ORIGINS = ["https://localhost", "https://localhost:8443"]
 
 # Game settings TODO: use them in front-end and back-end
 FIELD_WIDTH = 800
