@@ -1,3 +1,4 @@
+# settings.py
 
 from pathlib import Path
 import os
@@ -13,25 +14,28 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure--5o3-*y!2w25g-%9h^8yt!z(!7f^p_xf8+x5u(9z#*^o#pxtq9')
+SECRET_KEY = os.getenv(
+    "DJANGO_SECRET_KEY",
+    "django-insecure--5o3-*y!2w25g-%9h^8yt!z(!7f^p_xf8+x5u(9z#*^o#pxtq9",
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 # DEBUG = False
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "backendummy", "c1r3p3.hive.fi"]
 
 # Application definition
 
 INSTALLED_APPS = [
     # My apps
-    'beePong',
-    'accounts',
-    'tournament',
-
-    # Third-party apps
-    'django_bootstrap5',
-
+    "beePong",
+    "accounts",
+    "tournament",
+    # Third-party appsx
+    "django_bootstrap5",
+    # 'channels',
+    "daphne",
     # Django apps
     "django.contrib.admin",
     "django.contrib.auth",
@@ -71,17 +75,34 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "bpong_project.wsgi.application"
 
+ASGI_APPLICATION = "bpong_project.asgi.application"
+
+# CHANNEL_LAYERS = {
+#     'default': {
+#         'BACKEND': 'channels.layers.InMemoryChannelLayer',
+#     },
+# }
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("redis", 6379)],
+        },
+    },
+}
+
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('POSTGRES_DB'),
-        'USER': os.getenv('POSTGRES_USER'),
-        'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
-        'HOST': os.getenv('POSTGRES_HOST'),
-        'PORT': '5432',
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.getenv("POSTGRES_DB"),
+        "USER": os.getenv("POSTGRES_USER"),
+        "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
+        "HOST": os.getenv("POSTGRES_HOST"),
+        "PORT": "5432",
     }
 }
 
@@ -126,56 +147,52 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # My settings
 # Tells Django which URL to redirect to after a successful login attempt.
-LOGIN_REDIRECT_URL = 'beePong:index'
+LOGIN_REDIRECT_URL = "beePong:index"
 # Tells Django to redirect logged-out users back to the home page
-LOGOUT_REDIRECT_URL = 'beePong:index'
-LOGIN_URL = 'accounts:login'
+LOGOUT_REDIRECT_URL = "beePong:index"
+LOGIN_URL = "accounts:login"
 
 # List of trusted origins for CSRF protection
 # Requests from these origins will be allowed to bypass the CSRF protection
-CSRF_TRUSTED_ORIGINS = ['https://localhost']
+CSRF_TRUSTED_ORIGINS = ["https://localhost", "https://localhost:8443", "https://c1r3p3.hive.fi:8443"]
 
-################################################################################
-## Django setting for Logging 
-################################################################################
-import os
-import logging.config
-
-# Create a logs directory if it doesn't exist
-LOGS_DIR = os.path.join(BASE_DIR, 'logs')
-os.makedirs(LOGS_DIR, exist_ok=True)
+# Game settings TODO: use them in front-end and back-end
+FIELD_WIDTH = 800
+FIELD_HEIGHT = 500
+PADDLE_HEIGHT = 100
+PADDLE_WIDTH = 26
+PADDLE_SPEED = 20
+BALL_RADIUS = 15
+BALL_STARTING_SPEED = 10
+FPS = 30
+MAX_SCORE = 5
+PADDING_THICKNESS = 7
+THICK_BORDER_THICKNESS = 5
+UPPER_LIMIT = PADDING_THICKNESS + PADDLE_HEIGHT / 2
+LOWER_LIMIT = FIELD_HEIGHT - PADDING_THICKNESS - PADDLE_HEIGHT / 2
 
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'verbose': {
-            'format': '{levelname} {asctime} {module} {message}',
-            'style': '{',
-        },
-        'simple': {
-            'format': '{levelname} {message}',
-            'style': '{',
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
         },
     },
-    'handlers': {
-        'file': {
-            'level': 'DEBUG',
-            'class': 'logging.FileHandler',
-            'filename': os.path.join(LOGS_DIR, 'app.log'),
-            'formatter': 'verbose',
-        },
+    "root": {
+        "handlers": ["console"],
+        "level": "WARNING",  # Change to DEBUG to increase verbosity
     },
-    'loggers': {
-        'django': {
-            'handlers': ['file'],
-            'level': 'DEBUG',
-            'propagate': True,
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": "WARNING",
+            "propagate": False,
+        },
+        "channels": {
+            "handlers": ["console"],
+            "level": "WARNING",
+            "propagate": True,
         },
     },
 }
-
-import logging
-logger = logging.getLogger('django')
-
-logger.debug('DEBUG: Test log entry for Django in settings.py')

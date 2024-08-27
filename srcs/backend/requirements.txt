@@ -3,6 +3,11 @@ django-bootstrap5==23.3
 httpx==0.26.0
 pytest==7.4.4
 uvicorn==0.25.0
+channels==4.0.0
 python-dotenv==0.21.0
 psycopg2-binary==2.9.6
 requests==2.32.3
+# Django Server
+daphne===4.1.2
+asgiref===3.8.1
+channels-redis===4.2.0

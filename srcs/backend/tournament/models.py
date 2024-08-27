@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
-from django.contrib.auth.models import User
 from django.contrib.postgres.fields import ArrayField
+import json
 
 
 class Player(models.Model):
@@ -23,7 +23,6 @@ class Tournament(models.Model):
         ('NEW', 'New'),
         ('PLAYING', 'Started'),
         ('FINISHED', 'Final'),
-        # Add more states as needed
     ]
     
     tournament_id = models.AutoField(primary_key=True)
@@ -46,7 +45,7 @@ class Tournament(models.Model):
     is_final = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.title
+        return json.dumps(self.__dict__, default=str)
 
     def start_tournament(self):
         if self.num_players == len(self.players):
@@ -109,3 +108,4 @@ class Alias(models.Model):
 
     def __str__(self):
         return self.name
+    

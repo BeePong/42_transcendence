@@ -8,20 +8,20 @@ all: up_no_elk
 
 # Start all services except ELK stack and rebuild if necessary
 up_no_elk:
-	docker compose -f ./docker-compose.yml up --build -d nginx backend_dummy db pgadmin
+	docker compose -f ./docker-compose.yml up --build -d nginx backendummy db redis
 
 # Start all services including ELK stack and rebuild if necessary
 up_all:
 	docker compose -f ./docker-compose.yml up --build -d
 
 up_backend:
-	docker compose -f ./docker-compose.yml up --build -d backend_dummy
+	docker compose -f ./docker-compose.yml up --build -d backendummy
 
 up_db:
 	docker compose -f ./docker-compose.yml up --build -d db
 
 up_elk:
-	docker compose -f ./docker-compose.yml up --build -d elasticsearch kibana logstash filebeat metricbeat
+	docker compose -f ./docker-compose.yml up --build -d es01 kibana logstash01 filebeat01 metricbeat01
 
 ################################################################################
 # Clean and Remove
@@ -100,13 +100,13 @@ logs_nginx:
 	docker compose -f ./docker-compose.yml logs -f nginx
 
 logs_backend:
-	docker compose -f ./docker-compose.yml logs -f backend_dummy
+	docker compose -f ./docker-compose.yml logs -f backendummy
 
 logs_db:
 	docker compose -f ./docker-compose.yml logs -f db
 
 logs_elk:
-	docker compose -f ./docker-compose.yml logs -f elasticsearch kibana logstash filebeat metricbeat
+	docker compose -f ./docker-compose.yml logs -f es01 kibana logstash01 filebeat01 metricbeat01
 
 # Tail all logs with timestamps
 logs:
@@ -144,13 +144,13 @@ exec_nginx:
 	docker compose -f ./docker-compose.yml exec nginx sh
 
 exec_backend:
-	docker compose -f ./docker-compose.yml exec backend_dummy sh
+	docker compose -f ./docker-compose.yml exec backendummy sh
 
 exec_db:
 	docker compose -f ./docker-compose.yml exec db sh
 
 exec_elk:
-	docker compose -f ./docker-compose.yml exec elasticsearch sh
+	docker compose -f ./docker-compose.yml exec es01 sh
 
 ################################################################################
 # Stop services
