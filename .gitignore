@@ -6,6 +6,9 @@ venv/
 *venv/
 .env
 
+# --- helper files ---
+.image_ids
+
 # --- Vim ignores ---
 [._]*.s[a-v][a-z]
 !*.svg  # comment out if you don't need vector files
@@ -30,8 +33,6 @@ Icon
 # --- VSCode ignores ---
 .vscode
 *.code-workspace
-
-.image_ids
 
 # --- Lionel's ignore ---
 cat_project_to_clipboard_and_file.sh

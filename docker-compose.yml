@@ -17,17 +17,11 @@ volumes:
     driver: local
   app_logs: 
     driver: local
-
-networks:
-  default:
-    name: beepong
-    external: false
-
+                                                      
 services:
   db:
     image: postgres:16
-    container_name: beepong-postgres_db
-    environment:
+    container_name: postgres_db environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -50,13 +44,12 @@ services:
       timeout: 5s
       retries: 5
 
-  backend_dummy:
-    container_name: beepong-backendDummy
+  backendummy:
+    container_name: backendummy
     build:
       context: ./srcs/backend
     volumes:
       - ./srcs/backend/beePong:/usr/src/backend/beePong
-      - app_logs:/beePong/logs  # Mount application logs volume
     env_file:
       - .env
     ports:
@@ -78,14 +71,14 @@ services:
     restart: on-failure
 
   nginx:
-    container_name: beepong-nginx
+    container_name: nginx
     build:
       context: ./srcs/nginx
     volumes:
       - ./srcs/frontend:/var/www/html
       - nginx_logs:/var/log/nginx 
     ports:
-      - 1443:443
+      - 8443:8443
     logging:
       driver: gelf
       options:
@@ -94,12 +87,12 @@ services:
         env: ".env"
     restart: on-failure
     depends_on:
-      backend_dummy:
+      backendummy:
         condition: service_healthy
 
   pgadmin:
-    container_name: beepong-pgadmin
     image: dpage/pgadmin4
+    container_name: pgadmin
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
@@ -362,3 +355,4 @@ services:
       - ELASTIC_USER=elastic
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
       - ELASTIC_HOSTS=https://elasticsearch:9200
+
