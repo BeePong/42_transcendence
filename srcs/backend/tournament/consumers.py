@@ -372,6 +372,7 @@ class PongConsumer(AsyncWebsocketConsumer):
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(self.pong_group_name, self.channel_name)
         print("DISCONNECTED, close_code: ", close_code)
+        print("game state: ", self.__class__.game_state)
         self.__class__.consumers.remove(self)
 
     async def handle_tournament_message(self, message):
@@ -399,11 +400,6 @@ class PongConsumer(AsyncWebsocketConsumer):
 
     @classmethod
     async def send_game_state_to_all(cls):
-        # for consumer in cls.consumers:
-        #     try:
-        #         await consumer.send_game_state()
-        #     except ValueError as e:
-        #         print(f"Error sending game state: {e}")
         channel_layer = get_channel_layer()
         try:
             await channel_layer.group_send(
@@ -413,15 +409,17 @@ class PongConsumer(AsyncWebsocketConsumer):
                     "game_state": cls.game_state,
                 },
             )
-        except ValueError as e:
+        except Exception as e:
             print(f"Error sending game state: {e}")
 
     async def send_game_state(self, event):
         game_state = event["game_state"]
         try:
             await self.send(text_data=json.dumps(game_state))
-        except ValueError as e:
+        except Exception as e:
             print(f"Error sending game state: {e}")
+
+        
 
     async def receive(self, text_data):
         # TODO: only receive data from users who are playing the current game, ignore everyone else - it's done in handle_game_message function now, but this function would maybe be a better place for this

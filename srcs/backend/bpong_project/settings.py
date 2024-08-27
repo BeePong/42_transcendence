@@ -23,7 +23,7 @@ SECRET_KEY = os.getenv(
 DEBUG = True
 # DEBUG = False
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "backendummy"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "backendummy", "c1r3p3.hive.fi"]
 
 # Application definition
 
@@ -154,7 +154,7 @@ LOGIN_URL = "accounts:login"
 
 # List of trusted origins for CSRF protection
 # Requests from these origins will be allowed to bypass the CSRF protection
-CSRF_TRUSTED_ORIGINS = ["https://localhost", "https://localhost:8443"]
+CSRF_TRUSTED_ORIGINS = ["https://localhost", "https://localhost:8443", "https://c1r3p3.hive.fi:8443"]
 
 # Game settings TODO: use them in front-end and back-end
 FIELD_WIDTH = 800
