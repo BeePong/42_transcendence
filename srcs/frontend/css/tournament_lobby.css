@@ -14,6 +14,11 @@
   display: grid;
 }
 
+.tournament_lobby__name-container.lose-player {
+  outline: 1px solid var(--text-color-grey);
+  box-shadow: -5px -5px var(--text-color-grey);
+}
+
 section.full .tournament_lobby__name-list-container {
   place-items: center;
 }

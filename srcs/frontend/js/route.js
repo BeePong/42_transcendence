@@ -51,27 +51,28 @@ async function loadPage(path, redirectUrl = "/", fromNavigate = false) {
       )
         changeRedirectUrlandOauthState(redirectUrl);
 
-      // perform countdown in tournmament lobby if the list is full. Otherwise, wait for other players.
-      if (/^\/tournament\/\d+\/lobby$/.test(page))
-        document.querySelector(".full");
-      mockWebSocket();
-      /* if (/^\/tournament\/\d+\/lobby$/.test(page))
-        document.querySelector(".full")
-          ? tournamentLobbyCountdown()
-          : mockWebSocket(); */ //TODO: open websocket
-
+				// perform countdown in tournmament lobby if the list is full. Otherwise, wait for other players.
+				if (/^\/tournament\/\d+\/lobby$/.test(page)) {
+					if (document.querySelector('.full')) {
+						if (!document.querySelector('.winner'))
+							tournamentLobbyCountdown()
+					}
+					else
+						mockWebSocket(); //TODO: open websocket
+				}
       // if url contains "lobby", start mockWebSocket
-      var match = page.match(/^\/tournament\/(\d+)\/lobby$/);
-      console.log("match", match);
-      if (match) {
-        var tournament_id = match[1];
-        webSocketTest(tournament_id);
-      }
-      var solo_match = page.match(/^\/tournament\/solo_game$/);
-      console.log("solo_game match", solo_match);
-      if (solo_match) {
-        webSocketTest("solo");
-      }
+      //TODO: combined with server side branch code
+      // var match = page.match(/^\/tournament\/(\d+)\/lobby$/);
+      // console.log("match", match);
+      // if (match) {
+      //   var tournament_id = match[1];
+      //   webSocketTest(tournament_id);
+      // }
+      // var solo_match = page.match(/^\/tournament\/solo_game$/);
+      // console.log("solo_game match", solo_match);
+      // if (solo_match) {
+      //   webSocketTest("solo");
+      // }
     }
   } catch (error) {
     console.error("There was a problem with the fetch operation:", error);

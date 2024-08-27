@@ -3,7 +3,7 @@ from collections import namedtuple
 from .forms import TournamentForm, AliasForm
 from .decorators import login_required_json
 from django.contrib.auth.decorators import login_required
-from .models import Tournament, Player
+from .models import Tournament, Player, Match
 from django.utils.functional import SimpleLazyObject
 from django.shortcuts import render, redirect, get_object_or_404
 
@@ -104,7 +104,8 @@ def tournament(request):
 
 
 def solo_game(request):
-    return render(request, 'tournament/solo_game.html')
+    return render(request, "tournament/solo_game.html")
+
 
 @login_required_json
 def create_tournament(request):
@@ -173,16 +174,48 @@ def tournament_lobby(request, tournament_id):
                 if tournament.num_players_in >= tournament.num_players:
                     tournament.state = "READY"
                 tournament.save()
-        return render(
-            request,
-            "tournament/tournament_lobby.html",
-            {
-                "match_players": tournament.players,
-                "players_in_lobby": tournament.players,
-                "num_players": tournament.num_players,
-            },
-        )
-        # return render(request, 'tournament/tournament_lobby.html')
+
+        if (
+            tournament.state != "READY"
+            and tournament.num_players_in < tournament.num_players
+        ):
+            return render(
+                request,
+                "tournament/tournament_waiting_lobby.html",
+                {
+                    "players_in_lobby": tournament.players,
+                    "num_players": tournament.num_players,
+                },
+            )
+
+        matches = Match.objects.filter(
+            tournament=tournament
+        )  # Retrieve all matches associated with the tournament
+        lose_players = [
+            match.determine_loser().username for match in matches
+        ]  # TODO: replace username with alias
+        if tournament.winner:
+            return render(
+                request,
+                "tournament/tournament_winner.html",
+                {
+                    "players_in_lobby": tournament.players,
+                    "num_players": tournament.num_players,
+                    "lose_players": lose_players,
+                },
+            )
+        else:
+            return render(
+                request,
+                "tournament/tournament_full_lobby.html",
+                {
+                    "match_players": tournament.players,
+                    "players_in_lobby": tournament.players,
+                    "num_players": tournament.num_players,
+                    "lose_players": lose_players,
+                    "is_final": tournament.is_final,
+                },
+            )
     except Exception as error:
         print(error)
         return JsonResponse({"success": False, "error": error}, status=404)
