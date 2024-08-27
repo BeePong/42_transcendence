@@ -49,7 +49,7 @@ class Tournament(models.Model):
     is_final = models.BooleanField(default=False)
 
     def __str__(self):
-        return json.dumps(model_to_dict(self))
+        return json.dumps(self.__dict__, default=str)
 
     def start_tournament(self):
         if self.num_players == len(self.players):

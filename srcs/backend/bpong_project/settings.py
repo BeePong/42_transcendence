@@ -23,7 +23,7 @@ SECRET_KEY = os.getenv(
 DEBUG = True
 # DEBUG = False
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "backendummy", "nginx"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "backendummy", "nginx", "c1r3p3.hive.fi"]
 
 # Application definition
 
@@ -79,7 +79,10 @@ ASGI_APPLICATION = "bpong_project.asgi.application"
 
 CHANNEL_LAYERS = {
     "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer",
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("redis", 6379)],
+        },
     },
 }
 
@@ -150,6 +153,7 @@ CSRF_TRUSTED_ORIGINS = [
     "https://127.0.0.1",
     "https://nginx",
     "https://localhost:8443",
+    "https://c1r3p3.hive.fi:8443",
 ]
 
 # Game settings TODO: use them in front-end and back-end
@@ -157,8 +161,10 @@ FIELD_WIDTH = 800
 FIELD_HEIGHT = 500
 PADDLE_HEIGHT = 100
 PADDLE_WIDTH = 26
-PADDLE_SPEED = 10
+PADDLE_SPEED = 20
 BALL_RADIUS = 15
+BALL_STARTING_SPEED = 5
+BALL_SPEED_INCREMENT = 1
 FPS = 30
 MAX_SCORE = 5
 PADDING_THICKNESS = 7

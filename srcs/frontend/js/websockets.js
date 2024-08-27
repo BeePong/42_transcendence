@@ -1,3 +1,5 @@
+let old_ball_speed, new_ball_speed;
+
 function webSocketTest(tournament_id) {
   const canvas_height = 500;
   const canvas_width = 800;
@@ -87,7 +89,7 @@ function webSocketTest(tournament_id) {
     var data = JSON.parse(e.data);
     //console.log("socket data:", data);
     updateCanvas(data);
-    // Updating our game field will be here
+    return false;
   };
 
   // console.log("webSocketTest SOCKET", socket); // for debugging
@@ -125,6 +127,12 @@ function webSocketTest(tournament_id) {
   });
 
   function updateCanvas(game_data) {
+    if (new_ball_speed === undefined) new_ball_speed = game_data.ball.speed;
+    old_ball_speed = new_ball_speed;
+    new_ball_speed = game_data.ball.speed;
+    if (old_ball_speed !== new_ball_speed) {
+      console.log("ball speed changed", old_ball_speed, new_ball_speed);
+    }
     insertScores(game_data.player1.score, game_data.player2.score);
     if (game_data.state === "finished") {
       console.log("winner is", game_data.winner);

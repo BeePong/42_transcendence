@@ -3,16 +3,19 @@ import math
 import random
 import threading
 import time
+import asyncio
+from channels.generic.websocket import AsyncWebsocketConsumer
 from enum import Enum
-
-from channels.generic.websocket import WebsocketConsumer
 from django.conf import settings
-
-from . import models
 
 # from django.contrib.auth.models import User
 
 # from .models import Player, Tournament
+from .models import Tournament, Player
+from django.shortcuts import get_object_or_404
+from channels.db import database_sync_to_async
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 
 # import asyncio
 # from .ai import ai_bot
@@ -44,14 +47,14 @@ class GameStateSingleton:
             "state": GameState.COUNTDOWN.value,
             "countdown": 3,
             "ball": {"x": settings.FIELD_WIDTH / 2, "y": settings.FIELD_HEIGHT / 2},
-            "ball_speed": 10,
+            "ball_speed": settings.BALL_STARTING_SPEED,
             "hit_count": 0,
             "ball_vector": self.normalize_vector(
                 self.get_larger_random(), random.uniform(-1, 1)
             ),
             "player1": {
                 "player_id": None,
-                "player_name": "thuynguy",
+                "player_name": "vvagapov",
                 "score": 0,
                 "y": settings.FIELD_HEIGHT / 2,
                 "up_pressed": False,
@@ -59,7 +62,7 @@ class GameStateSingleton:
             },
             "player2": {
                 "player_id": None,
-                "player_name": "ai_bot",
+                "player_name": "dummy",
                 "score": 0,
                 "y": settings.FIELD_HEIGHT / 2,
                 "up_pressed": False,
@@ -83,10 +86,21 @@ class GameStateSingleton:
             "x": settings.FIELD_WIDTH / 2,
             "y": settings.FIELD_HEIGHT / 2,
         }
+        self.game_state["ball_speed"] = settings.BALL_STARTING_SPEED
+        self.game_state["hit_count"] = 0
         self.game_state["ball_vector"] = self.normalize_vector(
             self.get_larger_random(), random.uniform(-1, 1)
         )
-        # print("NEW ROUND INITIALIZED")
+        print("NEW ROUND INITIALIZED")
+
+    # TODO: use this function to reset the game state when the game is over
+    def init_new_game(self):
+        self.init_new_round()
+        self.game_state["player1"]["score"] = 0
+        self.game_state["player1"]["player_id"] = None
+        self.game_state["player2"]["score"] = 0
+        self.game_state["player2"]["player_id"] = None
+        self.game_state["winner"] = None
 
 
 class GameLoop:
@@ -102,18 +116,21 @@ class GameLoop:
 
     def __init__(self, game_state):
         self.game_state = game_state
-        self.thread = threading.Thread(target=self.loop)
+        self.running = True
+        self.loop_task = None
+        print("GAME LOOP INITIALIZED")
 
     def start(self):
-        self.thread.start()
+        self.loop_task = asyncio.create_task(self.game_loop())
 
-    def loop(self):
-        self.game_loop()
+    async def loop(self):
+        self.loop_task = asyncio.create_task(self.game_loop())
 
-    def game_loop(self):
+    async def game_loop(self):
+        print("GAME LOOP STARTED")
         # Your game loop code here, which can use self.game_state
-        while True:
-            time.sleep(1 / settings.FPS)
+        while self.running:
+            # time.sleep(1/settings.FPS)
 
             if self.game_state["state"] == GameState.COUNTDOWN.value:
                 if time.time() - self.game_state["round_start_time"] <= 3:
@@ -188,16 +205,6 @@ class GameLoop:
                         - remaining_movement * self.game_state["ball_vector"]["y"]
                     )
 
-                # instead of left paddle place another wall for debugging
-                # handle collisions with left wall
-                # if ball_new_x <= self.BALL_RADIUS:
-                # Calculate the remaining movement after the ball hits the wall
-                # remaining_movement = self.BALL_RADIUS - self.game_state['ball']['x']
-                # Reverse the x-component of the ball's direction vector
-                # self.game_state['ball_vector']['x'] *= -1
-                # Move the ball the remaining distance in the new direction
-                # ball_new_x = self.game_state['ball']['x'] + remaining_movement * self.game_state['ball_vector']['x']
-
                 # Collisions with the paddles
                 if (
                     ball_new_x
@@ -212,20 +219,25 @@ class GameLoop:
                     + settings.PADDLE_HEIGHT / 2
                     + settings.BALL_RADIUS
                 ):
+                    # print("HIT LEFT PADDLE")
                     self.game_state["hit_count"] += 1
+                    self.game_state["ball_speed"] += settings.BALL_SPEED_INCREMENT
                     # Calculate the remaining movement after the ball hits the wall
                     remaining_movement = (
                         settings.PADDING_THICKNESS
                         + settings.PADDLE_WIDTH
+                        + settings.BALL_RADIUS
                         - self.game_state["ball"]["x"]
                     )
-                    # Reverse the x-component of the ball's direction vector
-                    self.game_state["ball_vector"]["x"] *= -1
-                    # Move the ball the remaining distance in the new direction
-                    ball_new_x = (
-                        self.game_state["ball"]["x"]
-                        + remaining_movement * self.game_state["ball_vector"]["x"]
-                    )
+                    # check if ball is moving towards the paddle
+                    if self.game_state["ball_vector"]["x"] < 0:
+                        # Reverse the x-component of the ball's direction vector
+                        self.game_state["ball_vector"]["x"] *= -1
+                        # Move the ball the remaining distance in the new direction
+                        ball_new_x = (
+                            self.game_state["ball"]["x"]
+                            + remaining_movement * self.game_state["ball_vector"]["x"]
+                        )
                 if (
                     ball_new_x
                     > settings.FIELD_WIDTH
@@ -241,6 +253,7 @@ class GameLoop:
                     + settings.BALL_RADIUS
                 ):
                     self.game_state["hit_count"] += 1
+                    self.game_state["ball_speed"] += settings.BALL_SPEED_INCREMENT
                     # Calculate the remaining movement after the ball hits the wall
                     remaining_movement = (
                         self.game_state["ball"]["x"]
@@ -251,13 +264,15 @@ class GameLoop:
                             - settings.PADDLE_WIDTH
                         )
                     )
-                    # Reverse the x-component of the ball's direction vector
-                    self.game_state["ball_vector"]["x"] *= -1
-                    # Move the ball the remaining distance in the new direction
-                    ball_new_x = (
-                        self.game_state["ball"]["x"]
-                        - remaining_movement * self.game_state["ball_vector"]["x"]
-                    )
+                    # check  if ball is moving towards the paddle
+                    if self.game_state["ball_vector"]["x"] > 0:
+                        # Reverse the x-component of the ball's direction vector
+                        self.game_state["ball_vector"]["x"] *= -1
+                        # Move the ball the remaining distance in the new direction
+                        ball_new_x = (
+                            self.game_state["ball"]["x"]
+                            - remaining_movement * self.game_state["ball_vector"]["x"]
+                        )
 
                 # Update the ball's position
                 self.game_state["ball"]["x"] = ball_new_x
@@ -265,85 +280,113 @@ class GameLoop:
 
                 # Check for scoring
                 if ball_new_x >= settings.FIELD_WIDTH - settings.BALL_RADIUS:
+                    print("PLAYER 1 SCORED")
                     self.game_state["player1"]["score"] += 1
                     GameStateSingleton.get_instance().init_new_round()
                     if self.game_state["player1"]["score"] == settings.MAX_SCORE:
                         self.game_state["winner"] = self.game_state["player1"][
                             "player_id"
                         ]
-                        self.game_state["state"] = GameState.COUNTDOWN.value
+                        self.game_state["state"] = GameState.FINISHED.value
                         self.game_state["player2"]["score"] = 0
                         self.game_state["player1"]["score"] = 0
                 elif ball_new_x <= settings.BALL_RADIUS:
+                    print("PLAYER 2 SCORED")
                     self.game_state["player2"]["score"] += 1
                     GameStateSingleton.get_instance().init_new_round()
                     if self.game_state["player2"]["score"] == settings.MAX_SCORE:
                         self.game_state["winner"] = self.game_state["player2"][
                             "player_id"
                         ]
-                        self.game_state["state"] = GameState.COUNTDOWN.value
+                        self.game_state["state"] = GameState.FINISHED.value
                         self.game_state["player2"]["score"] = 0
                         self.game_state["player1"]["score"] = 0
-            PongConsumer.send_game_state_to_all()
+
+            await PongConsumer.send_game_state_to_all()
+            await asyncio.sleep(1 / settings.FPS)
+
+    def stop(self):
+        self.running = False
+        if self.loop_task:
+            self.loop_task.cancel()
 
 
-class PongConsumer(WebsocketConsumer):
+class PongConsumer(AsyncWebsocketConsumer):
 
     consumers = []
 
     game_state = GameStateSingleton.get_instance().game_state
-    game_loop = GameLoop.get_instance(game_state)
-    game_thread = threading.Thread(target=game_loop.loop)
-    game_thread.start()
-    print("GAME THREAD STARTED")
+    game_loop = GameLoop(game_state)
+    print("GAME STARTED")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.__class__.consumers.append(self)
+
         print("CONSUMERS: ", self.__class__.consumers)
 
-    def get_player_by_user(self, user):
+    async def get_player_by_user(self, user):
         if user.username == self.__class__.game_state["player1"]["player_name"]:
             return "player1"
         elif user.username == self.__class__.game_state["player2"]["player_name"]:
             return "player2"
-        return None
+        else:
+            return None
 
-    def send_message(self, message):
-        self.send(text_data=json.dumps({"message": message}))
+    async def send_message(self, message):
+        await self.send(text_data=json.dumps({"message": message}))
 
-    def connect(self):
-        self.user = self.scope["user"]
-        print("USER CONNECTED: ", self.scope["user"])
-        print("Attempting to connect...")
-        self.accept()
-        print("Connection accepted")
-        # is_bot = self.scope["query_string"].decode().split("=")[1] == "True"
-        # if is_bot:
-        #     user = {"id": 0, "username": "ai_bot"}
-        # else:
-        #     user = self.scope["user"]
-        # TODO: change this to the actual player id, now latest person who joins is the main player, the other one is dummy
-        # user = self.user
-        player = self.get_player_by_user(self.scope["user"])
-        if player is not None:
-            self.__class__.game_state[player]["player_id"] = self.scope["user"].id
-            print("PLAYER CONNECTED: ", player, self.scope["user"])
-        print("USER CONNECTED: ", self.scope["user"])
-        if player is None:
-            print("User is not playing this game, they are a viewer")
-        if self.scope["user"].is_authenticated:
+    @database_sync_to_async
+    def get_tournament(self, tournament_id):
+        try:
+            tournament = get_object_or_404(Tournament, tournament_id=tournament_id)
+            return tournament
+        except Tournament.DoesNotExist:
+            return None
+
+    async def connect(self):
+        tournament_id = self.scope["url_route"]["kwargs"]["tournament_id"]
+        # Retrieve the tournament object using the tournament_id
+        tournament = await self.get_tournament(tournament_id)
+
+        print("TOURNAMENT OBJECT: ", tournament)
+        await self.accept()
+        self.pong_group_name = (
+            "tournament_group"  # Define a group name for ping pong game
+        )
+        await self.channel_layer.group_add(self.pong_group_name, self.channel_name)
+
+        if not (self.scope["user"].is_authenticated):
+            print("User is not authenticated, disconnecting")
+            await self.close(code=4004)
+        else:
             print("authenticated user id: ", self.scope["user"].id)
             print("authenticated user name: ", self.scope["user"].username)
+        is_bot = self.scope["query_string"].decode().split("=")[1] == "True"
+        if is_bot:
+            user = {"id": 0, "username": "ai_bot"}
+        else:
+            user = self.scope["user"]
+        player = await self.get_player_by_user(user)
+        if not player is None:
+            self.__class__.game_state[player]["player_id"] = user.id
+            print("PLAYER CONNECTED: ", player, user)
+        print("USER CONNECTED: ", user)
+        if player is None:
+            print("User is not playing this game, they are a viewer")
         print("GAME STATE: ", self.__class__.game_state)
+        await self.__class__.game_loop.loop()
 
-    def disconnect(self, close_code):
+    async def disconnect(self, close_code):
+        await self.channel_layer.group_discard(self.pong_group_name, self.channel_name)
+        # print("DISCONNECTED, close_code: ", close_code)
+        print("game state: ", self.__class__.game_state)
         self.__class__.consumers.remove(self)
 
-    def handle_tournament_message(self, message):
-        self.send_message("Received tournament message: " + str(message))
+    async def handle_tournament_message(self, message):
+        await self.send_message("Received tournament message: " + str(message))
 
-    def handle_key_event(self, key, keyAction, player_field):
+    async def handle_key_event(self, key, keyAction, player_field):
         if key == "ArrowUp":
             self.__class__.game_state[player_field]["up_pressed"] = (
                 keyAction == "keydown"
@@ -353,33 +396,47 @@ class PongConsumer(WebsocketConsumer):
                 keyAction == "keydown"
             )
 
-    def handle_game_message(self, message):
+    async def handle_game_message(self, message):
         player = self.scope["user"]
         key = message["key"]
         keyAction = message["keyAction"]
         # Update the game state based on the key and action
         if player.id == self.__class__.game_state["player1"]["player_id"]:
-            self.handle_key_event(key, keyAction, "player1")
+            await self.handle_key_event(key, keyAction, "player1")
         elif player.id == self.__class__.game_state["player2"]["player_id"]:
-            self.handle_key_event(key, keyAction, "player2")
-
-    def send_game_state(self):
-        # Send the updated game state to all players
-        self.send(text_data=json.dumps(self.__class__.game_state))
+            await self.handle_key_event(key, keyAction, "player2")
 
     @classmethod
-    def send_game_state_to_all(cls):
-        for consumer in cls.consumers:
-            consumer.send_game_state()
+    async def send_game_state_to_all(cls):
+        channel_layer = get_channel_layer()
+        try:
+            await channel_layer.group_send(
+                "tournament_group",
+                {
+                    "type": "send_game_state",
+                    "game_state": cls.game_state,
+                },
+            )
+        except Exception as e:
+            print(f"Error sending game state: {e}")
 
-    def receive(self, text_data):
-        # TODO: only receive data from users who are playing the current game, ignore everyone else - it's done in handle_game_message function now, but this function would be a better place for this
+    async def send_game_state(self, event):
+        game_state = event["game_state"]
+        try:
+            await self.send(text_data=json.dumps(game_state))
+        except Exception as e:
+            print(f"Error sending game state: {e}")
 
-        text_data_json = json.loads(text_data)
-        message = text_data_json["message"]
-        message_type = text_data_json["type"]
+    async def receive(self, text_data):
+        # TODO: only receive data from users who are playing the current game, ignore everyone else - it's done in handle_game_message function now, but this function would maybe be a better place for this
+        try:
+            text_data_json = json.loads(text_data)
+            message = text_data_json["message"]
+            message_type = text_data_json["type"]
 
-        if message_type == "tournament":
-            self.handle_tournament_message(message)
-        elif message_type == "game":
-            self.handle_game_message(message)
+            if message_type == "tournament":
+                await self.handle_tournament_message(message)
+            elif message_type == "game":
+                await self.handle_game_message(message)
+        except Exception as e:
+            print("Error in receive method: %s", e)

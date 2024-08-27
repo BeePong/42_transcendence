@@ -14,3 +14,5 @@ asgiref===3.8.1
 websockets===13.0
 aiohttp===3.10.5
 beautifulsoup4===4.12.3
+# Redis
+channels-redis===4.2.0

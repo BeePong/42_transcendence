@@ -152,6 +152,8 @@ function tournamentLobbyAddPlayer() {
     .appendChild(playerDiv);
 
   // If the lobby is full, go to handle full tournament lobby. Otherwise, add new players again
+
+  console.log("updatedNumPlayersInLobby", updatedNumPlayersInLobby);
   updatedNumPlayersInLobby === numPlayers
     ? handleFullTournamentLobby()
     : mockWebSocket();
@@ -159,7 +161,8 @@ function tournamentLobbyAddPlayer() {
 
 // Handle full tournament lobby
 function handleFullTournamentLobby() {
-  setTimeout(() => {
+  console.log("HELLO handleFullTournamentLobby");
+  /*setTimeout(() => {
     if (/^\/tournament\/\d+\/lobby$/.test(window.location.pathname)) {
       document.getElementById("tournament-lobby-section").classList.add("full");
       document.querySelector(".tournament_lobby__header").innerHTML =
@@ -168,9 +171,10 @@ function handleFullTournamentLobby() {
         "dummy vs dummy";
       document.querySelector(".tournament_lobby__player-count").remove();
       document.getElementById("leave-button").remove();
-      tournamentLobbyCountdown();
+      console.log("HELLO commented out");
+      //tournamentLobbyCountdown();
     }
-  }, 1000);
+  }, 1000);*/
 }
 
 // Countdown in lobby page and navigate to the game page after countdown
