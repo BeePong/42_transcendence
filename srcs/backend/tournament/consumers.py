@@ -215,11 +215,14 @@ class GameLoop:
                     + settings.PADDLE_HEIGHT / 2
                     + settings.BALL_RADIUS
                 ):
+                    # print("HIT LEFT PADDLE")
                     self.game_state["hit_count"] += 1
+                    self.game_state["ball_speed"] += settings.BALL_SPEED_INCREMENT
                     # Calculate the remaining movement after the ball hits the wall
                     remaining_movement = (
                         settings.PADDING_THICKNESS
                         + settings.PADDLE_WIDTH
+                        + settings.BALL_RADIUS
                         - self.game_state["ball"]["x"]
                     )
                     # check if ball is moving towards the paddle
@@ -246,6 +249,7 @@ class GameLoop:
                     + settings.BALL_RADIUS
                 ):
                     self.game_state["hit_count"] += 1
+                    self.game_state["ball_speed"] += settings.BALL_SPEED_INCREMENT
                     # Calculate the remaining movement after the ball hits the wall
                     remaining_movement = (
                         self.game_state["ball"]["x"]
