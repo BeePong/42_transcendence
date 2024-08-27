@@ -54,7 +54,7 @@ class GameStateSingleton:
             ),
             "player1": {
                 "player_id": None,
-                "player_name": "vvagapov",
+                "player_name": "linh",
                 "score": 0,
                 "y": settings.FIELD_HEIGHT / 2,
                 "up_pressed": False,
@@ -363,15 +363,12 @@ class PongConsumer(AsyncWebsocketConsumer):
             print("authenticated user id: ", self.scope["user"].id)
             print("authenticated user name: ", self.scope["user"].username)
         is_bot = self.scope["query_string"].decode().split("=")[1] == "True"
-        if is_bot:
-            user = {"id": 0, "username": "ai_bot"}
-        else:
-            user = self.scope["user"]
-        player = await self.get_player_by_user(user)
+
+        player = await self.get_player_by_user(self.scope["user"])
         if not player is None:
-            self.__class__.game_state[player]["player_id"] = user.id
-            print("PLAYER CONNECTED: ", player, user)
-        print("USER CONNECTED: ", user)
+            self.__class__.game_state[player]["player_id"] = self.scope["user"].id
+            print("PLAYER CONNECTED: ", player, self.scope["user"])
+        print("USER CONNECTED: ", self.scope["user"])
         if player is None:
             print("User is not playing this game, they are a viewer")
         print("GAME STATE: ", self.__class__.game_state)

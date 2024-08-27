@@ -26,7 +26,7 @@ def login():
     # Step 1b: Submit the login form with the CSRF token
     login_url = "https://nginx:8443/page/accounts/login/"
     payload = {
-        "username": "ai_bot",  # Replace with your actual username
+        "username": "dummy",  # Replace with your actual username
         "password": "test123!",  # Replace with your actual password
         "csrfmiddlewaretoken": csrf_token,  # Include the CSRF token
     }
@@ -71,7 +71,7 @@ async def ai_bot(session):
         print("WebSocket connection established.")
 
         # Function to send game data, similar to the sendGameData function in JavaScript
-        async def send_game_data(key, key_action):
+        async def send_game_data(websocket, key, key_action):
             message = {
                 "message": {
                     "key": key,
