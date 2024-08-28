@@ -12,7 +12,10 @@ RUN mkdir /etc/nginx/ssl && \
 RUN openssl req -x509 -newkey rsa:2048 -nodes -days 365 \
 	-out /etc/nginx/ssl/beepong.csr \
 	-keyout /etc/nginx/ssl/beepong.key \
-	-subj "/C=FI/ST=Helsinki/L=Helsinki/O=beepong/OU=beepong/CN=beepong"
+	-subj "/C=FI/ST=Helsinki/L=Helsinki/O=beepong/OU=beepong/CN=nginx"
+
+RUN openssl x509 -in /etc/nginx/ssl/beepong.csr -out /etc/nginx/ssl/beepong.pem -outform PEM
+
 
 COPY ./nginx.conf /etc/nginx/http.d/default.conf
 

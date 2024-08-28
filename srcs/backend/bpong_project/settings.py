@@ -23,7 +23,7 @@ SECRET_KEY = os.getenv(
 DEBUG = True
 # DEBUG = False
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "backendummy", "c1r3p3.hive.fi"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "backendummy", "nginx", "c1r3p3.hive.fi"]
 
 # Application definition
 
@@ -76,12 +76,6 @@ TEMPLATES = [
 WSGI_APPLICATION = "bpong_project.wsgi.application"
 
 ASGI_APPLICATION = "bpong_project.asgi.application"
-
-# CHANNEL_LAYERS = {
-#     'default': {
-#         'BACKEND': 'channels.layers.InMemoryChannelLayer',
-#     },
-# }
 
 CHANNEL_LAYERS = {
     "default": {
@@ -154,7 +148,13 @@ LOGIN_URL = "accounts:login"
 
 # List of trusted origins for CSRF protection
 # Requests from these origins will be allowed to bypass the CSRF protection
-CSRF_TRUSTED_ORIGINS = ["https://localhost", "https://localhost:8443", "https://c1r3p3.hive.fi:8443"]
+CSRF_TRUSTED_ORIGINS = [
+    "https://localhost",
+    "https://127.0.0.1",
+    "https://nginx",
+    "https://localhost:8443",
+    "https://c1r3p3.hive.fi:8443",
+]
 
 # Game settings TODO: use them in front-end and back-end
 FIELD_WIDTH = 800
@@ -166,34 +166,34 @@ BALL_RADIUS = 15
 BALL_STARTING_SPEED = 5
 BALL_SPEED_INCREMENT = 1
 FPS = 30
-MAX_SCORE = 5
+MAX_SCORE = 500
 PADDING_THICKNESS = 7
 THICK_BORDER_THICKNESS = 5
 UPPER_LIMIT = PADDING_THICKNESS + PADDLE_HEIGHT / 2
 LOWER_LIMIT = FIELD_HEIGHT - PADDING_THICKNESS - PADDLE_HEIGHT / 2
 
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
-        },
-    },
-    "root": {
-        "handlers": ["console"],
-        "level": "WARNING",  # Change to DEBUG to increase verbosity
-    },
-    "loggers": {
-        "django": {
-            "handlers": ["console"],
-            "level": "WARNING",
-            "propagate": False,
-        },
-        "channels": {
-            "handlers": ["console"],
-            "level": "WARNING",
-            "propagate": True,
-        },
-    },
-}
+# LOGGING = {
+#     "version": 1,
+#     "disable_existing_loggers": False,
+#     "handlers": {
+#         "console": {
+#             "class": "logging.StreamHandler",
+#         },
+#     },
+#     "root": {
+#         "handlers": ["console"],
+#         "level": "WARNING",  # Change to DEBUG to increase verbosity
+#     },
+#     "loggers": {
+#         "django": {
+#             "handlers": ["console"],
+#             "level": "WARNING",
+#             "propagate": False,
+#         },
+#         "channels": {
+#             "handlers": ["console"],
+#             "level": "WARNING",
+#             "propagate": True,
+#         },
+#     },
+# }

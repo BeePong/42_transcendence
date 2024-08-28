@@ -1,12 +1,16 @@
 import json
-import asyncio
-import time
-import threading
-import random
 import math
+import random
+import threading
+import time
+import asyncio
 from channels.generic.websocket import AsyncWebsocketConsumer
 from enum import Enum
 from django.conf import settings
+
+# from django.contrib.auth.models import User
+
+# from .models import Player, Tournament
 from .models import Tournament, Player
 from django.shortcuts import get_object_or_404
 from channels.db import database_sync_to_async
@@ -117,7 +121,7 @@ class GameStateSingleton:
             ),
             "player1": {
                 "player_id": None,
-                "player_name": "vvagapov",
+                "player_name": "thuynguy",
                 "score": 0,
                 "y": settings.FIELD_HEIGHT / 2,
                 "up_pressed": False,
@@ -429,20 +433,18 @@ class PongConsumer(AsyncWebsocketConsumer):
         )
         await self.channel_layer.group_add(self.pong_group_name, self.channel_name)
 
-        # decode if bot or user
+
         is_bot = self.scope["query_string"].decode().split("=")[1] == "True"
         if is_bot:
             user = {"id": 0, "username": "ai_bot"}
         else:
             user = self.scope["user"]
-
         # add player to tournament if eligible
         if self.__class__.tournament.is_new():
             await self.__class__.tournament.add_player_and_start_game_if_ready(user)
 
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(self.pong_group_name, self.channel_name)
-        print("CONSUMER DISCONNECTED, close_code: ", close_code)
 
     async def handle_tournament_message(self, message):
         await print("TOURNAMENT MESSAGE: ", message)
@@ -478,6 +480,7 @@ class PongConsumer(AsyncWebsocketConsumer):
 
     async def send_game_state(self, event):
         game_state = event["game_state"]
+        print("SENDING GAME STATE: ", game_state)
         try:
             await self.send(text_data=json.dumps(game_state))
         except Exception as e:

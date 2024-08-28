@@ -26,6 +26,7 @@ services:
       context: ./srcs/backend
     volumes:
       - ./srcs/backend/beePong:/usr/src/backend/beePong
+      - nginx_ssl_certs:/etc/nginx/ssl  # <-- Access certs inside the backend
     env_file:
       - .env
     ports:
@@ -43,8 +44,6 @@ services:
   redis:
     container_name: redis
     image: redis:7.4.0
-    ports:
-      - "6379:6379"
     restart: on-failure
     volumes:
       - redis_data:/data
@@ -55,6 +54,7 @@ services:
       context: ./srcs/nginx
     volumes:
       - ./srcs/frontend:/var/www/html
+      - nginx_ssl_certs:/etc/nginx/ssl  # <-- Share the cert directory with host
     ports:
       - 8443:8443
     restart: on-failure
@@ -75,5 +75,6 @@ services:
 
 volumes:
   postgres_data:
+  nginx_ssl_certs:
   redis_data:
 

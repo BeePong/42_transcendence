@@ -96,8 +96,11 @@ re_all_elk: clean_all up_all
 # Logging
 ################################################################################
 # Tail logs from specific services
-logs_nginx:
-	docker compose -f ./docker-compose.yml logs -f nginx
+nginx_logs:
+	docker compose -f ./docker-compose.yml exec nginx sh -c 'tail -f /var/log/nginx/access.log'
+
+nginx_logs_error:
+	docker compose -f ./docker-compose.yml exec nginx sh -c 'tail -f /var/log/nginx/error.log'
 
 logs_backend:
 	docker compose -f ./docker-compose.yml logs -f backendummy
