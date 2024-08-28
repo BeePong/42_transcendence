@@ -5,7 +5,6 @@ import ssl
 from bs4 import BeautifulSoup
 import json
 import random
-import time
 
 
 # Step 1: Log in to the website
@@ -66,7 +65,7 @@ async def ai_bot(session):
     }
 
     async with websockets.connect(
-        url, ssl=ssl_context, extra_headers=headers, ping_interval=20, ping_timeout=10
+        url, ssl=ssl_context, extra_headers=headers
     ) as websocket:
         print("WebSocket connection established.")
 
@@ -85,39 +84,30 @@ async def ai_bot(session):
         # Example loop to simulate key press and release
         while True:
             try:
-                async with websockets.connect(
-                    url,
-                    ssl=ssl_context,
-                    extra_headers=headers,
-                    ping_interval=20,
-                    ping_timeout=10,
-                ) as websocket:
-                    print("WebSocket connection established.")
+                # Receive and print the game state
+                game_state = await websocket.recv()
+                print(f"Received game state: {game_state}")
 
-                    # Example loop to simulate key press and release
-                    while True:
-                        # Randomly choose to press "ArrowUp" or "ArrowDown"
-                        key = random.choice(["ArrowUp", "ArrowDown"])
-                        await send_game_data(websocket, key, "keydown")
+                # Randomly choose to press "ArrowUp" or "ArrowDown"
+                key = random.choice(["ArrowUp", "ArrowDown"])
+                await send_game_data(websocket, key, "keydown")
 
-                        # Simulate holding the key down for a short duration
-                        await asyncio.sleep(random.uniform(0.1, 0.5))
+                # Simulate holding the key down for a short duration
+                await asyncio.sleep(random.uniform(0.1, 0.5))
 
-                        # Explicit ping to keep the connection alive
-                        await websocket.ping()
+                # Explicit ping to keep the connection alive
+                await websocket.ping()
 
-                        # Simulate key release
-                        await send_game_data(websocket, key, "keyup")
+                # Simulate key release
+                await send_game_data(websocket, key, "keyup")
 
-                        # Wait before pressing a key again
-                        await asyncio.sleep(random.uniform(0.5, 2.0))
+                # Wait before pressing a key again
+                await asyncio.sleep(random.uniform(0.5, 2.0))
 
             except websockets.ConnectionClosedError as e:
-                print(f"WebSocket connection closed: {e}. Attempting to reconnect...")
-                await asyncio.sleep(5)  # Wait before attempting to reconnect
+                print(f"WebSocket connection closed: {e}")
             except Exception as e:
-                print(f"Unexpected error: {e}. Attempting to reconnect...")
-                await asyncio.sleep(5)  # Wait before attempting to reconnect
+                print(f"Unexpected error: {e}")
 
 
 # Main execution

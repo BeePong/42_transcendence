@@ -166,34 +166,34 @@ BALL_RADIUS = 15
 BALL_STARTING_SPEED = 5
 BALL_SPEED_INCREMENT = 1
 FPS = 30
-MAX_SCORE = 5
+MAX_SCORE = 500
 PADDING_THICKNESS = 7
 THICK_BORDER_THICKNESS = 5
 UPPER_LIMIT = PADDING_THICKNESS + PADDLE_HEIGHT / 2
 LOWER_LIMIT = FIELD_HEIGHT - PADDING_THICKNESS - PADDLE_HEIGHT / 2
 
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
-        },
-    },
-    "root": {
-        "handlers": ["console"],
-        "level": "WARNING",  # Change to DEBUG to increase verbosity
-    },
-    "loggers": {
-        "django": {
-            "handlers": ["console"],
-            "level": "WARNING",
-            "propagate": False,
-        },
-        "channels": {
-            "handlers": ["console"],
-            "level": "WARNING",
-            "propagate": True,
-        },
-    },
-}
+# LOGGING = {
+#     "version": 1,
+#     "disable_existing_loggers": False,
+#     "handlers": {
+#         "console": {
+#             "class": "logging.StreamHandler",
+#         },
+#     },
+#     "root": {
+#         "handlers": ["console"],
+#         "level": "WARNING",  # Change to DEBUG to increase verbosity
+#     },
+#     "loggers": {
+#         "django": {
+#             "handlers": ["console"],
+#             "level": "WARNING",
+#             "propagate": False,
+#         },
+#         "channels": {
+#             "handlers": ["console"],
+#             "level": "WARNING",
+#             "propagate": True,
+#         },
+#     },
+# }

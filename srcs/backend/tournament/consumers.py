@@ -54,7 +54,7 @@ class GameStateSingleton:
             ),
             "player1": {
                 "player_id": None,
-                "player_name": "linh",
+                "player_name": "thuynguy",
                 "score": 0,
                 "y": settings.FIELD_HEIGHT / 2,
                 "up_pressed": False,
@@ -362,7 +362,7 @@ class PongConsumer(AsyncWebsocketConsumer):
         else:
             print("authenticated user id: ", self.scope["user"].id)
             print("authenticated user name: ", self.scope["user"].username)
-        is_bot = self.scope["query_string"].decode().split("=")[1] == "True"
+        # is_bot = self.scope["query_string"].decode().split("=")[1] == "True"
 
         player = await self.get_player_by_user(self.scope["user"])
         if not player is None:
@@ -419,6 +419,7 @@ class PongConsumer(AsyncWebsocketConsumer):
 
     async def send_game_state(self, event):
         game_state = event["game_state"]
+        print("SENDING GAME STATE: ", game_state)
         try:
             await self.send(text_data=json.dumps(game_state))
         except Exception as e:
