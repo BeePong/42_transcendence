@@ -62,7 +62,7 @@ class Game:
         return y
 
     def normalize_vector(self, x, y):
-        magnitude = math.sqrt(x**2 + y**2)
+        magnitude = math.sqrt(x ** 2 + y ** 2)
         return {"x": x / magnitude, "y": y / magnitude}
 
     def init_new_round(self):
@@ -88,6 +88,7 @@ class Game:
         self.game_state["player2"]["score"]
         self.game_state["player2"]["player_id"] = None
         self.game_state["winner"] = None
+
 
 
 class GameStateSingleton:
@@ -372,9 +373,18 @@ class GameLoop:
             self.loop_task.cancel()
 
 
-class Game:
+class PongConsumer(AsyncWebsocketConsumer):
 
-    def get_player_by_user(self, user):
+
+    game_state = GameStateSingleton.get_instance().game_state
+    game_loop = GameLoop(game_state)
+    
+    print("GAME STARTED")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    async def get_player_by_user(self, user):
         if user.username == self.__class__.game_state["player1"]["player_name"]:
             return "player1"
         elif user.username == self.__class__.game_state["player2"]["player_name"]:
@@ -382,8 +392,8 @@ class Game:
         else:
             return None
 
-
-class Tournament:
+    async def send_message(self, message):
+        await self.send(text_data=json.dumps({"message": message}))
 
     @database_sync_to_async
     def get_tournament(self, tournament_id):
@@ -395,57 +405,48 @@ class Tournament:
 
     @database_sync_to_async
     def start_tournament(self, tournament):
+
         tournament.save()
 
-
-class PongConsumer(AsyncWebsocketConsumer):
-
-    tournament_id = None
-    tournament = None
-    print("TOURNAMENT STARTED")
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
     async def connect(self):
-        if self.__class__.tournament_id is None:
-            self.__class__.tournament_id = self.scope["url_route"]["kwargs"][
-                "tournament_id"
-            ]
-            # init tournament to new instance of Tournament class
-            self.__class__.tournament = Tournament(
-                tournament_id=self.__class__.tournament_id
-            )
+        tournament_id = self.scope["url_route"]["kwargs"]["tournament_id"]
+        # Retrieve the tournament object using the tournament_id
+        tournament = await self.get_tournament(tournament_id)
 
-        # accept connection
+        print("TOURNAMENT OBJECT: ", tournament)
         await self.accept()
-        # reject if not authenticated
-        if not (self.scope["user"].is_authenticated):
-            print("User is not authenticated, disconnecting")
-            await self.close(code=4004)
-        # add to group
         self.pong_group_name = (
             "tournament_group"  # Define a group name for ping pong game
         )
         await self.channel_layer.group_add(self.pong_group_name, self.channel_name)
 
-        # decode if bot or user
+        if not (self.scope["user"].is_authenticated):
+            print("User is not authenticated, disconnecting")
+            await self.close(code=4004)
+        else:
+            print("authenticated user id: ", self.scope["user"].id)
+            print("authenticated user name: ", self.scope["user"].username)
         is_bot = self.scope["query_string"].decode().split("=")[1] == "True"
         if is_bot:
             user = {"id": 0, "username": "ai_bot"}
         else:
             user = self.scope["user"]
-
-        # add player to tournament if eligible
-        if self.__class__.tournament.is_new():
-            await self.__class__.tournament.add_player_and_start_game_if_ready(user)
+        player = await self.get_player_by_user(user)
+        if not player is None:
+            self.__class__.game_state[player]["player_id"] = user.id
+            print("PLAYER CONNECTED: ", player, user)
+        print("USER CONNECTED: ", user)
+        if player is None:
+            print("User is not playing this game, they are a viewer")
+        print("GAME STATE: ", self.__class__.game_state)
+        await self.__class__.game_loop.loop()
 
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(self.pong_group_name, self.channel_name)
         print("CONSUMER DISCONNECTED, close_code: ", close_code)
 
     async def handle_tournament_message(self, message):
-        await print("TOURNAMENT MESSAGE: ", message)
+        await self.send_message("Received tournament message: " + str(message))
 
     async def handle_key_event(self, key, keyAction, player_field):
         if key == "ArrowUp":
@@ -458,9 +459,14 @@ class PongConsumer(AsyncWebsocketConsumer):
             )
 
     async def handle_game_message(self, message):
-        self.__class__.tournament.handle_key_action(
-            self.scope["user"], message["key"], message["keyAction"]
-        )
+        player = self.scope["user"]
+        key = message["key"]
+        keyAction = message["keyAction"]
+        # Update the game state based on the key and action
+        if player.id == self.__class__.game_state["player1"]["player_id"]:
+            await self.handle_key_event(key, keyAction, "player1")
+        elif player.id == self.__class__.game_state["player2"]["player_id"]:
+            await self.handle_key_event(key, keyAction, "player2")
 
     @classmethod
     async def send_game_state_to_all(cls):
@@ -484,14 +490,15 @@ class PongConsumer(AsyncWebsocketConsumer):
             print(f"Error sending game state: {e}")
 
     async def receive(self, text_data):
-        if self.__class__.tournament.includes_player(self.scope["user"]):
-            try:
-                text_data_json = json.loads(text_data)
-                message = text_data_json["message"]
-                message_type = text_data_json["type"]
-                if message_type == "tournament":
-                    await self.handle_tournament_message(message)
-                elif message_type == "game":
-                    await self.handle_game_message(message)
-            except Exception as e:
-                print("Error in receive method: %s", e)
+        # TODO: only receive data from users who are playing the current game, ignore everyone else - it's done in handle_game_message function now, but this function would maybe be a better place for this
+        try:
+            text_data_json = json.loads(text_data)
+            message = text_data_json["message"]
+            message_type = text_data_json["type"]
+
+            if message_type == "tournament":
+                await self.handle_tournament_message(message)
+            elif message_type == "game":
+                await self.handle_game_message(message)
+        except Exception as e:
+            print("Error in receive method: %s", e)

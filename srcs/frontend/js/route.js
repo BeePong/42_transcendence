@@ -51,28 +51,24 @@ async function loadPage(path, redirectUrl = "/", fromNavigate = false) {
       )
         changeRedirectUrlandOauthState(redirectUrl);
 
-				// perform countdown in tournmament lobby if the list is full. Otherwise, wait for other players.
-				if (/^\/tournament\/\d+\/lobby$/.test(page)) {
-					if (document.querySelector('.full')) {
-						if (!document.querySelector('.winner'))
-							tournamentLobbyCountdown()
-					}
-					else
-						mockWebSocket(); //TODO: open websocket
-				}
+      // perform countdown in tournmament lobby if the list is full. Otherwise, wait for other players.
+      if (/^\/tournament\/\d+\/lobby$/.test(page)) {
+        if (document.querySelector(".full")) {
+          if (!document.querySelector(".winner")) tournamentLobbyCountdown();
+        } else mockWebSocket(); //TODO: open websocket
+      }
       // if url contains "lobby", start mockWebSocket
-      //TODO: combined with server side branch code
-      // var match = page.match(/^\/tournament\/(\d+)\/lobby$/);
-      // console.log("match", match);
-      // if (match) {
-      //   var tournament_id = match[1];
-      //   webSocketTest(tournament_id);
-      // }
-      // var solo_match = page.match(/^\/tournament\/solo_game$/);
-      // console.log("solo_game match", solo_match);
-      // if (solo_match) {
-      //   webSocketTest("solo");
-      // }
+      var match = page.match(/^\/tournament\/(\d+)\/lobby$/);
+      console.log("match", match);
+      if (match) {
+        var tournament_id = match[1];
+        webSocketTest(tournament_id);
+      }
+      var solo_match = page.match(/^\/tournament\/solo_game$/);
+      console.log("solo_game match", solo_match);
+      if (solo_match) {
+        webSocketTest("solo");
+      }
     }
   } catch (error) {
     console.error("There was a problem with the fetch operation:", error);
@@ -163,7 +159,7 @@ function tournamentLobbyAddPlayer() {
 // Handle full tournament lobby
 function handleFullTournamentLobby() {
   console.log("HELLO handleFullTournamentLobby");
-  /*setTimeout(() => {
+  setTimeout(() => {
     if (/^\/tournament\/\d+\/lobby$/.test(window.location.pathname)) {
       document.getElementById("tournament-lobby-section").classList.add("full");
       document.querySelector(".tournament_lobby__header").innerHTML =
@@ -175,7 +171,7 @@ function handleFullTournamentLobby() {
       console.log("HELLO commented out");
       //tournamentLobbyCountdown();
     }
-  }, 1000);*/
+  }, 1000);
 }
 
 // Countdown in lobby page and navigate to the game page after countdown
