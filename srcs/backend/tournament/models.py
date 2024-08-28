@@ -91,6 +91,11 @@ class Match(models.Model):
             return self.player1
         return self.player2
 
+    def determine_loser(self):
+        if self.player1_score < self.player2_score:
+            return self.player1
+        return self.player2
+
 class PlayerTournament(models.Model):
     player_tournament_id = models.AutoField(primary_key=True)
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
