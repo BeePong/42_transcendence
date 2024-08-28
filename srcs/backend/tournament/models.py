@@ -39,14 +39,19 @@ class Tournament(models.Model):
     state = models.CharField(max_length=50, choices=STATE_CHOICES, default="NEW")
     num_players = models.IntegerField()
     num_players_in = models.IntegerField(default=0)
-    # players = models.ManyToManyField(Player, related_name='tournaments', blank=True) to see if we will use it
+    players = models.ManyToManyField(Player, related_name="tournaments", blank=True)
 
-    players = ArrayField(models.CharField(max_length=100), blank=True, default=list)
+    # players = ArrayField(models.CharField(max_length=100), blank=True, default=list)
 
     winner = models.CharField(max_length=255, null=True, blank=True, default=None)
     created_at = models.DateTimeField(auto_now_add=True)
     is_started = models.BooleanField(default=False)
     is_final = models.BooleanField(default=False)
+
+    async def __init__(self, tournament_id):
+        self.game = None
+        self.game_loop = None
+        print("TOURNAMENT INITIALISED, id: ", tournament_id)
 
     def __str__(self):
         return json.dumps(self.__dict__, default=str)
@@ -56,6 +61,34 @@ class Tournament(models.Model):
             self.create_1st_match()
             self.is_started = True
             self.save()
+
+    def is_user_in_tournament(self, user):
+        return self.players.filter(user=user).exists()
+
+    def get_user_in_tournament(self, user):
+        return self.players.get(user=user)
+
+    def connect_player_if_applicable(self, user):
+        # if player is joining a new game, create a player for them
+        if self.tournament.state == "NEW" and self.num_players_in < self.num_players:
+            player, _ = Player.objects.create(user=user)
+            self.players.add(player)
+            self.num_players_in += 1
+        # if player is reconnecting mid-tournament, activate them
+        elif self.tournament.state == "PLAYING" and self.is_user_in_tournament(user):
+            player = self.get_user_in_tournament(user)
+
+        self.save()
+
+    def add_player_and_start_if_ready(self, user):
+        if self.tournament.num_players_in < self.tournament.num_players:
+            player, _ = Player.objects.create(user=user)
+            self.tournament.players.add(player)
+            self.tournament.num_players_in += 1
+            if self.tournament.num_players_in == self.tournament.num_players:
+                self.tournament.state = "PLAYING"
+                self.start_tournament()
+            self.tournament.save()
 
     def create_1st_match(self):
         if len(self.players) >= 2:
