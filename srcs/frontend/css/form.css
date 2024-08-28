@@ -69,16 +69,9 @@ form label {
 .form__input-button-container {
 	display: flex;
 	align-items: center;
+	gap: 0.5em;
 }
 
-.form__input-container {
-	flex-grow: 1;
-	margin-right: 1rem;
+.form__input-button-container input {
+  margin-bottom: 0em;
 }
-
-.form__input-container > input {
-	margin-bottom: 0em;
-}
-
-
-

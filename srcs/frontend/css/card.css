@@ -3,17 +3,18 @@
 }
 
 .card {
-	outline: 1px solid var(--text-color-main);
-	box-shadow: -10px -10px var(--color-primary);
   overflow: hidden;
   min-height: 330px;
+  height: 100%;
+}
+
+.card--active {
+	outline: 1px solid var(--text-color-main);
+	box-shadow: -10px -10px var(--color-primary);
 }
 
 .card--inactive {
 	outline: 1px solid var(--text-color-main);
-  overflow: hidden;
-  margin: 20px;
-  height: 100%;
 }
 
 .card--empty {
@@ -35,6 +36,7 @@
 	font-size: var(--font-size-sm);
   font-family: var(--font-family-alt);
   font-variation-settings: "YOPQ" 300;
+  overflow-wrap: break-word;
 }
 
 .card__note {
