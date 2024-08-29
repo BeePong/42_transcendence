@@ -3,7 +3,7 @@
 		<div class="card card--active">
 			<div class="card__content">
 				<h1 class="card__title">NEW TOURNAMENT</h1>
-				<form onsubmit=handleFormSubmit(event) action="{{ form_action }}">
+				<form onsubmit="handleFormSubmit(event)" action="{{ form_action }}">
 					{% csrf_token %}
 					<div>
 						<label for="id_title">Title</label>

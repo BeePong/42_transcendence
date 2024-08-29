@@ -32,6 +32,7 @@ form label {
 	font-size: var(--font-size-sm);
 	flex-direction: column;
 	gap: 1em;
+	overflow-wrap: break-word;
 }
 
 .radio-group {

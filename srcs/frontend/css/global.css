@@ -32,7 +32,6 @@
   box-sizing: border-box;
 }
 
-/* Ensure html and body take up the full height of the viewport */
 html, body {
   height: 100%;
   display: flex;
@@ -52,7 +51,7 @@ main {
   flex: 1;
   max-width: 1100px;
   width: 90%;
-  margin: 5em auto;
+  margin: 3em auto;
   display: flex;
   align-items: center;
   flex-direction: column;
@@ -76,26 +75,6 @@ footer {
 .font--alt {
   font-family: var(--font-family-alt);
   font-variation-settings: "YOPQ" 300;
-}
-
-.font-size--xl {
-  font-size: var(--font-size-xl);
-}
-
-.font-size--lg {
-  font-size: var(--font-size-base);
-}
-
-.font-size--md {
-  font-size: var(--font-size-md);
-}
-
-.font-size--sm {
-  font-size: var(--font-size-sm);
-}
-
-.font-size--xs {
-  font-size: var(--font-size-xs);
 }
 
 h1 {

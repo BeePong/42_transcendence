@@ -7,7 +7,6 @@
 }
 
 .tournament__grid {
-	margin-top: 3em;
 	display: grid;
 	grid-template-columns: repeat(2, minmax(300px, 1fr));
 	gap: 2.5rem;
