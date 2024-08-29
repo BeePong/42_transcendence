@@ -37,6 +37,12 @@ services:
       - "5432:5432"
     env_file:
       - .env
+    logging:
+      driver: gelf
+      options:
+        gelf-address: udp://localhost:12201
+        tag: "postgres"
+        env: ".env"
     restart: on-failure
     healthcheck:
       test: ["CMD-SHELL", "psql -U ${POSTGRES_USER} -d ${POSTGRES_DB} --password ${POSTGRES_PASSWORD}"] 
@@ -55,6 +61,12 @@ services:
       - .env
     ports:
       - "8000:8000"
+    logging:
+      driver: gelf
+      options:
+        gelf-address: udp://localhost:12201
+        tag: "backend_dummy"
+        env: ".env"
     depends_on:
       db:
         condition: service_healthy
@@ -71,9 +83,15 @@ services:
       context: ./srcs/nginx
     volumes:
       - ./srcs/frontend:/var/www/html
-      - nginx_logs:/var/log/nginx  # Mount the nginx_logs volume
+      - nginx_logs:/var/log/nginx 
     ports:
-      - 443:443
+      - 1443:443
+    logging:
+      driver: gelf
+      options:
+        gelf-address: udp://localhost:12201
+        tag: "nginx"
+        env: ".env"
     restart: on-failure
     depends_on:
       backend_dummy:
@@ -95,6 +113,7 @@ services:
     image: docker.elastic.co/elasticsearch/elasticsearch:${STACK_VERSION}
     volumes:
       - certs:/usr/share/elasticsearch/config/certs
+      - ./elk/index_policies:/policies
     user: "0"
     command: >
       bash -c '
@@ -138,7 +157,67 @@ services:
         until curl -s --cacert config/certs/ca/ca.crt https://elasticsearch:9200 | grep -q "missing authentication credentials"; do sleep 30; done;
         echo "Setting kibana_system password";
         until curl -s -X POST --cacert config/certs/ca/ca.crt -u "elastic:${ELASTIC_PASSWORD}" -H "Content-Type: application/json" https://elasticsearch:9200/_security/user/kibana_system/_password -d "{\"password\":\"${KIBANA_PASSWORD}\"}" | grep -q "^{}"; do sleep 10; done;
+        echo "Waiting for Kibana to become available";
+        until curl -s --cacert config/certs/ca/ca.crt -u "elastic:${ELASTIC_PASSWORD}" https://kibana:5601/api/status > /dev/null; do
+          echo "Kibana not available yet, retrying in 5 seconds...";
+          sleep 5;
+        done;
+
+        echo "Kibana is available, waiting for full initialization...";
+        
+        # Wait for additional time to ensure all plugins and services in Kibana are ready
+        sleep 20
+
+        echo ""
+        echo "Creating ILM policies:"
+        curl -X PUT "https://elasticsearch:9200/_ilm/policy/Backend-logs-index-policy" \
+          -H "Content-Type: application/json" \
+          -u "elastic:${ELASTIC_PASSWORD}" \
+          --cacert config/certs/ca/ca.crt \
+          -d @/policies/backend_policy.json
+  
+        curl -X PUT "https://elasticsearch:9200/_ilm/policy/Nginx-logs-index-policy" \
+          -H "Content-Type: application/json" \
+          -u "elastic:${ELASTIC_PASSWORD}" \
+          --cacert config/certs/ca/ca.crt \
+          -d @/policies/nginx_policy.json
+  
+        curl -X PUT "https://elasticsearch:9200/_ilm/policy/Postgres-logs-index-policy" \
+          -H "Content-Type: application/json" \
+          -u "elastic:${ELASTIC_PASSWORD}" \
+          --cacert config/certs/ca/ca.crt \
+          -d @/policies/postgres_policy.json
+
+        sleep 10
+        echo ""
+        echo "Creating Kibana data views:"
+        curl -s -X POST --cacert config/certs/ca/ca.crt "https://kibana:5601/api/data_views/data_view" \
+          -H "kbn-xsrf: true" \
+          -H "Content-Type: application/json" \
+          -u "elastic:${ELASTIC_PASSWORD}" \
+          -d "{\"data_view\": {\"title\": \"backend-logs-*\", \"timeFieldName\": \"@timestamp\"}}"
+        
+        curl -s -X POST --cacert config/certs/ca/ca.crt "https://kibana:5601/api/data_views/data_view" \
+          -H "kbn-xsrf: true" \
+          -H "Content-Type: application/json" \
+          -u "elastic:${ELASTIC_PASSWORD}" \
+          -d "{\"data_view\": {\"title\": \"nginx-logs-*\", \"timeFieldName\": \"@timestamp\"}}"
+        
+        curl -s -X POST --cacert config/certs/ca/ca.crt "https://kibana:5601/api/data_views/data_view" \
+          -H "kbn-xsrf: true" \
+          -H "Content-Type: application/json" \
+          -u "elastic:${ELASTIC_PASSWORD}" \
+          -d "{\"data_view\": {\"title\": \"postgres-logs-*\", \"timeFieldName\": \"@timestamp\"}}"
+        
+        curl -s -X POST --cacert config/certs/ca/ca.crt "https://kibana:5601/api/data_views/data_view" \
+          -H "kbn-xsrf: true" \
+          -H "Content-Type: application/json" \
+          -u "elastic:${ELASTIC_PASSWORD}" \
+          -d "{\"data_view\": {\"title\": \"metricbeat-*\", \"timeFieldName\": \"@timestamp\"}}"
+        
+        echo ""
         echo "All done!";
+        echo ""
       '
     healthcheck:
       test: ["CMD-SHELL", "[ -f config/certs/elasticsearch/elasticsearch.crt ]"]
@@ -177,15 +256,15 @@ services:
       - xpack.security.transport.ssl.verification_mode=certificate
       - xpack.license.self_generated.type=${LICENSE}
     mem_limit: ${ES_MEM_LIMIT}
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
+   # ulimits:
+   #   memlock:
+   #     soft: -1
+   #     hard: -1
     healthcheck:
       test:
         [
           "CMD-SHELL",
-          "curl -s --cacert config/certs/ca/ca.crt https://localhost:9200 | grep -q 'missing authentication credentials'",
+          "curl -s --cacert config/certs/ca/ca.crt 'https://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=50s' -u 'elastic:${ELASTIC_PASSWORD}'",
         ]
       interval: 10s
       timeout: 10s
@@ -218,7 +297,6 @@ services:
       - SERVER_SSL_CERTIFICATE=config/certs/kibana/kibana.crt
       - SERVER_SSL_KEY=config/certs/kibana/kibana.key
       - SERVER_SSL_CERTIFICATEAUTHORITIES=config/certs/ca/ca.crt
-      - ELASTIC_APM_SECRET_TOKEN=${ELASTIC_APM_SECRET_TOKEN}
     mem_limit: ${KB_MEM_LIMIT}
     healthcheck:
       test:
@@ -261,32 +339,6 @@ services:
     command:
       -strict.perms=false        
 
-  filebeat:
-    container_name: beepong-filebeat
-    depends_on:
-      elasticsearch:
-        condition: service_healthy
-    image: docker.elastic.co/beats/filebeat:${STACK_VERSION}
-    user: root
-    volumes:
-      - certs:/usr/share/filebeat/certs
-      - filebeat_data:/usr/share/filebeat/data
-      - "./elk/filebeat_ingest_data/:/usr/share/filebeat/ingest_data/"
-      - "./elk/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro"
-      - "/var/lib/docker/containers:/var/lib/docker/containers:ro"
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
-      - nginx_logs:/usr/share/filebeat/nginx_logs  # Mount the nginx_logs volume
-      - app_logs:/usr/share/filebeat/app_logs  # Mount the application logs volume
-    environment:
-      - ELASTIC_USER=elastic
-      - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
-      - ELASTIC_HOSTS=https://elasticsearch:9200
-      - KIBANA_HOSTS=https://kibana:5601
-      - LOGSTASH_HOSTS=http://logstash:9600
-      - CA_CERT=certs/ca/ca.crt
-    command:
-      -strict.perms=false
-
   logstash:
     container_name: beepong-logstash
     depends_on:
@@ -298,14 +350,15 @@ services:
     labels:
       co.elastic.logs/module: logstash
     user: root
+    ports:
+      - "12201:12201/udp"
     volumes:
       - certs:/usr/share/logstash/certs
       - logstash_data:/usr/share/logstash/data
-      - "./elk/logstash_ingest_data/:/usr/share/logstash/ingest_data/"
+      - nginx_logs:/usr/share/logstash/ingest_data/
       - "./elk/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro"
     environment:
       - xpack.monitoring.enabled=false
       - ELASTIC_USER=elastic
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
       - ELASTIC_HOSTS=https://elasticsearch:9200
-
