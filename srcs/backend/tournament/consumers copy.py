@@ -1,7 +1,6 @@
 import json
 import asyncio
 import time
-import threading
 import random
 import math
 from channels.generic.websocket import AsyncWebsocketConsumer
@@ -55,15 +54,7 @@ class Game:
         }
         self.tournament = None
 
-    def get_larger_random(self):
-        y = 0
-        while abs(y) < 0.2:
-            y = random.uniform(-1, 1)
-        return y
-
-    def normalize_vector(self, x, y):
-        magnitude = math.sqrt(x ** 2 + y ** 2)
-        return {"x": x / magnitude, "y": y / magnitude}
+    
 
     def init_new_round(self):
         self.game_state["round_start_time"] = time.time()

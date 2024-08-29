@@ -156,7 +156,7 @@ def tournament_lobby(request, tournament_id):
         if tournament.state != "READY":
             user1 = request.user
             list_players = tournament.players
-            if user1.username in list_players:
+            if user1 in list_players:
                 print(f"{user1} is in the list.")
             else:
                 print(f"{user1} is not in the list.")
@@ -167,9 +167,7 @@ def tournament_lobby(request, tournament_id):
                     player.current_tournament_id = tournament_id
                     player.has_active_tournament = True
                     player.save()
-                    tournament.players.append(
-                        player.username
-                    )  # append.*(player.alias) to put alias and not username and make unique the alias
+                    tournament.players.add(player)
                     tournament.num_players_in += 1
                 if tournament.num_players_in >= tournament.num_players:
                     tournament.state = "READY"
@@ -188,6 +186,7 @@ def tournament_lobby(request, tournament_id):
                 },
             )
 
+        #todo: do it in a new way now that matches list is in tournament
         matches = Match.objects.filter(
             tournament=tournament
         )  # Retrieve all matches associated with the tournament
@@ -226,8 +225,3 @@ def tournament_lobby(request, tournament_id):
 # def tournament_lobby(request, tournament_id):
 #    """The tournament lobby page for BeePong."""
 #    return render(request, 'tournament/tournament_lobby.html', {'match_players': mockMatchPlayers, 'players_in_lobby': mockPlayersInLobby, 'num_players': mockNumPlayers})
-
-
-def pong(request):
-    """The pong page for BeePong."""
-    return render(request, "tournament/pong.html")
