@@ -1,6 +1,7 @@
 
 from pathlib import Path
 import os
+import socket
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -19,7 +20,9 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure--5o3-*y!2w25g-%9h^8
 DEBUG = True
 # DEBUG = False
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+hostname = socket.gethostname()
+local_ip = socket.gethostbyname(hostname)
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', local_ip]
 
 # Application definition
 
@@ -133,4 +136,4 @@ LOGIN_URL = 'accounts:login'
 
 # List of trusted origins for CSRF protection
 # Requests from these origins will be allowed to bypass the CSRF protection
-CSRF_TRUSTED_ORIGINS = ["https://localhost", "https://127.0.0.1"]
+CSRF_TRUSTED_ORIGINS = ["https://localhost", "https://127.0.0.1", 'https://' + local_ip]
