@@ -21,3 +21,15 @@ nav ul {
 #username svg {
 	margin-right: 0.3em;
 }
+
+@media (max-width: 700px) {
+	nav {
+		flex-direction: column;
+		gap: 2em;
+	}
+
+	nav ul {
+		flex-direction: column;
+		gap: 2em;
+	}
+}

@@ -46,3 +46,10 @@
   font-family: var(--font-family-alt);
   font-variation-settings: "YOPQ" 300;
 }
+
+@media (max-width: 700px) {
+  .card__container {
+    width: 300px;
+    margin-top: 2em;
+  }
+}

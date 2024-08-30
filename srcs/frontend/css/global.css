@@ -8,17 +8,11 @@
   --background-color: #1F1F1F;
   --font-family-main: "Krona One", sans-serif;
   --font-family-alt: "Kumbh Sans", sans-serif;
-  --font-size-base: 16px;
+  --font-size-base: 1rem;
   --font-size-xl: 1.5rem;
   --font-size-md: 0.875rem;
   --font-size-sm: 0.75rem;
   --font-size-xs: 0.625rem;
-	--breakpoint-xs: 400px;
-  --breakpoint-sm: 600px;
-	--breakpoint-md: 900px;
-	--breakpoint-lg: 1280px;
-	--breakpoint-xl: 1440px;
-	--breakpoint-xxl: 1920px;
 }
 
 * {
@@ -79,16 +73,4 @@ footer {
 
 h1 {
   font-size: var(--font-size-xl);
-}
-
-@media (max-width: var(--breakpoint-md)) {
-  html {
-    font-size: 80%;
-  }
-}
-
-@media (max-width: var(--breakpoint-sm)) {
-  html {
-    font-size: 62.5%;
-  }
 }
