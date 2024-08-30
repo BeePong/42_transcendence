@@ -17,6 +17,8 @@ from channels.db import database_sync_to_async
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 
+from django.core import management
+
 # import asyncio
 # from .ai import ai_bot
 
@@ -372,6 +374,12 @@ class PongConsumer(AsyncWebsocketConsumer):
         if player is None:
             print("User is not playing this game, they are a viewer")
         print("GAME STATE: ", self.__class__.game_state)
+
+        solo = self.scope["query_string"].decode().split("=")[1] == "True"
+        if solo:
+            print("SOLO GAME, Calling AI")
+            management.call_command("run_aibot", tournament_id=tournament_id)
+
         await self.__class__.game_loop.loop()
 
     async def disconnect(self, close_code):
@@ -419,7 +427,6 @@ class PongConsumer(AsyncWebsocketConsumer):
 
     async def send_game_state(self, event):
         game_state = event["game_state"]
-        print("SENDING GAME STATE: ", game_state)
         try:
             await self.send(text_data=json.dumps(game_state))
         except Exception as e:

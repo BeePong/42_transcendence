@@ -5,6 +5,7 @@ import ssl
 from bs4 import BeautifulSoup
 import json
 import random
+from django.conf import settings
 
 
 # Step 1: Log in to the website
@@ -45,9 +46,9 @@ def login():
 
 
 # Step 2: Use the session to establish a WebSocket connection
-async def ai_bot(session):
+async def ai_bot(session, tournament_id):
     # Define the WebSocket URL
-    url = "wss://nginx:8443/ws/pong/1/?is_bot=True"
+    url = "wss://nginx:8443/ws/pong/" + tournament_id + "/?solo=False"
 
     # Extract the session cookie
     cookies = session.cookies.get_dict()
@@ -88,21 +89,46 @@ async def ai_bot(session):
                 game_state = await websocket.recv()
                 print(f"Received game state: {game_state}")
 
-                # Randomly choose to press "ArrowUp" or "ArrowDown"
-                key = random.choice(["ArrowUp", "ArrowDown"])
-                await send_game_data(websocket, key, "keydown")
+                # Extract positions from the game state
+                game_state_data = json.loads(game_state)
+                ball_position = game_state_data["ball"]
+                ai_paddle_position = game_state_data["player2"][
+                    "y"
+                ]  # Assuming AI is player2
 
-                # Simulate holding the key down for a short duration
-                await asyncio.sleep(random.uniform(0.1, 0.5))
+                # Extract ball vector (direction) and speed
+                ball_vector = game_state_data["ball_vector"]
+                ball_speed = game_state_data["ball_speed"]
 
-                # Explicit ping to keep the connection alive
-                await websocket.ping()
+                # Predict the ball's future y-position when it reaches the AI paddle
+                field_width = settings.FIELD_WIDTH
+                time_to_paddle = (field_width - ball_position["x"]) / ball_vector["x"]
 
-                # Simulate key release
-                await send_game_data(websocket, key, "keyup")
+                predicted_ball_y = (
+                    ball_position["y"] + ball_vector["y"] * time_to_paddle
+                )
 
-                # Wait before pressing a key again
-                await asyncio.sleep(random.uniform(0.5, 2.0))
+                # Handle ball bouncing off the top and bottom boundaries
+                field_height = settings.FIELD_HEIGHT
+                if predicted_ball_y < 0:
+                    predicted_ball_y = -predicted_ball_y
+                elif predicted_ball_y > field_height:
+                    predicted_ball_y = 2 * field_height - predicted_ball_y
+
+                # Move the AI paddle towards the predicted intersection point
+                # Move the AI paddle towards the predicted intersection point
+                if predicted_ball_y < ai_paddle_position:
+                    await send_game_data(websocket, "ArrowUp", "keydown")
+                    # Simulate holding the key down for a short duration
+                    await asyncio.sleep(random.uniform(0.1, 0.5))
+                    await send_game_data(websocket, "ArrowUp", "keyup")
+                elif predicted_ball_y > ai_paddle_position:
+                    await send_game_data(websocket, "ArrowDown", "keydown")
+                    # Simulate holding the key down for a short duration
+                    await asyncio.sleep(random.uniform(0.1, 0.5))
+                    await send_game_data(websocket, "ArrowDown", "keyup")
+                # Explicit ping to keep the connection alive, is it needed?
+                # await websocket.ping()
 
             except websockets.ConnectionClosedError as e:
                 print(f"WebSocket connection closed: {e}")

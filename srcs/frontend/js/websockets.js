@@ -15,7 +15,7 @@ function webSocketTest(tournament_id) {
     "/ws/pong/" +
     tournament_id +
     "/" +
-    "?is_bot=False";
+    "?solo=True";
 
   console.log("Starting WebSocket on URL: ", url);
   var socket = new WebSocket(url);
