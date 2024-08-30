@@ -85,7 +85,7 @@ services:
       - ./srcs/frontend:/var/www/html
       - nginx_logs:/var/log/nginx 
     ports:
-      - 1443:443
+      - 443:443
     logging:
       driver: gelf
       options:

@@ -2,13 +2,16 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.auth.models import User
 from django.contrib.postgres.fields import ArrayField
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 
 class Player(models.Model):
     player_id = models.AutoField(primary_key=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE, default=1)  # Replace 1 with an appropriate user ID
     username = models.CharField(max_length=255)
-    alias = models.CharField(max_length=255) #todo put the alias
+    #alias = models.CharField(max_length=255) #todo put the alias
+    alias = models.CharField(max_length=100)
     has_active_tournament = models.BooleanField(default=False) # active player in a tournament Rename has_active_tournament
     is_online = models.BooleanField(default=False) # 
     auth_info = models.CharField(max_length=255)
@@ -17,6 +20,15 @@ class Player(models.Model):
 
     def __str__(self):
         return self.username
+    
+    @receiver(post_save, sender=User)
+    def create_player(sender, instance, created, **kwargs):
+        if created:
+            Player.objects.create(user=instance, username=instance.username)
+
+    @receiver(post_save, sender=User)
+    def save_player(sender, instance, **kwargs):
+        instance.player.save()
 
 class Tournament(models.Model):
     STATE_CHOICES = [
@@ -102,10 +114,3 @@ class PlayerTournament(models.Model):
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     
-
-##TODO: to be replaced replace by real database           
-class Alias(models.Model):
-    alias = models.CharField(max_length=100)
-
-    def __str__(self):
-        return self.name
