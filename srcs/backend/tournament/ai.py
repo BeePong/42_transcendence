@@ -5,6 +5,23 @@ import ssl
 from bs4 import BeautifulSoup
 import json
 import random
+import os
+
+# Game settings TODO: use them in front-end and back-end
+FIELD_WIDTH = 800
+FIELD_HEIGHT = 500
+PADDLE_HEIGHT = 100
+PADDLE_WIDTH = 26
+PADDLE_SPEED = 20
+BALL_RADIUS = 15
+BALL_STARTING_SPEED = 5
+BALL_SPEED_INCREMENT = 1
+FPS = 30
+MAX_SCORE = 500
+PADDING_THICKNESS = 7
+THICK_BORDER_THICKNESS = 5
+UPPER_LIMIT = PADDING_THICKNESS + PADDLE_HEIGHT / 2
+LOWER_LIMIT = FIELD_HEIGHT - PADDING_THICKNESS - PADDLE_HEIGHT / 2
 
 
 # Step 1: Log in to the website
@@ -39,6 +56,43 @@ def login():
     if response.status_code == 200:
         print("Login successful.")
         return session
+    elif response.status_code == 400:
+        print("Login failed: User does not exist. Attempting to register...")
+
+        # Step 2: Register the user
+        register_url = "https://nginx:8443/page/accounts/register/"
+        register_payload = {
+            "username": "dummy",  # Same username as above
+            "password1": "test123!",  # Same password as above
+            "password2": "test123!",  # Password confirmation
+            "csrfmiddlewaretoken": csrf_token,  # CSRF token
+        }
+
+        # Get the CSRF token for the registration page
+        response = session.get(register_url, verify=False)
+        if response.status_code != 200:
+            print("Failed to load registration page.")
+            return None
+
+        soup = BeautifulSoup(response.text, "html.parser")
+        csrf_token = soup.find("input", {"name": "csrfmiddlewaretoken"}).get("value")
+        register_payload["csrfmiddlewaretoken"] = csrf_token
+
+        # Submit the registration form
+        response = session.post(
+            register_url,
+            data=register_payload,
+            headers={"Referer": register_url},
+            verify=False,
+        )
+
+        # Check if registration was successful
+        if response.status_code == 201:
+            print("Registration successful. Logging in...")
+            return session  # Attempt to log in again after registration
+        else:
+            print(f"Registration failed. Status code: {response.status_code}")
+            return None
     else:
         print(f"Login failed. Status code: {response.status_code}")
         return None
@@ -65,7 +119,7 @@ async def ai_bot(session):
     }
 
     async with websockets.connect(
-        url, ssl=ssl_context, extra_headers=headers
+        url, ssl=ssl_context, extra_headers=headers, ping_interval=30, ping_timeout=60
     ) as websocket:
         print("WebSocket connection established.")
 
@@ -85,24 +139,53 @@ async def ai_bot(session):
         while True:
             try:
                 # Receive and print the game state
+                # async with asyncio.timeout(30):
                 game_state = await websocket.recv()
                 print(f"Received game state: {game_state}")
 
-                # Randomly choose to press "ArrowUp" or "ArrowDown"
-                key = random.choice(["ArrowUp", "ArrowDown"])
-                await send_game_data(websocket, key, "keydown")
+                # Extract positions from the game state
+                game_state_data = json.loads(game_state)
+                ball_position = game_state_data["ball"]
+                ai_paddle_position = game_state_data["player2"][
+                    "y"
+                ]  # Assuming AI is player2
 
-                # Simulate holding the key down for a short duration
-                await asyncio.sleep(random.uniform(0.1, 0.5))
+                # Extract ball vector (direction) and speed
+                ball_vector = game_state_data["ball_vector"]
+                ball_speed = game_state_data["ball_speed"]
 
-                # Explicit ping to keep the connection alive
-                await websocket.ping()
+                # Predict the ball's future y-position when it reaches the AI paddle
+                field_width = FIELD_WIDTH
+                time_to_paddle = (field_width - ball_position["x"]) / ball_vector["x"]
 
-                # Simulate key release
-                await send_game_data(websocket, key, "keyup")
+                predicted_ball_y = (
+                    ball_position["y"] + ball_vector["y"] * time_to_paddle
+                )
 
-                # Wait before pressing a key again
-                await asyncio.sleep(random.uniform(0.5, 2.0))
+                # Handle ball bouncing off the top and bottom boundaries
+                field_height = FIELD_HEIGHT
+                if predicted_ball_y < 0:
+                    predicted_ball_y = -predicted_ball_y
+                elif predicted_ball_y > field_height:
+                    predicted_ball_y = 2 * field_height - predicted_ball_y
+
+                print(f"Predicted ball y-position: {predicted_ball_y}")
+                print(f"AI paddle position: {ai_paddle_position}")
+
+                # Move the AI paddle towards the predicted intersection point
+                if predicted_ball_y < ai_paddle_position:
+                    await send_game_data(websocket, "ArrowUp", "keydown")
+                    # Simulate holding the key down for a short duration
+                    await asyncio.sleep(random.uniform(0.1, 0.5))
+                    await send_game_data(websocket, "ArrowUp", "keyup")
+                elif predicted_ball_y > ai_paddle_position:
+                    await send_game_data(websocket, "ArrowDown", "keydown")
+                    # Simulate holding the key down for a short duration
+                    await asyncio.sleep(random.uniform(0.1, 0.5))
+                    await send_game_data(websocket, "ArrowDown", "keyup")
+
+                # Add a delay to refresh the AI's view once per second
+                await asyncio.sleep(1)
 
             except websockets.ConnectionClosedError as e:
                 print(f"WebSocket connection closed: {e}")
