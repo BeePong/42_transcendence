@@ -1,0 +1,24 @@
+{
+  "name": "beepong",
+  "version": "1.0.0",
+  "description": "beePong for testing with Jest",
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {
+    "jest": "^27.5.1",
+    "jest-fetch-mock": "^3.0.3"
+  },
+  "jest": {
+    "moduleDirectories": [
+      "node_modules",
+      "srcs/frontend/js"
+    ],
+    "testEnvironment": "jsdom",
+    "automock": false,
+    "resetMocks": false,
+    "setupFiles": [
+      "./setupJest.js"
+    ]
+  }
+}

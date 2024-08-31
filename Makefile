@@ -8,7 +8,7 @@ all: up_no_elk
 
 # Start all services except ELK stack and rebuild if necessary
 up_no_elk:
-	docker compose -f ./docker-compose.yml up --build -d nginx backend_dummy db pgadmin
+	docker compose -f ./docker-compose.yml up --build -d nginx backend_dummy db pgadmin jest
 
 # Start all services including ELK stack and rebuild if necessary
 up_all:
@@ -246,3 +246,10 @@ help:
 	@echo ""
 	@echo "Help:"
 	@echo "  help           Show this help message"
+
+################################################################################
+# Run test
+################################################################################
+# Run jest
+jest:
+	docker-compose -f ./docker-compose.yml run --rm jest

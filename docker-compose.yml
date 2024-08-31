@@ -96,6 +96,13 @@ services:
     depends_on:
       backend_dummy:
         condition: service_healthy
+    
+  jest:
+    container_name: beepong-jest
+    build:
+      context: .
+      dockerfile: srcs/frontend/tests/Dockerfile
+    restart: on-failure
 
   pgadmin:
     container_name: beepong-pgadmin
