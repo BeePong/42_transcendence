@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup
 import json
 import random
 import os
+import time
 
 # Game settings TODO: use them in front-end and back-end
 FIELD_WIDTH = 800
@@ -15,7 +16,7 @@ PADDLE_WIDTH = 26
 PADDLE_SPEED = 20
 BALL_RADIUS = 15
 BALL_STARTING_SPEED = 5
-BALL_SPEED_INCREMENT = 1
+BALL_SPEED_INCREMENT = 0
 FPS = 30
 MAX_SCORE = 500
 PADDING_THICKNESS = 7
@@ -106,6 +107,7 @@ async def ai_bot(session):
     # Extract the session cookie
     cookies = session.cookies.get_dict()
     cookie_header = "; ".join([f"{name}={value}" for name, value in cookies.items()])
+    # print(f"Session cookie: {cookie_header}")
 
     # SSL context to trust the self-signed certificate
     ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
@@ -116,6 +118,7 @@ async def ai_bot(session):
         "Cookie": cookie_header,
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
         "Origin": "https://nginx",
+        "Connection": "keep-alive",
     }
 
     async with websockets.connect(
@@ -139,9 +142,10 @@ async def ai_bot(session):
         while True:
             try:
                 # Receive and print the game state
-                # async with asyncio.timeout(30):
-                game_state = await websocket.recv()
-                print(f"Received game state: {game_state}")
+                async with asyncio.timeout(30):
+                    game_state = await websocket.recv()
+                    print(f"Received game state at {time.time()}: {game_state}")
+                    print(f"Received game state: {game_state}")
 
                 # Extract positions from the game state
                 game_state_data = json.loads(game_state)
@@ -176,15 +180,16 @@ async def ai_bot(session):
                 if predicted_ball_y < ai_paddle_position:
                     await send_game_data(websocket, "ArrowUp", "keydown")
                     # Simulate holding the key down for a short duration
-                    await asyncio.sleep(random.uniform(0.1, 0.5))
+                    await asyncio.sleep(random.uniform(0.2, 0.6))
                     await send_game_data(websocket, "ArrowUp", "keyup")
                 elif predicted_ball_y > ai_paddle_position:
                     await send_game_data(websocket, "ArrowDown", "keydown")
                     # Simulate holding the key down for a short duration
-                    await asyncio.sleep(random.uniform(0.1, 0.5))
+                    await asyncio.sleep(random.uniform(0.2, 0.6))
                     await send_game_data(websocket, "ArrowDown", "keyup")
 
                 # Add a delay to refresh the AI's view once per second
+                print("Waiting for 1 second...")
                 await asyncio.sleep(1)
 
             except websockets.ConnectionClosedError as e:
