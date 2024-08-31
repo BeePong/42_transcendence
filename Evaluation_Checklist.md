@@ -1,4 +1,3 @@
-
 # Project Evaluation Checklist
 
 ## Essential Project Requirements
@@ -68,6 +67,42 @@
   - [x] Extend support to an additional web browser.
   - [x] Test and optimize the application to function correctly in the new browser.
   - [x] Address any compatibility issues and maintain a consistent user experience.
+  
+## Eval Sheet Focus
+
+- [ ] **Preliminary Tests**
+  - [ ] Ensure all credentials, API keys, and environment variables are in a `.env` file.
+  - [ ] Ensure the docker-compose file is at the root of the repository.
+  - [ ] Run the `docker-compose up --build` command to ensure everything builds and runs without errors.
+
+- [ ] **Basic Checks**
+  - [ ] Ensure the website is available.
+  - [ ] Verify that the user can subscribe to the website.
+  - [ ] Ensure registered users can log in.
+  - [ ] Confirm that the website is a Single Page Application (SPA) with functional "Back" and "Forward" buttons.
+  - [ ] Ensure the website can be browsed using the latest version of Chrome.
+
+- [ ] **Security Checks**
+  - [ ] Ensure the website is secured and TLS is implemented if necessary.
+  - [ ] Verify that passwords are hashed in the database.
+  - [ ] Ensure there is server-side validation/sanitization on all forms and user inputs.
+  - [ ] Thoroughly test security measures to ensure they are properly implemented.
+
+- [ ] **Gameplay Checks**
+  - [ ] Ensure the game is playable and respects the original Pong game mechanics.
+  - [ ] Provide intuitive controls or clear instructions.
+  - [ ] Implement an end-game screen or ensure the game page exits when the game is over.
+
+- [ ] **Lag & Disconnection Handling**
+  - [ ] Ensure the game does not crash during lags or disconnections.
+  - [ ] Implement handling for unexpected disconnections (e.g., pause, reconnect).
+  - [ ] Allow lagging users to catch up with the match.
+
+- [ ] **Modules Verification**
+  - [ ] Verify that each major module is functioning correctly.
+  - [ ] Ensure there are no errors in the implementation of the modules.
+  - [ ] Confirm that the purpose of each module is understood and well explained.
+  - [ ] Ensure each module is thoroughly demonstrated and explained during evaluation.
 
 ## Submission and Peer-Evaluation
 
