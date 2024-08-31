@@ -1,7 +1,6 @@
 from django import forms
-from .models import Tournament, Alias
+from .models import Tournament, Player
 
-#TODO: to be replaced by real database
 class TournamentForm(forms.ModelForm):
     num_players = forms.ChoiceField(
         choices=[(2, '2'), (4, '4')],
@@ -22,12 +21,9 @@ class TournamentForm(forms.ModelForm):
             })
         }
 
-
-
-#TODO: to be replaced by real database
 class AliasForm(forms.ModelForm):
     class Meta:
-        model = Alias
+        model = Player
         fields = ['alias']
         widgets = {
             'alias': forms.TextInput(attrs={
