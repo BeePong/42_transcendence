@@ -59,12 +59,15 @@ mockNumPlayers = 4 # num_players """
 
 @login_required_json
 def tournament(request):
+    print("tournament")
     """The tournament page for BeePong."""
     if request.method != "POST":
+        print("NOT POST")
         # Fetch tournaments from the database, ordered by the most recent
         tournaments = Tournament.objects.all().order_by("-tournament_id")
         form = AliasForm(username=request.user.username)
     else:
+        print("POST")
         tournament_id = request.POST.get("tournament_id")
         username = request.session.get("username", None)
         form = AliasForm(data=request.POST, username=username)
@@ -79,7 +82,14 @@ def tournament(request):
 
     # Prepare tournaments data for the template
     tournament_data = []
+    print("num of tournaments:", tournaments.count())
     for tournament in tournaments:
+        print(
+            "tournament:",
+            tournament.tournament_id,
+        )
+        players = list(tournament.players.values("username"))
+        winner_username = tournament.winner.username if tournament.winner else ""
         tournament_data.append(
             {
                 "tournament_id": tournament.tournament_id,
@@ -87,11 +97,12 @@ def tournament(request):
                 "description": tournament.description,
                 "state": tournament.state,
                 "num_players": tournament.num_players,
-                "players": tournament.players,
-                "winner": tournament.winner,
+                "players": players,
+                "winner": winner_username,
             }
         )
-    print(tournament_data)
+    print("before render")
+    print("tournament_data:", tournament_data)
     return render(
         request,
         "tournament/tournament.html",
@@ -118,6 +129,8 @@ def create_tournament(request):
             tournament = form.save(commit=False)
             tournament.save()
             form.save_m2m()
+            players = list(tournament.players.values("username"))
+            winner_username = tournament.winner.username if tournament.winner else ""
             return JsonResponse(
                 {
                     "success": True,
@@ -127,8 +140,8 @@ def create_tournament(request):
                     "num_players": tournament.num_players,
                     "tournament_id": tournament.tournament_id,
                     "state": tournament.state,
-                    "players": tournament.players,
-                    "winner": tournament.winner,
+                    "players": players,
+                    "winner": winner_username,
                 },
                 status=201,
             )
@@ -143,6 +156,7 @@ def create_tournament(request):
 
 @login_required
 def tournament_lobby(request, tournament_id):
+    print("tournament_lobby")
     """The tournament lobby page for BeePong."""
     if request.method == "POST":
         form = AliasForm(request.POST)
@@ -153,40 +167,43 @@ def tournament_lobby(request, tournament_id):
     try:
         # Safely retrieve the tournament object
         tournament = get_object_or_404(Tournament, tournament_id=tournament_id)
+        players = list(tournament.players.values("username"))
         if tournament.state != "READY":
             user1 = request.user
-            list_players = tournament.players
-            if user1 in list_players:
+
+            if tournament.is_user_in_tournament(user1):
                 print(f"{user1} is in the list.")
             else:
                 print(f"{user1} is not in the list.")
+                print(f"Adding {user1} to the list.")
                 player, _ = Player.objects.get_or_create(user=request.user)
+
                 player.is_online = True
                 player.username = request.user.username
+                print("created or got player", player.username)
                 if player.has_active_tournament == False:
                     player.current_tournament_id = tournament_id
                     player.has_active_tournament = True
                     player.save()
                     tournament.players.add(player)
-                    tournament.num_players_in += 1
-                if tournament.num_players_in >= tournament.num_players:
+                if tournament.players.count() >= tournament.num_players:
                     tournament.state = "READY"
                 tournament.save()
 
         if (
             tournament.state != "READY"
-            and tournament.num_players_in < tournament.num_players
+            and tournament.players.count() < tournament.num_players
         ):
             return render(
                 request,
                 "tournament/tournament_waiting_lobby.html",
                 {
-                    "players_in_lobby": tournament.players,
+                    "players_in_lobby": players,
                     "num_players": tournament.num_players,
                 },
             )
 
-        #todo: do it in a new way now that matches list is in tournament
+        # todo: do it in a new way now that matches list is in tournament
         matches = Match.objects.filter(
             tournament=tournament
         )  # Retrieve all matches associated with the tournament
@@ -198,7 +215,7 @@ def tournament_lobby(request, tournament_id):
                 request,
                 "tournament/tournament_winner.html",
                 {
-                    "players_in_lobby": tournament.players,
+                    "players_in_lobby": players,
                     "num_players": tournament.num_players,
                     "lose_players": lose_players,
                 },
@@ -208,8 +225,8 @@ def tournament_lobby(request, tournament_id):
                 request,
                 "tournament/tournament_full_lobby.html",
                 {
-                    "match_players": tournament.players,
-                    "players_in_lobby": tournament.players,
+                    "match_players": players,
+                    "players_in_lobby": players,
                     "num_players": tournament.num_players,
                     "lose_players": lose_players,
                     "is_final": tournament.is_final,
@@ -217,7 +234,7 @@ def tournament_lobby(request, tournament_id):
             )
     except Exception as error:
         print(error)
-        return JsonResponse({"success": False, "error": error}, status=404)
+        return JsonResponse({"success": False, "error": str(error)}, status=404)
 
 
 ##TODO: only players in the tournament can access its lobby page

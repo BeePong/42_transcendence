@@ -52,11 +52,11 @@ async function loadPage(path, redirectUrl = "/", fromNavigate = false) {
         changeRedirectUrlandOauthState(redirectUrl);
 
       // perform countdown in tournmament lobby if the list is full. Otherwise, wait for other players.
-      if (/^\/tournament\/\d+\/lobby$/.test(page)) {
+      /*if (/^\/tournament\/\d+\/lobby$/.test(page)) {
         if (document.querySelector(".full")) {
           if (!document.querySelector(".winner")) tournamentLobbyCountdown();
         } else mockWebSocket(); //TODO: open websocket
-      }
+      } */
       // if url contains "lobby", start mockWebSocket
       var match = page.match(/^\/tournament\/(\d+)\/lobby$/);
       console.log("match", match);

@@ -135,7 +135,7 @@ function webSocketTest(tournament_id) {
     }
     insertScores(game_data.player1.score, game_data.player2.score);
     if (game_data.state === "finished") {
-      console.log("winner is", game_data.winner);
+      console.log("winner is", game_data.winner.username);
       socket.close();
       return;
     }
