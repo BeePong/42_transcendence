@@ -380,6 +380,14 @@ class PongConsumer(AsyncWebsocketConsumer):
         print("game state: ", self.__class__.game_state)
         self.__class__.consumers.remove(self)
 
+    async def keepalive(self):
+        while True:
+            try:
+                await asyncio.sleep(30)  # Wait for 30 seconds
+                # Perform keepalive tasks here, if any
+            except asyncio.CancelledError:
+                break
+
     async def handle_tournament_message(self, message):
         await self.send_message("Received tournament message: " + str(message))
 

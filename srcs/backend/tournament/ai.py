@@ -122,7 +122,7 @@ async def ai_bot(session):
     }
 
     async with websockets.connect(
-        url, ssl=ssl_context, extra_headers=headers, ping_interval=30, ping_timeout=60
+        url, ssl=ssl_context, extra_headers=headers, ping_interval=None
     ) as websocket:
         print("WebSocket connection established.")
 
