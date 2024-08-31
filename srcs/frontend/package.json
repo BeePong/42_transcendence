@@ -12,7 +12,7 @@
   "jest": {
     "moduleDirectories": [
       "node_modules",
-      "srcs/frontend/js"
+      "./js"
     ],
     "testEnvironment": "jsdom",
     "automock": false,

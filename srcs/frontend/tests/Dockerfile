@@ -5,13 +5,13 @@ FROM node:14
 WORKDIR /app
 
 # Copy package.json and package-lock.json
-COPY package.json package-lock.json setupJest.js ./
+COPY package.json package-lock.json .
 
 # Install dependencies (including Jest)
 RUN npm install
 
-# Copy only the frontend source code
-COPY srcs/frontend/ .
+# Copy the rest of frontend project files to /app
+COPY . .
 
 # Specify the command to run tests with Jest
 CMD ["npx", "jest"]

@@ -100,8 +100,8 @@ services:
   jest:
     container_name: beepong-jest
     build:
-      context: .
-      dockerfile: srcs/frontend/tests/Dockerfile
+      context: srcs/frontend
+      dockerfile: tests/Dockerfile
     restart: on-failure
 
   pgadmin:
