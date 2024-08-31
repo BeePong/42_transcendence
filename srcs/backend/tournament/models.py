@@ -145,26 +145,25 @@ class Tournament(models.Model):
     def get_user_in_tournament(self, user):
         return self.players.get(user=user)
 
-    @sync_to_async
-    def connect_player_if_applicable(self, user):
+    async def connect_player_if_applicable(self, user):
         print("CONNECT PLAYER IF APPLICABLE")
-
         # if player is joining a new game, create a player for them
-        if self.state == "NEW" and self.players.count() < self.num_players:
-            # TODO: remove duplicate with this logic in tournament_lobby views.py
-            player, _ = Player.objects.get_or_create(user=user)
-            player.is_online = True
-            player.username = user.username
-            if player.has_active_tournament == False:
-                player.current_tournament_id = self.tournament_id
-                player.has_active_tournament = True
-                player.save()
-                self.players.add(player)
+        # if self.state == "NEW" and self.players.count() < self.num_players:
+        # TODO: remove duplicate with this logic in tournament_lobby views.py
+        # player, _ = Player.objects.get_or_create(user=user)
+        # player.is_online = True
+        # player.username = user.username
+        # if player.has_active_tournament == False:
+        #    player.current_tournament_id = self.tournament_id
+        #    player.has_active_tournament = True
+        #    player.save()
+        #    self.players.add(player)
         # if player is reconnecting mid-tournament, activate them
-        elif self.state == "PLAYING" and self.is_user_in_tournament(user):
-            player = self.get_user_in_tournament(user)
+        if_user_in_tournament = await self.is_user_in_tournament(user)
+        if self.state == "PLAYING" and if_user_in_tournament:
+            player = await self.get_user_in_tournament(user)
             player.is_online = True
-        self.save()
+        await sync_to_async(self.save)()
 
     @sync_to_async
     def disconnect_player(self, user):
@@ -223,8 +222,6 @@ class Tournament(models.Model):
 
 class GameLoop:
 
-    print("GAMELOOP root")
-
     def __init__(self, match):
         self.match = match
         self.running = True
@@ -256,8 +253,8 @@ class GameLoop:
                     # print("state changed to PLAYING")
 
             # Update the position of the paddles based on the key states
-            print("match: ", await self.match.to_dict())
-            print("MATCH ID: ", self.match.game_id)
+            # print("match: ", await self.match.to_dict())
+            # print("MATCH ID: ", self.match.game_id)
             if self.match.player1_up_pressed:
                 new_y = self.match.player1_y - settings.PADDLE_SPEED
                 if new_y < settings.UPPER_LIMIT:

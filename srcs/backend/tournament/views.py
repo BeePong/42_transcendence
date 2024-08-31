@@ -237,7 +237,7 @@ def tournament_lobby(request, tournament_id):
         return JsonResponse({"success": False, "error": str(error)}, status=404)
 
 
-##TODO: only players in the tournament can access its lobby page
+# TODO: only players in the tournament can access its lobby page
 # @login_required_json
 # def tournament_lobby(request, tournament_id):
 #    """The tournament lobby page for BeePong."""

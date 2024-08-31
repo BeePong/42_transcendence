@@ -11,6 +11,7 @@ window.navigate = function navigate(eventOrPath, redirectUrl = "/") {
 
   // Do not render again for the same path
   if (window.location.pathname === path) return;
+  // TODO: add custom navigation event here, which will be listened to in websocket function
 
   loadPage(path, redirectUrl, true);
 };
@@ -49,6 +50,7 @@ async function loadPage(path, redirectUrl = "/", fromNavigate = false) {
         (page === "/accounts/login" || page === "/accounts/register") &&
         redirectUrl !== "/"
       )
+      
         changeRedirectUrlandOauthState(redirectUrl);
 
       // perform countdown in tournmament lobby if the list is full. Otherwise, wait for other players.
@@ -122,6 +124,7 @@ function mockWebSocket() {
 
 // Add player in the tournament lobby
 function tournamentLobbyAddPlayer() {
+  // TODO: connect the below out, pass it to function instead
   const numPlayersInLobby = parseInt(
     document.getElementById("num-players-in-lobby").textContent,
     10
@@ -210,6 +213,7 @@ async function loadNavBar() {
 
 // Listen to popstate events for back/forward navigation
 window.addEventListener("popstate", () => {
+  // TODO: add custom navigation event here, which will be listened to in websocket as well
   loadPage(window.location.pathname);
 });
 

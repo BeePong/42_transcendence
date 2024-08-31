@@ -88,7 +88,14 @@ function webSocketTest(tournament_id) {
   socket.onmessage = function (e) {
     var data = JSON.parse(e.data);
     //console.log("socket data:", data);
-    updateCanvas(data);
+    // Here tournament_lobby function will be called once the winner is determined, call loadPage on window.pathname (reload page)
+    // every time game state is updated
+    // if tpirnament not full
+    // navigate to refresh page
+    // when new player joins, send player into to tournamentLobbyAddPlayer(player), numPlayers and updatedNumPlayersInLobby
+    // state is countdown, seconds number is 2, 1, 0 and call function to change number in countdown
+
+    updateCanvas(data); // when state is playing
     return false;
   };
 
@@ -127,6 +134,7 @@ function webSocketTest(tournament_id) {
   });
 
   function updateCanvas(game_data) {
+    
     if (new_ball_speed === undefined) new_ball_speed = game_data.ball.speed;
     old_ball_speed = new_ball_speed;
     new_ball_speed = game_data.ball.speed;
