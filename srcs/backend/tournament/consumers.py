@@ -302,7 +302,7 @@ class GameLoop:
                         self.game_state["player2"]["score"] = 0
                         self.game_state["player1"]["score"] = 0
 
-            await PongConsumer.send_game_state_to_all()
+            await PongConsumer.send_game_state_to_all(self.game_state)
             await asyncio.sleep(1 / settings.FPS)
 
     def stop(self):
@@ -412,14 +412,14 @@ class PongConsumer(AsyncWebsocketConsumer):
             await self.handle_key_event(key, keyAction, "player2")
 
     @classmethod
-    async def send_game_state_to_all(cls):
+    async def send_game_state_to_all(cls, game_state):
         channel_layer = get_channel_layer()
         try:
             await channel_layer.group_send(
                 "tournament_group",
                 {
                     "type": "send_game_state",
-                    "game_state": cls.game_state,
+                    "game_state": game_state,
                 },
             )
         except Exception as e:
