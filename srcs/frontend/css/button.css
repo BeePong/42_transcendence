@@ -27,9 +27,17 @@ button {
 	text-align: left;
 }
 
-.fortytwo-icon {
-	margin-right: 8px;
-	vertical-align: middle;
+.button--fortytwo {
+	width: 80%;
+	padding: 0.5em 1.5em;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+}
+
+#github-link {
+	text-decoration: underline;
 }
 
 .cross-icon {

@@ -26,13 +26,13 @@ form label {
 	background-color: var(--color-secondary);
 	color: var(--text-color-alt);
 	padding: 2em 3em;
-	margin: 2em 0;
 	font-family: var(--font-family-alt);
 	font-variation-settings: "YOPQ" 300;
 	font-size: var(--font-size-sm);
 	flex-direction: column;
 	gap: 1em;
 	overflow-wrap: break-word;
+	width: 100%
 }
 
 .radio-group {
