@@ -16,7 +16,7 @@ function navigate(eventOrPath, redirectUrl = '/') {
 }
 
 // Load content based on the path, and add the redirect url for login and register page 
-async function loadPage(path, redirectUrl = '/', fromNavigate = false, queryString = '') {
+export async function loadPage(path, redirectUrl = '/', fromNavigate = false, queryString = '') {
 	// If the path is '/', set page to '/home'.
 	// Otherwise, remove the trailing slash from the path and set page to the resulting string.
 	const page = path === '/' ? '/home' : path.replace(/\/$/, '');
@@ -209,5 +209,3 @@ document.addEventListener('DOMContentLoaded', () => {
 	loadNavBar();
 	loadPage(window.location.pathname, '/', false, window.location.search);
 });
-
-// module.exports = { loadPage };

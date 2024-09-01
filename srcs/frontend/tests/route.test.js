@@ -1,4 +1,4 @@
-const { loadPage } = require('../js/route');
+import { loadPage } from '../js/route';
 
 describe('loadPage', () => {
   beforeEach(() => {
