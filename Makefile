@@ -1,4 +1,4 @@
-.PHONY: up down clean clean_volumes clean_orphans clean_images clean_all get_images_id re re_elk re_all re_all_elk  up_backend up_db up_elk up_all up_no_elk logs logs_errors logs_grep logs_nginx logs_backend logs_db logs_elk ps ps_short ps_inspect exec_nginx exec_backend exec_db exec_elk stop_all stats sys_df help nuke
+.PHONY: up down clean clean_volumes clean_orphans clean_images clean_all get_images_id re re_elk re_all re_all_elk  up_backend up_db up_elk up_all up_no_elk logs logs_errors logs_grep logs_nginx logs_backend logs_db logs_elk ps ps_short ps_inspect exec_nginx exec_backend exec_db exec_elk stop_all stats sys_df help nuke jest cypress
 
 ################################################################################
 # Build and Start
@@ -8,7 +8,7 @@ all: up_no_elk
 
 # Start all services except ELK stack and rebuild if necessary
 up_no_elk:
-	docker compose -f ./docker-compose.yml up --build -d nginx backend_dummy db pgadmin jest cypress 
+	docker compose -f ./docker-compose.yml up --build -d nginx backend_dummy db pgadmin
 
 # Start all services including ELK stack and rebuild if necessary
 up_all:
@@ -248,8 +248,14 @@ help:
 	@echo "  help           Show this help message"
 
 ################################################################################
-# Run test
+# Build and Run test
 ################################################################################
-# Run jest
+# Build and run jest
 jest:
-	docker-compose -f ./docker-compose.yml run --rm jest
+	docker-compose build jest
+	docker-compose run --rm jest
+
+# Build and run cypress
+cypress:
+	docker-compose build cypress
+	docker-compose run --rm cypress
