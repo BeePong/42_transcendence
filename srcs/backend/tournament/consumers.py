@@ -8,6 +8,7 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from enum import Enum
 from django.conf import settings
 from django.http import Http404
+from asgiref.sync import sync_to_async
 
 # from django.contrib.auth.models import User
 
@@ -78,6 +79,7 @@ class PongConsumer(AsyncWebsocketConsumer):
         else:
             user = self.scope["user"]
         # add player to tournament if eligible
+
         await self.__class__.tournament.connect_player_if_applicable(user)
         await self.__class__.tournament.start_tournament_if_applicable()
 
@@ -88,12 +90,16 @@ class PongConsumer(AsyncWebsocketConsumer):
         # remove consumer from group
         await self.channel_layer.group_discard(self.pong_group_name, self.channel_name)
 
-    async def handle_game_message(self, message):
+    def handle_game_message(self, message):
         print("handle_game_message, message:")
         print(message)
-        await self.__class__.tournament.handle_key_action(
+        self.__class__.tournament.handle_key_action(
             self.scope["user"], message["key"], message["keyAction"]
         )
+
+    def handle_tournament_message(self, message):
+        print("handle_tournament_message, message:")
+        print(message)
 
     @classmethod
     async def send_game_state_to_all(self, match):
@@ -125,9 +131,10 @@ class PongConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         print("receive")
         print("tournament state:", self.__class__.tournament.state)
-        user_in_tournament = await self.__class__.tournament.is_user_in_tournament(
-            self.scope["user"]
-        )
+        # Use sync_to_async to call the synchronous ORM method
+        user_in_tournament = await sync_to_async(
+            self.__class__.tournament.is_user_in_tournament
+        )(self.scope["user"])
         print("user_in_tournament:", user_in_tournament)
         if self.__class__.tournament.state == "PLAYING" and user_in_tournament:
             try:
@@ -137,8 +144,7 @@ class PongConsumer(AsyncWebsocketConsumer):
                 message_type = text_data_json["type"]
                 print("message_type:", message_type)
                 if message_type == "tournament":
-                    await self.handle_tournament_message(message)
-                elif message_type == "game":
-                    await self.handle_game_message(message)
+                    await sync_to_async(self.handle_tournament_message)(message)
+                    await sync_to_async(self.handle_game_message)(message)
             except Exception as e:
                 print("Error in receive method: %s", e)

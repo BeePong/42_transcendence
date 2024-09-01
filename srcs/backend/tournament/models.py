@@ -99,24 +99,24 @@ class Tournament(models.Model):
             self.state = "PLAYING"
             await match.start_match()
 
-    async def handle_key_action(self, user, key, keyAction):
+    def handle_key_action(self, user, key, keyAction):
         print("HANDLE KEY ACTION")
-        player = await self.get_user_in_tournament(user)
+        player = self.get_user_in_tournament(user)
         print("got player in tournament: ", player.username)
         # TODO: change from first to actual match
         print("matches after")
-        total_matches = await sync_to_async(self.matches.count)()
+        total_matches = self.matches.count()
         print("total matches: ", total_matches)
         # print all matches
-        match = await sync_to_async(lambda: self.matches.first())()
+        match = self.matches.first()
         print("match: ")
         if match:
             print(f"Match found, match for handling key id: {match.game_id}")
         else:
             print("No match found")
         # TODO: check match state
-        match_player1 = await sync_to_async(lambda: match.player1.player_id)()
-        match_player2 = await sync_to_async(lambda: match.player2.player_id)()
+        match_player1 = match.player1.player_id
+        match_player2 = match.player2.player_id
         print("match player 1: ", match_player1)
         print("match player 2: ", match_player2)
         if player.player_id == match_player1:
@@ -135,17 +135,16 @@ class Tournament(models.Model):
             elif key == "ArrowDown":
                 match.player2_down_pressed = keyAction == "keydown"
                 print("player 2 down pressed", match.player2_down_pressed)
-        await sync_to_async(match.save)()
+        match.save()
 
-    @sync_to_async
     def is_user_in_tournament(self, user):
         return self.players.filter(user=user).exists()
 
-    @sync_to_async
     def get_user_in_tournament(self, user):
         return self.players.get(user=user)
 
-    async def connect_player_if_applicable(self, user):
+    @sync_to_async
+    def connect_player_if_applicable(self, user):
         print("CONNECT PLAYER IF APPLICABLE")
         # if player is joining a new game, create a player for them
         # if self.state == "NEW" and self.players.count() < self.num_players:
@@ -159,11 +158,11 @@ class Tournament(models.Model):
         #    player.save()
         #    self.players.add(player)
         # if player is reconnecting mid-tournament, activate them
-        if_user_in_tournament = await self.is_user_in_tournament(user)
+        if_user_in_tournament = self.is_user_in_tournament(user)
         if self.state == "PLAYING" and if_user_in_tournament:
-            player = await self.get_user_in_tournament(user)
+            player = self.get_user_in_tournament(user)
             player.is_online = True
-        await sync_to_async(self.save)()
+        self.save()
 
     @sync_to_async
     def disconnect_player(self, user):
