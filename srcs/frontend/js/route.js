@@ -210,4 +210,4 @@ document.addEventListener('DOMContentLoaded', () => {
 	loadPage(window.location.pathname, '/', false, window.location.search);
 });
 
-module.exports = { loadPage };
+// module.exports = { loadPage };

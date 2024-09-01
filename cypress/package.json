@@ -1,0 +1,12 @@
+{
+  "name": "cypress-tests",
+  "version": "1.0.0",
+  "description": "Cypress testing dependencies",
+  "scripts": {
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run"
+  },
+  "devDependencies": {
+    "cypress": "^12.16.0"
+  }
+}

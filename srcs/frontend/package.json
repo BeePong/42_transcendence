@@ -1,7 +1,7 @@
 {
-  "name": "beepong",
+  "name": "jest-tests",
   "version": "1.0.0",
-  "description": "beePong for testing with Jest",
+  "description": "Jest testing dependencies",
   "scripts": {
     "test": "jest"
   },

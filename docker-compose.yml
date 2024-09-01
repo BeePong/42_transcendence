@@ -102,7 +102,22 @@ services:
     build:
       context: srcs/frontend
       dockerfile: tests/Dockerfile
-    restart: on-failure
+    # restart: on-failure
+
+  cypress:
+    container_name: beepong-cypress
+    build:
+      context: ./cypress
+      dockerfile: Dockerfile
+    # ports:
+    #   - "443:443"  # Map port 443 on the host to port 443 in the container
+    environment:
+      - CYPRESS_baseUrl=https://nginx  # Docker service name
+    # environment:
+    #   - CYPRESS_baseUrl=https://localhost
+    # restart: on-failure
+    depends_on:
+      - nginx
 
   pgadmin:
     container_name: beepong-pgadmin
