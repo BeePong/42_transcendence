@@ -123,17 +123,21 @@ class Tournament(models.Model):
             print("key action player 1")
             if key == "ArrowUp":
                 match.player1_up_pressed = keyAction == "keydown"
+                match.player1_game_state["up_pressed"] = keyAction == "keydown"
                 print("player 1 up pressed", match.player1_up_pressed)
             elif key == "ArrowDown":
-                match.player1_up_pressed = keyAction == "keydown"
-                print("player 1 down pressed", match.player1_up_pressed)
+                match.player1_down_pressed = keyAction == "keydown"
+                match.player1_game_state["down_pressed"] = keyAction == "keydown"
+                print("player 1 down pressed", match.player1_down_pressed)
         elif player.player_id == match_player2:
             print("key action player 2")
             if key == "ArrowUp":
                 match.player2_up_pressed = keyAction == "keydown"
+                match.player2_game_state["up_pressed"] = keyAction == "keydown"
                 print("player 2 up pressed", match.player2_up_pressed)
             elif key == "ArrowDown":
                 match.player2_down_pressed = keyAction == "keydown"
+                match.player2_game_state["down_pressed"] = keyAction == "keydown"
                 print("player 2 down pressed", match.player2_down_pressed)
         match.save()
 
@@ -227,11 +231,9 @@ class GameLoop:
         self.loop_task = None
         print("GAME LOOP INITIALIZED, match id: ", self.match.game_id)
 
-    def start(self):
-        self.loop_task = asyncio.create_task(self.game_loop())
-
     async def loop(self):
-        self.loop_task = asyncio.create_task(self.game_loop())
+        if not self.loop_task or self.loop_task.done():
+            self.loop_task = asyncio.create_task(self.game_loop())
 
     async def game_loop(self):
         from .consumers import PongConsumer
@@ -254,14 +256,20 @@ class GameLoop:
             # Update the position of the paddles based on the key states
             # print("match: ", await self.match.to_dict())
             # print("MATCH ID: ", self.match.game_id)
-            if self.match.player1_up_pressed:
+            if (
+                self.match.player1_up_pressed
+                or self.match.player1_game_state["up_pressed"]
+            ):
                 new_y = self.match.player1_y - settings.PADDLE_SPEED
                 if new_y < settings.UPPER_LIMIT:
                     self.match.player1_y = settings.UPPER_LIMIT
                 else:
                     self.match.player1_y = new_y
                 print("new y player 1: ", self.match.player1_y)
-            elif self.match.player1_game_state["down_pressed"]:
+            elif (
+                self.match.player1_down_pressed
+                or self.match.player1_game_state["down_pressed"]
+            ):
                 new_y = self.match.player1_y + settings.PADDLE_SPEED
                 if new_y > settings.LOWER_LIMIT:
                     self.match.player1_y = settings.LOWER_LIMIT
@@ -269,7 +277,10 @@ class GameLoop:
                     self.match.player1_y = new_y
                 print("new y player 1: ", self.match.player1_y)
             # print("UPDATING PADDLE POSITIONS 2")
-            if self.match.player2_up_pressed:
+            if (
+                self.match.player2_up_pressed
+                or self.match.player2_game_state["up_pressed"]
+            ):
                 new_y = self.match.player2_y - settings.PADDLE_SPEED
                 if new_y < settings.UPPER_LIMIT:
                     self.match.player2_y = settings.UPPER_LIMIT
@@ -277,7 +288,10 @@ class GameLoop:
                     self.match.player2_y = new_y
                 print("new y player 2: ", self.match.player2_y)
 
-            elif self.match.player2_down_pressed:
+            elif (
+                self.match.player2_down_pressed
+                or self.match.player2_game_state["down_pressed"]
+            ):
                 new_y = self.match.player2_y + settings.PADDLE_SPEED
                 if new_y > settings.LOWER_LIMIT:
                     self.match.player2_y = settings.LOWER_LIMIT
@@ -418,6 +432,7 @@ class GameLoop:
                         self.match.state = "FINISHED"
                         self.match.player2_score = 0
                         self.match.player1_score = 0
+                        self.match.save()
                 elif ball_new_x <= settings.BALL_RADIUS:
                     print("PLAYER 2 SCORED")
                     self.match.player2_score += 1
@@ -427,17 +442,24 @@ class GameLoop:
                         self.match.state = "FINISHED"
                         self.match.player2_score = 0
                         self.match.player1_score = 0
+                        self.match.save()
             # will this find the correct consumer?
             # print("SENDING GAME STATE TO ALL")
             await PongConsumer.send_game_state_to_all(self.match)
             # print("GAME STATE SENT TO ALL")
             await asyncio.sleep(1 / settings.FPS)
             # print("GAME LOOP AFTER SLEEPING")
+            if self.match.state == "FINISHED":
+                # print("MATCH FINISHED")
+                self.match.save()
+                self.stop()
 
     def stop(self):
+        print("STOP GAME LOOP")
         self.running = False
         if self.loop_task:
             self.loop_task.cancel()
+            self.loop_task = None
 
 
 class Match(models.Model):

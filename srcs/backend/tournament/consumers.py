@@ -128,6 +128,7 @@ class PongConsumer(AsyncWebsocketConsumer):
         except Exception as e:
             print(f"Error sending game state: {e}")
 
+    # reveive() has to be async because we're using channel layer
     async def receive(self, text_data):
         print("receive")
         print("tournament state:", self.__class__.tournament.state)
@@ -145,6 +146,7 @@ class PongConsumer(AsyncWebsocketConsumer):
                 print("message_type:", message_type)
                 if message_type == "tournament":
                     await sync_to_async(self.handle_tournament_message)(message)
+                elif message_type == "game":
                     await sync_to_async(self.handle_game_message)(message)
             except Exception as e:
                 print("Error in receive method: %s", e)
