@@ -1,12 +1,14 @@
-import requests
 import asyncio
-import websockets
-import ssl
-from bs4 import BeautifulSoup
 import json
-import random
 import os
+import random
+import ssl
 import time
+
+import aiohttp
+import requests
+import websockets
+from bs4 import BeautifulSoup
 
 # Game settings TODO: use them in front-end and back-end
 FIELD_WIDTH = 800
@@ -17,7 +19,7 @@ PADDLE_SPEED = 20
 BALL_RADIUS = 15
 BALL_STARTING_SPEED = 5
 BALL_SPEED_INCREMENT = 0
-FPS = 30
+FPS = 20
 MAX_SCORE = 500
 PADDING_THICKNESS = 7
 THICK_BORDER_THICKNESS = 5
@@ -99,103 +101,215 @@ def login():
         return None
 
 
+async def calculate_ai_move(game_state_data):
+    ball_position = game_state_data["ball"]
+    ai_paddle_position = game_state_data["player2"]["y"]  # Assuming AI is player2
+    ball_vector = game_state_data["ball_vector"]
+    ball_speed = game_state_data["ball_speed"]
+
+    # Predict the ball's future y-position when it reaches the AI paddle
+    time_to_paddle = (FIELD_WIDTH - ball_position["x"]) / ball_vector["x"]
+    predicted_ball_y = ball_position["y"] + ball_vector["y"] * time_to_paddle
+
+    # Handle ball bouncing off the top and bottom boundaries
+    if predicted_ball_y < 0:
+        predicted_ball_y = -predicted_ball_y
+    elif predicted_ball_y > FIELD_HEIGHT:
+        predicted_ball_y = 2 * FIELD_HEIGHT - predicted_ball_y
+
+    print(f"Predicted ball y-position: {predicted_ball_y}")
+    print(f"AI paddle position: {ai_paddle_position}")
+
+    # Determine the move direction
+    if predicted_ball_y < ai_paddle_position:
+        return "ArrowUp"
+    elif predicted_ball_y > ai_paddle_position:
+        return "ArrowDown"
+    else:
+        return None  # No movement needed
+
+
 # Step 2: Use the session to establish a WebSocket connection
+# async def ai_bot(session):
+#     # Define the WebSocket URL
+#     url = "wss://nginx:8443/ws/pong/1/?is_bot=True"
+
+#     # Extract the session cookie
+#     cookies = session.cookies.get_dict()
+#     cookie_header = "; ".join([f"{name}={value}" for name, value in cookies.items()])
+#     # print(f"Session cookie: {cookie_header}")
+
+#     # SSL context to trust the self-signed certificate
+#     ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+#     ssl_context.load_verify_locations("/etc/nginx/ssl/beepong.pem")
+
+#     # Define the headers to include the session cookie
+#     headers = {
+#         "Cookie": cookie_header,
+#         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+#         "Origin": "https://nginx",
+#         "Connection": "keep-alive",
+#     }
+
+#     async with websockets.connect(
+#         url, ssl=ssl_context, extra_headers=headers, ping_interval=None
+#     ) as websocket:
+#         print("WebSocket connection established.")
+
+#         # Function to send game data, similar to the sendGameData function in JavaScript
+#         async def send_game_data(websocket, key, key_action):
+#             message = {
+#                 "message": {
+#                     "key": key,
+#                     "keyAction": key_action,
+#                 },
+#                 "type": "game",
+#             }
+#             await websocket.send(json.dumps(message))
+#             print(f"Sent: {message}")
+
+#         # Example loop to simulate key press and release
+#         while True:
+#             try:
+#                 # Receive and print the game state
+#                 async with asyncio.timeout(30):
+#                     game_state = await websocket.recv()
+#                     game_state_data = json.loads(game_state)
+#                     current_time = time.time()
+#                     print(f"Received game state at {current_time}:")
+#                     print(json.dumps(game_state_data, indent=2))
+
+#                     # Calculate and print the delay
+#                     server_timestamp = game_state_data["timestamp"]
+#                     delay = current_time - server_timestamp
+#                     print(f"Delay: {delay:.4f} seconds")
+
+#                     # Clear the message queue
+#                     while websocket.messages:
+#                         _ = await websocket.recv()
+#                         print("Skipped an old message")
+
+#                     # Extract positions from the game state
+#                     # game_state_data = json.loads(game_state)
+#                     ball_position = game_state_data["ball"]
+#                     ai_paddle_position = game_state_data["player2"][
+#                         "y"
+#                     ]  # Assuming AI is player2
+
+#                     # Extract ball vector (direction) and speed
+#                     ball_vector = game_state_data["ball_vector"]
+#                     ball_speed = game_state_data["ball_speed"]
+
+#                     # Predict the ball's future y-position when it reaches the AI paddle
+#                     field_width = FIELD_WIDTH
+#                     time_to_paddle = (field_width - ball_position["x"]) / ball_vector[
+#                         "x"
+#                     ]
+
+#                     predicted_ball_y = (
+#                         ball_position["y"] + ball_vector["y"] * time_to_paddle
+#                     )
+
+#                     # Handle ball bouncing off the top and bottom boundaries
+#                     field_height = FIELD_HEIGHT
+#                     if predicted_ball_y < 0:
+#                         predicted_ball_y = -predicted_ball_y
+#                     elif predicted_ball_y > field_height:
+#                         predicted_ball_y = 2 * field_height - predicted_ball_y
+
+#                     print(f"Predicted ball y-position: {predicted_ball_y}")
+#                     print(f"AI paddle position: {ai_paddle_position}")
+
+#                     # Move the AI paddle towards the predicted intersection point
+#                     if predicted_ball_y < ai_paddle_position:
+#                         await send_game_data(websocket, "ArrowUp", "keydown")
+#                         # Simulate holding the key down for a short duration
+#                         await asyncio.sleep(random.uniform(0.2, 0.6))
+#                         await send_game_data(websocket, "ArrowUp", "keyup")
+#                     elif predicted_ball_y > ai_paddle_position:
+#                         await send_game_data(websocket, "ArrowDown", "keydown")
+#                         # Simulate holding the key down for a short duration
+#                         await asyncio.sleep(random.uniform(0.2, 0.6))
+#                         await send_game_data(websocket, "ArrowDown", "keyup")
+
+#                 # Add a delay to refresh the AI's view once per second
+#                 # print("Waiting for 1 second...")
+#                 # await asyncio.sleep(1)
+
+#             except websockets.ConnectionClosedError as e:
+#                 print(f"WebSocket connection closed: {e}")
+#             except Exception as e:
+#                 print(f"Unexpected error: {e}")
+
+
 async def ai_bot(session):
-    # Define the WebSocket URL
     url = "wss://nginx:8443/ws/pong/1/?is_bot=True"
-
-    # Extract the session cookie
     cookies = session.cookies.get_dict()
-    cookie_header = "; ".join([f"{name}={value}" for name, value in cookies.items()])
-    # print(f"Session cookie: {cookie_header}")
-
-    # SSL context to trust the self-signed certificate
-    ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-    ssl_context.load_verify_locations("/etc/nginx/ssl/beepong.pem")
-
-    # Define the headers to include the session cookie
     headers = {
-        "Cookie": cookie_header,
+        "Cookie": "; ".join([f"{name}={value}" for name, value in cookies.items()]),
         "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
         "Origin": "https://nginx",
         "Connection": "keep-alive",
     }
 
-    async with websockets.connect(
-        url, ssl=ssl_context, extra_headers=headers, ping_interval=None
-    ) as websocket:
-        print("WebSocket connection established.")
+    # SSL context to trust the self-signed certificate
+    ssl_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    ssl_context.load_verify_locations("/etc/nginx/ssl/beepong.pem")
 
-        # Function to send game data, similar to the sendGameData function in JavaScript
-        async def send_game_data(websocket, key, key_action):
-            message = {
-                "message": {
-                    "key": key,
-                    "keyAction": key_action,
-                },
-                "type": "game",
-            }
-            await websocket.send(json.dumps(message))
-            print(f"Sent: {message}")
+    async with aiohttp.ClientSession() as session:
+        async with session.ws_connect(url, ssl=ssl_context, headers=headers) as ws:
+            print("WebSocket connection established.")
 
-        # Example loop to simulate key press and release
-        while True:
-            try:
-                # Receive and print the game state
-                async with asyncio.timeout(30):
-                    game_state = await websocket.recv()
-                    print(f"Received game state at {time.time()}: {game_state}")
-                    print(f"Received game state: {game_state}")
+            async def send_game_data(key, key_action):
+                message = {
+                    "message": {
+                        "key": key,
+                        "keyAction": key_action,
+                    },
+                    "type": "game",
+                }
+                await ws.send_json(message)
+                print(f"Sent: {message}")
 
-                # Extract positions from the game state
-                game_state_data = json.loads(game_state)
-                ball_position = game_state_data["ball"]
-                ai_paddle_position = game_state_data["player2"][
-                    "y"
-                ]  # Assuming AI is player2
+            while True:
+                try:
+                    msg = await ws.receive_json(timeout=30)
+                    current_time = time.time()
+                    server_timestamp = msg["timestamp"]
+                    delay = current_time - server_timestamp
+                    print(f"Received game state at {current_time}:")
+                    print(json.dumps(msg, indent=2))  # Pretty print the JSON
+                    print(f"Delay: {delay:.4f} seconds")
 
-                # Extract ball vector (direction) and speed
-                ball_vector = game_state_data["ball_vector"]
-                ball_speed = game_state_data["ball_speed"]
+                    # Calculate AI move
+                    move = await calculate_ai_move(msg)
 
-                # Predict the ball's future y-position when it reaches the AI paddle
-                field_width = FIELD_WIDTH
-                time_to_paddle = (field_width - ball_position["x"]) / ball_vector["x"]
+                    # Execute the move
+                    if move:
+                        await send_game_data(move, "keydown")
+                        await asyncio.sleep(random.uniform(0.2, 0.6))
+                        await send_game_data(move, "keyup")
 
-                predicted_ball_y = (
-                    ball_position["y"] + ball_vector["y"] * time_to_paddle
-                )
+                    # Clear the message queue if it's too long
+                    messages_cleared = 0
+                    while (
+                        messages_cleared < 10
+                    ):  # Limit to clearing 10 messages at most
+                        _ = await ws.receive_json(timeout=0.01)
+                        messages_cleared += 1
 
-                # Handle ball bouncing off the top and bottom boundaries
-                field_height = FIELD_HEIGHT
-                if predicted_ball_y < 0:
-                    predicted_ball_y = -predicted_ball_y
-                elif predicted_ball_y > field_height:
-                    predicted_ball_y = 2 * field_height - predicted_ball_y
+                    if messages_cleared > 0:
+                        print(f"Cleared {messages_cleared} old message(s)")
 
-                print(f"Predicted ball y-position: {predicted_ball_y}")
-                print(f"AI paddle position: {ai_paddle_position}")
+                except asyncio.TimeoutError:
+                    print("Timeout waiting for game state. Reconnecting...")
+                    break
+                except Exception as e:
+                    print(f"Error: {e}")
+                    break
 
-                # Move the AI paddle towards the predicted intersection point
-                if predicted_ball_y < ai_paddle_position:
-                    await send_game_data(websocket, "ArrowUp", "keydown")
-                    # Simulate holding the key down for a short duration
-                    await asyncio.sleep(random.uniform(0.2, 0.6))
-                    await send_game_data(websocket, "ArrowUp", "keyup")
-                elif predicted_ball_y > ai_paddle_position:
-                    await send_game_data(websocket, "ArrowDown", "keydown")
-                    # Simulate holding the key down for a short duration
-                    await asyncio.sleep(random.uniform(0.2, 0.6))
-                    await send_game_data(websocket, "ArrowDown", "keyup")
-
-                # Add a delay to refresh the AI's view once per second
-                print("Waiting for 1 second...")
-                await asyncio.sleep(1)
-
-            except websockets.ConnectionClosedError as e:
-                print(f"WebSocket connection closed: {e}")
-            except Exception as e:
-                print(f"Unexpected error: {e}")
+    # Reconnect if the loop is broken
+    await ai_bot(session)
 
 
 # Main execution

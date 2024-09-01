@@ -118,6 +118,9 @@ class GameLoop:
         self.game_state = game_state
         self.running = True
         self.loop_task = None
+        self.update_times = []
+        self.max_update_times = 100  # Store the last 100 update times
+
         print("GAME LOOP INITIALIZED")
 
     def start(self):
@@ -128,9 +131,21 @@ class GameLoop:
 
     async def game_loop(self):
         print("GAME LOOP STARTED")
+        last_update_time = time.time()
         # Your game loop code here, which can use self.game_state
         while self.running:
             # time.sleep(1/settings.FPS)
+            current_time = time.time()
+            time_since_last_update = current_time - last_update_time
+
+            # Add the new update time to the list
+            self.update_times.append(time_since_last_update)
+            if len(self.update_times) > self.max_update_times:
+                self.update_times.pop(0)
+
+            # Calculate and print the average update time
+            avg_update_time = sum(self.update_times) / len(self.update_times)
+            print(f"Average update time: {avg_update_time:.4f} seconds")
 
             if self.game_state["state"] == GameState.COUNTDOWN.value:
                 if time.time() - self.game_state["round_start_time"] <= 3:
@@ -302,7 +317,12 @@ class GameLoop:
                         self.game_state["player2"]["score"] = 0
                         self.game_state["player1"]["score"] = 0
 
+            self.game_state["timestamp"] = current_time
             await PongConsumer.send_game_state_to_all(self.game_state)
+
+            print(f"Game state updated after {time_since_last_update:.4f} seconds")
+            last_update_time = current_time
+
             await asyncio.sleep(1 / settings.FPS)
 
     def stop(self):
@@ -415,6 +435,7 @@ class PongConsumer(AsyncWebsocketConsumer):
     async def send_game_state_to_all(cls, game_state):
         channel_layer = get_channel_layer()
         try:
+            print(f"Sending game state at {time.time():.4f}: {game_state}")
             await channel_layer.group_send(
                 "tournament_group",
                 {
