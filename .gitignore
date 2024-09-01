@@ -36,3 +36,6 @@ Icon
 # --- Lionel's ignore ---
 cat_project_to_clipboard_and_file.sh
 combined_output.txt
+
+# --- node_modules ignore ---
+**/node_modules/
