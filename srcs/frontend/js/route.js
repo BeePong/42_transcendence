@@ -1,5 +1,5 @@
 // Handle navigation based on path or event 
-function navigate(eventOrPath, redirectUrl = '/') {
+export function navigate(eventOrPath, redirectUrl = '/') {
 	let path;
 	if (typeof eventOrPath === 'string')
 			path = eventOrPath;
@@ -186,7 +186,7 @@ function tournamentLobbyCountdown() {
 }
 
 // Load navbar
-async function loadNavBar() {
+export async function loadNavBar() {
 	try {
 			const response = await fetch('/page/navbar/');
 			if (!response.ok) {
@@ -209,3 +209,6 @@ document.addEventListener('DOMContentLoaded', () => {
 	loadNavBar();
 	loadPage(window.location.pathname, '/', false, window.location.search);
 });
+
+// Attach navigate to the global window object for use in inline event handlers
+window.navigate = navigate;

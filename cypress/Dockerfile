@@ -10,7 +10,7 @@ COPY package.json package-lock.json .
 # Install dependencies (including Cypress)
 RUN npm install
 
-# Copy the rest of your project files
+# Copy the rest of cypress project files to /app
 COPY . .
 
 # Run Cypress

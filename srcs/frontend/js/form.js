@@ -1,3 +1,6 @@
+import { navigate } from "./route.js";
+import { loadNavBar } from "./route.js";
+
 //handle form submit for register, login and logout
 async function handleFormSubmit(event) {
 	event.preventDefault();
@@ -69,3 +72,6 @@ async function handleFormSubmit(event) {
 			console.error('There was a problem with the fetch operation:', error);
 	}
 }
+
+// Attach handleFormSubmit to the global window object for use in inline event handlers
+window.handleFormSubmit = handleFormSubmit;
