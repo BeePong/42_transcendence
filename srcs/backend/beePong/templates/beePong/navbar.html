@@ -1,21 +1,14 @@
-<li>
-	<a href="{% url 'beePong:about' %}" onclick="navigate(event)">ABOUT</a>
-</li>
 {% if user.is_authenticated %}
-<li>
-	<svg width="10" height="10">
-		<circle cx="5" cy="5" r="4" fill="yellow" />
-	</svg>
-	<span>{{ user.username }}</span>
-</li>
-<li>
-	<form action="{% url 'accounts:logout' %}" onsubmit=handleFormSubmit(event)>
+	<div id="username">
+		<svg width="10" height="10">
+			<circle cx="5" cy="5" r="5" fill="yellow"/>
+		</svg>
+		<span>{{ user.username }}</span>
+	</div>
+	<form action="{% url 'accounts:logout' %}" onsubmit="handleFormSubmit(event)">
 		{% csrf_token %}
 		<button class="button--tertiary" type="submit">LOG OUT</button>
 	</form>
-</li>
 {% else %}
-<li>
-	<button class="button--tertiary" onclick="navigate('/accounts/login', '/')">LOGIN</button>
-</li>
+	<button class="button--tertiary" onclick="navigate(`{% url 'accounts:login' %}`)">LOGIN</button>
 {% endif %}

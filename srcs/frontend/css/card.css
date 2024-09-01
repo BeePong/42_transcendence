@@ -1,25 +1,26 @@
 .card__container {
-  width: 350px;
-}
-
-.card__container > div {
-  width: 100%;
-  min-height: 300px;
+  width: 330px;
+  margin-top: 2em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2em;
 }
 
 .card {
+  overflow: hidden;
+  min-height: 330px;
+  height: 100%;
+  width: 100%;
+}
+
+.card--active {
 	outline: 1px solid var(--text-color-main);
 	box-shadow: -10px -10px var(--color-primary);
-  overflow: hidden;
-  margin: 20px;
-  height: 100%;
 }
 
 .card--inactive {
 	outline: 1px solid var(--text-color-main);
-  overflow: hidden;
-  margin: 20px;
-  height: 100%;
 }
 
 .card--empty {
@@ -28,14 +29,31 @@
 }
 
 .card__content {
-  padding: 40px;
+  padding: 2.5em 3em;
 }
 
 .card__title {
-  margin: 0 0 10px;
+  margin-bottom: 2em;
+  font-size: var(--font-size-base);
 }
 
 .card__text {
-  margin: 0 0 10px;
+  margin-bottom: 2em;
 	font-size: var(--font-size-sm);
+  font-family: var(--font-family-alt);
+  font-variation-settings: "YOPQ" 300;
+  overflow-wrap: break-word;
+}
+
+.card__note {
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family-alt);
+  font-variation-settings: "YOPQ" 300;
+  width: 90%;
+}
+
+@media (max-width: 700px) {
+  .card__container {
+    width: 300px;
+  }
 }

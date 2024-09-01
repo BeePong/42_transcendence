@@ -1,6 +1,11 @@
+.tournament_lobby__header--winner {
+  margin-bottom: 2.5em;
+}
+
 .tournament_lobby__description {
   margin-top: 1.5em;
-  margin-bottom: 3em;
+  margin-bottom: 4em;
+  font-size: var(--font-size-sm);
 }
 
 .tournament_lobby__player-count {
@@ -125,4 +130,10 @@ section.full .tournament_lobby__name-container:nth-child(3)::before {
   border-bottom: 1px solid var(--text-color-main);
   border-bottom-left-radius: 10em;
   top: -10px;
+}
+
+@media (max-width: 700px) {
+	section.full .tournament_lobby__name-list-container {
+    transform: translateX(50px);
+  }
 }
