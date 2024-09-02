@@ -129,6 +129,45 @@ async def calculate_ai_move(game_state_data):
         return None  # No movement needed
 
 
+async def ai_movement_logic(websocket, game_state_event, game_state_data):
+    while True:
+        await game_state_event.wait()  # Wait for a new game state
+        game_state_event.clear()  # Clear the event
+
+        print("AI movement logic triggered")
+        print(json.dumps(game_state_data, indent=2))
+        # Check if the necessary keys are present in the game state data
+        if (
+            "ball" in game_state_data
+            and "player2" in game_state_data
+            and "ball_vector" in game_state_data
+        ):
+            print("Calculating AI move")
+            # Calculate AI move
+            move = await calculate_ai_move(game_state_data)
+            print(f"AI move: {move}")
+
+            # Execute the move
+            if move:
+                await send_game_data(websocket, move, "keydown")
+                await asyncio.sleep(random.uniform(0.2, 0.6))
+                await send_game_data(websocket, move, "keyup")
+
+        await asyncio.sleep(1)  # Wait for 1 second before the next move
+
+
+async def send_game_data(websocket, key, key_action):
+    message = {
+        "message": {
+            "key": key,
+            "keyAction": key_action,
+        },
+        "type": "game",
+    }
+    await websocket.send(json.dumps(message))
+    print(f"Sent: {message}")
+
+
 # Step 2: Use the session to establish a WebSocket connection
 async def ai_bot(session):
     # Define the WebSocket URL
@@ -156,17 +195,13 @@ async def ai_bot(session):
     ) as websocket:
         print("WebSocket connection established.")
 
-        # Function to send game data, similar to the sendGameData function in JavaScript
-        async def send_game_data(websocket, key, key_action):
-            message = {
-                "message": {
-                    "key": key,
-                    "keyAction": key_action,
-                },
-                "type": "game",
-            }
-            await websocket.send(json.dumps(message))
-            print(f"Sent: {message}")
+        game_state_event = asyncio.Event()
+        game_state_data = {}
+
+        # Start the AI movement logic coroutine
+        asyncio.create_task(
+            ai_movement_logic(websocket, game_state_event, game_state_data)
+        )
 
         # Example loop to simulate key press and release
         while True:
@@ -174,29 +209,32 @@ async def ai_bot(session):
                 # Receive and print the game state
                 async with asyncio.timeout(30):
                     game_state = await websocket.recv()
-                    game_state_data = json.loads(game_state)
+                    game_state_data.update(json.loads(game_state))
                     current_time = time.time()
-                    print(f"Received game state at {current_time}:")
-                    print(json.dumps(game_state_data, indent=2))
+                    # print(f"Received game state at {current_time}:")
+                    # print(json.dumps(game_state_data, indent=2))
 
                     # Calculate and print the delay
                     server_timestamp = game_state_data["timestamp"]
                     delay = current_time - server_timestamp
-                    print(f"Delay: {delay:.4f} seconds")
+                    # print(f"Delay: {delay:.4f} seconds")
+
+                    # Signal that a new game state has been received
+                    game_state_event.set()
 
                     # Clear the message queue
-                    while websocket.messages:
-                        _ = await websocket.recv()
-                        print("Skipped an old message")
+                    # while websocket.messages:
+                    #     _ = await websocket.recv()
+                    #     print("Skipped an old message")
 
-                    # Calculate AI move
-                    move = await calculate_ai_move(game_state_data)
+                    # # Calculate AI move
+                    # move = await calculate_ai_move(game_state_data)
 
-                    # Execute the move
-                    if move:
-                        await send_game_data(websocket, move, "keydown")
-                        await asyncio.sleep(random.uniform(0.2, 0.6))
-                        await send_game_data(websocket, move, "keyup")
+                    # # Execute the move
+                    # if move:
+                    #     await send_game_data(websocket, move, "keydown")
+                    #     await asyncio.sleep(random.uniform(0.2, 0.6))
+                    #     await send_game_data(websocket, move, "keyup")
 
             except websockets.ConnectionClosedError as e:
                 print(f"WebSocket connection closed: {e}")
