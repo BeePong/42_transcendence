@@ -24,6 +24,8 @@ from channels.layers import get_channel_layer
 class PongConsumer(AsyncWebsocketConsumer):
 
     tournament = None
+    tournament_id = None
+    pong_group_name = None
     print("PONG CONSUMER root")
 
     @database_sync_to_async
@@ -40,36 +42,44 @@ class PongConsumer(AsyncWebsocketConsumer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.pong_group_name = "tournament_group"
         print("PONG CONSUMER INITIALISED")
 
     async def connect(self):
         # init tournament if not initialized yet
-        if self.__class__.tournament is None:
-            tournament_id = self.scope["url_route"]["kwargs"]["tournament_id"]
-            # init tournament to new instance of Tournament class
-            self.__class__.tournament = await self.get_tournament_by_id(tournament_id)
-            if self.__class__.tournament is None:
-                print("Tournament not found")
+        if self.tournament_id is None:
+            self.tournament_id = self.scope["url_route"]["kwargs"]["tournament_id"]
+            self.tournament = await self.get_tournament_by_id(self.tournament_id)
+            if self.tournament is None:
+                print("CONNECT: Tournament not found")
                 await self.close(code=4004)
                 return
-
+            else:
+                print("CONNECT: Tournament was found and added")
+            self.tournament.consumer = self
+            await sync_to_async(self.tournament.save)()
+        if self.pong_group_name is None:
+            self.pong_group_name = f"tournament_group_{self.tournament_id}"
+            print("pong_group_name set: ", self.pong_group_name)
+            # init tournament to new instance of Tournament class
         # accept connection
         await self.accept()
         # close if tournament is over
-        if self.__class__.tournament.state == "FINISHED":
+        if self.tournament.state == "FINISHED":
             print(
-                "User is not authenticated or the tournament is finished, disconnecting"
+                "The tournament ",
+                self.tournament_id,
+                " is finished, disconnecting",
             )
             await self.close(code=4005)
+            return
         # close if not authenticated
         if not (self.scope["user"].is_authenticated):
-            print(
-                "User is not authenticated or the tournament is finished, disconnecting"
-            )
+            print("User is not authenticated , disconnecting")
             await self.close(code=4004)
+            return
         # add consumer to group
 
+        print("group_add pong_group_name: ", self.pong_group_name)
         await self.channel_layer.group_add(self.pong_group_name, self.channel_name)
 
         # not sure if this bot handling is needed here
@@ -78,22 +88,29 @@ class PongConsumer(AsyncWebsocketConsumer):
             user = {"id": 0, "username": "ai_bot"}
         else:
             user = self.scope["user"]
-        # add player to tournament if eligible
 
-        await self.__class__.tournament.connect_player_if_applicable(user)
-        await self.__class__.tournament.start_tournament_if_applicable()
+        # TODO: first check if a new user actually joined the tournament
+        print(
+            "tournament state check before send_tournament_state_to_all: ",
+            self.tournament.state,
+        )
+        if self.tournament.state == "NEW":
+            await self.send_tournament_state_to_all("tournament_update")
+        await self.tournament.connect_player_if_applicable(user)
+        await self.tournament.start_tournament_if_applicable()
 
     async def disconnect(self, close_code):
         # set player status to false in tournament
-        if self.__class__.tournament is not None:
-            await self.__class__.tournament.disconnect_player(self.scope["user"])
+        if self.tournament is not None:
+            await self.tournament.disconnect_player(self.scope["user"])
         # remove consumer from group
+        print("group_discard pong_group_name: ", self.pong_group_name)
         await self.channel_layer.group_discard(self.pong_group_name, self.channel_name)
 
     def handle_game_message(self, message):
         print("handle_game_message, message:")
         print(message)
-        self.__class__.tournament.handle_key_action(
+        self.tournament.handle_key_action(
             self.scope["user"], message["key"], message["keyAction"]
         )
 
@@ -101,9 +118,8 @@ class PongConsumer(AsyncWebsocketConsumer):
         print("handle_tournament_message, message:")
         print(message)
 
-    @classmethod
     async def send_game_state_to_all(self, match):
-        # print("send_game_state_to_all")
+        print("send_game_state_to_all, pong_group_name: ", self.pong_group_name)
         try:
             match_dict = await match.to_dict()
             # print("match_dict", match_dict)
@@ -112,7 +128,7 @@ class PongConsumer(AsyncWebsocketConsumer):
         channel_layer = get_channel_layer()
         try:
             await channel_layer.group_send(
-                "tournament_group",
+                self.pong_group_name,
                 {
                     "type": "send_game_state",
                     "game_state": match_dict,
@@ -124,22 +140,48 @@ class PongConsumer(AsyncWebsocketConsumer):
     async def send_game_state(self, event):
         game_state = event["game_state"]
         try:
-            await self.send(text_data=json.dumps(game_state))
+            await self.send(
+                text_data=json.dumps({"type": "game", "message": game_state})
+            )
         except Exception as e:
             print(f"Error sending game state: {e}")
+
+    async def send_tournament_state_to_all(self, tournament_message):
+        print("send_tournament_state_to_all, pong_group_name: ", self.pong_group_name)
+        channel_layer = get_channel_layer()
+        try:
+            await channel_layer.group_send(
+                self.pong_group_name,
+                {
+                    "type": "send_tournament_state",
+                    "tournament_message": tournament_message,
+                },
+            )
+        except Exception as e:
+            print(f"Error sending tournament state: {e}")
+
+    async def send_tournament_state(self, event):
+        tournament_message = event["tournament_message"]
+        try:
+            await self.send(
+                text_data=json.dumps(
+                    {"type": "tournament", "message": tournament_message}
+                )
+            )
+        except Exception as e:
+            print(f"Error sending tournament state: {e}")
 
     # reveive() has to be async because we're using channel layer
     async def receive(self, text_data):
         print("receive")
-        print("tournament state:", self.__class__.tournament.state)
+        print("receive tournament state:", self.tournament.state)
         # Use sync_to_async to call the synchronous ORM method
-        user_in_tournament = await sync_to_async(
-            self.__class__.tournament.is_user_in_tournament
-        )(self.scope["user"])
-        print("user_in_tournament:", user_in_tournament)
-        if self.__class__.tournament.state == "PLAYING" and user_in_tournament:
+        user_in_tournament = await sync_to_async(self.tournament.is_user_in_tournament)(
+            self.scope["user"]
+        )
+        print("receive user_in_tournament:", user_in_tournament)
+        if self.tournament.state == "PLAYING" and user_in_tournament:
             try:
-                print("before json.loads")
                 text_data_json = json.loads(text_data)
                 message = text_data_json["message"]
                 message_type = text_data_json["type"]

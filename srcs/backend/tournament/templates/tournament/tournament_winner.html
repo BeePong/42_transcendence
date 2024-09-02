@@ -1,7 +1,15 @@
-<section id="tournament-lobby-section" class="full winner {% if num_players == 2 %}two-players{% endif %}">
+<section
+  id="tournament-lobby-section"
+  class="full winner {% if num_players == 2 %}two-players{% endif %}"
+>
   <h1 class="tournament_lobby__header">BEEPONG CUP'S QUEEN BEE IS...</h1>
-	
-	{% include 'tournament/tournament_name_list.html' %}
-	
-	<button class="button--primary" onclick="navigate(`{% url 'tournament:tournament' %}`, '/tournament')">BACK TO TOURNAMENTS</button>
+
+  {% include 'tournament/tournament_name_list.html' %}
+
+  <button
+    class="button--primary"
+    onclick="navigate(`{% url 'tournament:tournament' %}`, '/tournament')"
+  >
+    BACK TO TOURNAMENTS
+  </button>
 </section>

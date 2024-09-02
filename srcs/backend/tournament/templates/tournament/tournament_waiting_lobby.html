@@ -1,7 +1,19 @@
-<section id="tournament-lobby-section" class="{% if num_players == 2 %}two-players{% endif %}">
+<section
+  id="tournament-lobby-section"
+  class="{% if num_players == 2 %}two-players{% endif %}"
+>
   <h1 class="tournament_lobby__header">BEEPONG CUP</h1>
-  <p class="tournament_lobby__description font--alt font-size--sm">The mighty Pong contest for the best of the best bees!</p>
-  <p class="tournament_lobby__player-count"><span id="num-players-in-lobby">{{ players_in_lobby|length }}</span>/<span id="num-players">{{ num_players }}</span> PLAYERS</p>
+  <p class="tournament_lobby__description font--alt font-size--sm">
+    The mighty Pong contest for the best of the best bees!
+  </p>
+  <p class="tournament_lobby__player-count">
+    <span id="num-players-in-lobby">{{ num_players_in_tournament }}</span>/<span
+      id="num-players"
+      >{{ num_players }}</span
+    >
+    PLAYERS
+  </p>
+  <p>players_in_lobby: {{players_in_lobby}}</p>
   <div class="tournament_lobby__name-list-container">
     {% for player in players_in_lobby %}
     <div class="tournament_lobby__name-container">
@@ -10,12 +22,11 @@
     </div>
     {% endfor %}
   </div>
-  <div class="game-info__container">
-    <div id="score-player1" class="score">0</div>
-    <div id="score-player2" class="score">0</div>
-  </div>
-  <canvas id="game_canvas" width="800" height="500"></canvas>
-  <button id="leave-button" class="button--tertiary button--with-icon" onclick="navigate('/')">
+  <button
+    id="leave-button"
+    class="button--tertiary button--with-icon"
+    onclick="navigate('/')"
+  >
     <div class="cross-icon"></div>
     <span>LEAVE TOURNAMENT</span>
   </button>

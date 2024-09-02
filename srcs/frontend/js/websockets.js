@@ -87,7 +87,21 @@ function webSocketTest(tournament_id) {
   drawBall(canvas_width / 2, canvas_height / 2);
   socket.onmessage = function (e) {
     var data = JSON.parse(e.data);
-    //console.log("socket data:", data);
+    // parse message
+    var jsonData = JSON.parse(data);
+    // if type is tournament
+    if (jsonData.type === "tournament") {
+      var tournament_data = jsonData.message;
+      console.log("tournament_data:", tournament_data);
+      console.log("window.pathname", window.pathname);
+      if (tournament_data.state === "NEW") {
+        console.log("tournament is new, reloading page");
+        loadPage(window.pathname);
+      }
+    } else {
+      updateCanvas(jsonData.message);
+    }
+
     // Here tournament_lobby function will be called once the winner is determined, call loadPage on window.pathname (reload page)
     // every time game state is updated
     // if tpirnament not full
@@ -95,7 +109,7 @@ function webSocketTest(tournament_id) {
     // when new player joins, send player into to tournamentLobbyAddPlayer(player), numPlayers and updatedNumPlayersInLobby
     // state is countdown, seconds number is 2, 1, 0 and call function to change number in countdown
 
-    updateCanvas(data); // when state is playing
+    // when state is playing
     return false;
   };
 
@@ -134,7 +148,6 @@ function webSocketTest(tournament_id) {
   });
 
   function updateCanvas(game_data) {
-    
     if (new_ball_speed === undefined) new_ball_speed = game_data.ball.speed;
     old_ball_speed = new_ball_speed;
     new_ball_speed = game_data.ball.speed;

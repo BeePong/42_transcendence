@@ -50,7 +50,6 @@ async function loadPage(path, redirectUrl = "/", fromNavigate = false) {
         (page === "/accounts/login" || page === "/accounts/register") &&
         redirectUrl !== "/"
       )
-      
         changeRedirectUrlandOauthState(redirectUrl);
 
       // perform countdown in tournmament lobby if the list is full. Otherwise, wait for other players.
@@ -61,7 +60,7 @@ async function loadPage(path, redirectUrl = "/", fromNavigate = false) {
       } */
       // if url contains "lobby", start mockWebSocket
       var match = page.match(/^\/tournament\/(\d+)\/lobby$/);
-      console.log("match", match);
+      console.log("URL matched websocket");
       if (match) {
         var tournament_id = match[1];
         webSocketTest(tournament_id);

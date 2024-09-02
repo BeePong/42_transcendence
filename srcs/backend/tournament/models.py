@@ -16,8 +16,6 @@ logging.basicConfig(level=logging.INFO)
 
 class Player(models.Model):
 
-    print("PLAYER root")
-
     player_id = models.AutoField(primary_key=True)
     user = models.OneToOneField(
         User, on_delete=models.CASCADE, default=1
@@ -38,14 +36,10 @@ class Player(models.Model):
 
 class Tournament(models.Model):
 
-    print("TOURNAMENT root")
-
     STATE_CHOICES = [
         ("NEW", "New"),
-        ("READY", "Ready"),
         ("PLAYING", "Started"),
         ("FINISHED", "Final"),
-        # Add more states as needed
     ]
 
     tournament_id = models.AutoField(primary_key=True)
@@ -53,7 +47,6 @@ class Tournament(models.Model):
     description = models.TextField()
     state = models.CharField(max_length=50, choices=STATE_CHOICES, default="NEW")
     num_players = models.IntegerField()
-    # num_players_in = models.IntegerField(default=0)
     players = models.ManyToManyField(Player, related_name="tournaments", blank=True)
     # matches = models.ManyToManyField("Match", related_name="tournament", blank=True)
 
@@ -73,6 +66,7 @@ class Tournament(models.Model):
     is_final = models.BooleanField(default=False)
 
     def __init__(self, *args, **kwargs):
+        self.consumer = kwargs.pop("consumer", None)
         super().__init__(*args, **kwargs)
         self.game = None
         self.game_loop = None
@@ -87,17 +81,45 @@ class Tournament(models.Model):
         num_players = await sync_to_async(self.players.count)()
         print("num_players: ", num_players)
         print("self.num_players: ", self.num_players)
-        if self.num_players == num_players:
+        if self.num_players == num_players and self.state == "NEW":
             print("about to create first match")
             await self.create_1st_match()
             self.is_started = True
+            self.state = "PLAYING"
             await sync_to_async(self.save)()
-            print("number of matches: ", await sync_to_async(self.matches.count)())
-            match = await sync_to_async(self.matches.first)()
+            print(
+                "number of matches in the tournament that is about to start: ",
+                await sync_to_async(self.matches.count)(),
+            )
+            ordered_matches = self.matches.order_by("-created_at")
+            match = await sync_to_async(ordered_matches.first)()
             match_dict = await match.to_dict()
             print("MATCH: ", match_dict)
-            self.state = "PLAYING"
             await match.start_match()
+            winner = match.winner
+            if self.num_players > 2:
+                await self.create_next_match()
+                ordered_matches = self.matches.order_by("-created_at")
+                next_match = filter(state=Match.PENDING).first()
+                await next_match.start_match()
+                await self.create_next_match()
+                ordered_matches = self.matches.order_by("-created_at")
+                next_match = filter(state=Match.PENDING).first()
+                await next_match.start_match()
+                winner = next_match.winner
+            self.state = "FINISHED"
+            # set has_active_tournament to false for all players
+            players = await sync_to_async(list)(self.players.all())
+            for player in players:
+                player.has_active_tournament = False
+                player.current_tournament_id = -1
+                await sync_to_async(player.save)()
+            print("TOURNAMENT ", self.title, " FINISHED")
+            if winner:
+                print("WINNER: ", winner.username)
+            else:
+                print("NO WINNER, ERROR")
+            await sync_to_async(self.save)()
 
     def handle_key_action(self, user, key, keyAction):
         print("HANDLE KEY ACTION")
@@ -142,9 +164,26 @@ class Tournament(models.Model):
         match.save()
 
     def is_user_in_tournament(self, user):
-        return self.players.filter(user=user).exists()
+        resolved_user = self.resolve_user(user)
+        return self.players.filter(user=resolved_user).exists()
+
+    def resolve_user(self, user):
+        if hasattr(user, "_wrapped") and hasattr(user, "_setup"):
+            if not user._wrapped:
+                user._setup()
+            return user._wrapped
+        return user
 
     def get_user_in_tournament(self, user):
+        resolved_user = self.resolve_user(user)
+        return self.players.get(user=resolved_user)
+
+    def resolve_user(self, user):
+        if hasattr(user, "_wrapped") and hasattr(user, "_setup"):
+            if not user._wrapped:
+                user._setup()
+            return user._wrapped
+        return user
         return self.players.get(user=user)
 
     @sync_to_async
@@ -181,14 +220,38 @@ class Tournament(models.Model):
         players = await sync_to_async(list)(self.players.all())
         random.shuffle(players)
         if await sync_to_async(self.players.count)() >= 2:
-            print("creating match")
-            # print("player 1 id: ", players[0].player_id)
-            # print("player 2 id: ", players[1].player_id)
-            match, _ = await sync_to_async(Match.objects.get_or_create)(
+            # get all match objects
+            all_matches = await sync_to_async(Match.objects.all)()
+            num_all_matches = await sync_to_async(len)(all_matches)
+            print("num all matches: ", num_all_matches)
+            matches_this_tournament = await sync_to_async(list)(
+                Match.objects.filter(tournament=self)
+            )
+            num_matches_this_tournament = await sync_to_async(len)(
+                matches_this_tournament
+            )
+            print("num matches this tournament: ", num_matches_this_tournament)
+            filtered_matches = await sync_to_async(list)(
+                Match.objects.filter(
+                    player1=players[0], player2=players[1], tournament=self
+                )
+            )
+            num_filtered_matches = await sync_to_async(len)(filtered_matches)
+            print("num filtered matches: ", num_filtered_matches)
+            matches_with_id_7 = await sync_to_async(list)(
+                Match.objects.filter(game_id=7)
+            )
+            num_matches_with_id_7 = await sync_to_async(len)(matches_with_id_7)
+            print("num matches with id 7: ", num_matches_with_id_7)
+            print("creating 1st match")
+            print("creating 1st match player 1 id: ", players[0].player_id)
+            print("creating 1st match player 2 id: ", players[1].player_id)
+            match, created = await sync_to_async(Match.objects.get_or_create)(
                 player1=players[0], player2=players[1], tournament=self
             )
+            print("match created bool: ", created)
             logging.info(
-                "Match created, id: %s",
+                "match created id: %s",
                 match.game_id,
             )
             print("player1: ", await sync_to_async(lambda: match.player1.player_id)())
@@ -203,8 +266,14 @@ class Tournament(models.Model):
         random.shuffle(players)
         if not self.is_final:
             if players.count() >= 4:
-                match._ = Match.objects.get_or_create(
+
+                match, created = Match.objects.get_or_create(
                     player1=players[0], player2=players[1], tournament=self
+                )
+                print("match created bool: ", created)
+                logging.info(
+                    "match created id: %s",
+                    match.game_id,
                 )
                 self.matches.add(match)
                 self.is_final = True
@@ -219,6 +288,10 @@ class Tournament(models.Model):
                 match = Match.objects.create(
                     player1=winners[0], player2=winners[1], tournament=self
                 )
+                logging.info(
+                    "final match created id: %s",
+                    match.game_id,
+                )
                 self.matches.add(match)
                 self.save()
 
@@ -226,6 +299,7 @@ class Tournament(models.Model):
 class GameLoop:
 
     def __init__(self, match):
+        print("INIT GAME LOOP, match id: ", match.game_id)
         self.match = match
         self.running = True
         self.loop_task = None
@@ -238,7 +312,13 @@ class GameLoop:
     async def game_loop(self):
         from .consumers import PongConsumer
 
-        print("GAME LOOP STARTED")
+        print(
+            "match ",
+            self.match.game_id,
+            ", tour. ",
+            self.match.tournament.tournament_id,
+            " GAME LOOP STARTED",
+        )
         while self.running:
             # print("GAME LOOP RUNNING, state: ", self.match.state)
             if self.match.state == "COUNTDOWN":
@@ -252,6 +332,7 @@ class GameLoop:
                     self.match.countdown = 0
                     self.match.state = "PLAYING"
                     # print("state changed to PLAYING")
+                await sync_to_async(self.match.save)()
 
             # Update the position of the paddles based on the key states
             # print("match: ", await self.match.to_dict())
@@ -362,7 +443,13 @@ class GameLoop:
                     + settings.PADDLE_HEIGHT / 2
                     + settings.BALL_RADIUS
                 ):
-                    print("HIT LEFT PADDLE")
+                    print(
+                        "match ",
+                        self.match.game_id,
+                        ", tour. ",
+                        self.match.tournament.tournament_id,
+                        "HIT LEFT PADDLE",
+                    )
                     self.match.hit_count += 1
                     self.match.ball_speed += settings.BALL_SPEED_INCREMENT
                     # Calculate the remaining movement after the ball hits the wall
@@ -395,7 +482,13 @@ class GameLoop:
                     + settings.PADDLE_HEIGHT / 2
                     + settings.BALL_RADIUS
                 ):
-                    print("HIT RIGHT PADDLE")
+                    print(
+                        "match ",
+                        self.match.game_id,
+                        ", tour. ",
+                        self.match.tournament.tournament_id,
+                        "HIT RIGHT PADDLE",
+                    )
                     self.match.hit_count += 1
                     self.match.ball_speed += settings.BALL_SPEED_INCREMENT
                     # Calculate the remaining movement after the ball hits the wall
@@ -424,7 +517,13 @@ class GameLoop:
 
                 # Check for scoring
                 if ball_new_x >= settings.FIELD_WIDTH - settings.BALL_RADIUS:
-                    print("PLAYER 1 SCORED")
+                    print(
+                        "match ",
+                        self.match.game_id,
+                        ", tour. ",
+                        self.match.tournament.tournament_id,
+                        "PLAYER 1 SCORED",
+                    )
                     self.match.player1_score += 1
                     self.match.init_new_round()
                     if self.match.player1_score == settings.MAX_SCORE:
@@ -432,9 +531,15 @@ class GameLoop:
                         self.match.state = "FINISHED"
                         self.match.player2_score = 0
                         self.match.player1_score = 0
-                        self.match.save()
+                        await sync_to_async(self.match.save)()
                 elif ball_new_x <= settings.BALL_RADIUS:
-                    print("PLAYER 2 SCORED")
+                    print(
+                        "match ",
+                        self.match.game_id,
+                        ", tour. ",
+                        self.match.tournament.tournament_id,
+                        "PLAYER 2 SCORED",
+                    )
                     self.match.player2_score += 1
                     self.match.init_new_round()
                     if self.match.player2_score == settings.MAX_SCORE:
@@ -442,20 +547,31 @@ class GameLoop:
                         self.match.state = "FINISHED"
                         self.match.player2_score = 0
                         self.match.player1_score = 0
-                        self.match.save()
+                        await sync_to_async(self.match.save)()
             # will this find the correct consumer?
             # print("SENDING GAME STATE TO ALL")
-            await PongConsumer.send_game_state_to_all(self.match)
+            await self.match.tournament.consumer.send_game_state_to_all(self.match)
             # print("GAME STATE SENT TO ALL")
             await asyncio.sleep(1 / settings.FPS)
             # print("GAME LOOP AFTER SLEEPING")
             if self.match.state == "FINISHED":
-                # print("MATCH FINISHED")
-                self.match.save()
+                print(
+                    "match ",
+                    self.match.game_id,
+                    ", tour. ",
+                    self.match.tournament.tournament_id,
+                    "MATCH FINISHED",
+                )
                 self.stop()
 
     def stop(self):
-        print("STOP GAME LOOP")
+        print(
+            "match ",
+            self.match.game_id,
+            ", tour. ",
+            self.match.tournament.tournament_id,
+            "STOP GAME LOOP",
+        )
         self.running = False
         if self.loop_task:
             self.loop_task.cancel()
@@ -463,8 +579,6 @@ class GameLoop:
 
 
 class Match(models.Model):
-
-    print("MATCH root")
 
     STATE_CHOICES = [
         ("PENDING", "Pending"),
@@ -538,6 +652,14 @@ class Match(models.Model):
         print("MATCH INITIALIZED")
         self.game_loop = GameLoop(self)
         self.round_start_time = time.time()
+        all_matches = Match.objects.all()
+        num_all_matches = all_matches.count()
+        print("end of INIT MATCH num all matches: ", num_all_matches)
+        matches_with_gameid_8 = Match.objects.filter(game_id=8)
+        num_matches_with_gameid_8 = len(matches_with_gameid_8)
+        print(
+            "end of INIT MATCH num matches with game id 8: ", num_matches_with_gameid_8
+        )
         print("GAME LOOP IN MATCH INITIALIZED")
 
     def __str__(self):
@@ -548,6 +670,7 @@ class Match(models.Model):
         self.state = "COUNTDOWN"
         self.round_start_time = time.time()
         await self.game_loop.loop()
+        await sync_to_async(self.save)()
 
     def determine_winner(self):
         print("DETERMINE WINNER")
@@ -573,6 +696,7 @@ class Match(models.Model):
         self.ball_vector = self.normalize_vector(
             self.get_larger_random(), random.uniform(-1, 1)
         )
+        self.save()
         print("NEW ROUND INITIALIZED")
 
     def init_new_game(self):
@@ -582,6 +706,7 @@ class Match(models.Model):
         self.player2_score = 0
         self.winner = None
         self.state = "PENDING"
+        self.save()
 
     @sync_to_async
     def to_dict(self):
