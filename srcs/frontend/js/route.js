@@ -11,32 +11,48 @@ window.navigate = function navigate(eventOrPath, redirectUrl = "/") {
 
   // Do not render again for the same path
   if (window.location.pathname === path) return;
-  // TODO: add custom navigation event here, which will be listened to in websocket function
 
   loadPage(path, redirectUrl, true);
 };
 
 // Load content based on the path, and add the redirect url for login and register page
-async function loadPage(path, redirectUrl = "/", fromNavigate = false) {
+async function loadPage(
+  path,
+  redirectUrl = "/",
+  fromNavigate = false,
+  queryString = ""
+) {
   // If the path is '/', set page to '/home'.
   // Otherwise, remove the trailing slash from the path and set page to the resulting string.
   const page = path === "/" ? "/home" : path.replace(/\/$/, "");
   try {
-    console.log("fetching page", `/page${page}/`);
-    const response = await fetch(`/page${page}/`);
-    console.log("response", response);
+    const response = await fetch(`/page${page}/${queryString}`);
+
     if (!response.ok) {
-      if (!(response.status === 401 || response.status === 404))
+      if (
+        !(
+          response.status === 400 ||
+          response.status === 401 ||
+          response.status === 404
+        )
+      )
         throw new Error("Network response was not ok");
     }
 
     // If the navigation was triggered programmatically (fromNavigate is true) and the response status is not 401 (unauthorized),
     // update the browser's history to the new path without reloading the page.
-    if (fromNavigate === true && response.status !== 401)
+    if (
+      fromNavigate === true &&
+      response.status !== 400 &&
+      response.status !== 401
+    )
       history.pushState(null, null, path);
 
+    // Handle 42 authorization error by fetching the error page
+    if (page === "/accounts/oauth_error" && response.status === 400)
+      fetchOauthErrorPage();
     // Redirect to login page if the user is not login
-    if (response.status === 401) {
+    else if (response.status === 401) {
       const data = await response.json();
       if (data.authenticated === false) {
         redirectToLoginPage(redirectUrl);
@@ -53,11 +69,12 @@ async function loadPage(path, redirectUrl = "/", fromNavigate = false) {
         changeRedirectUrlandOauthState(redirectUrl);
 
       // perform countdown in tournmament lobby if the list is full. Otherwise, wait for other players.
-      /*if (/^\/tournament\/\d+\/lobby$/.test(page)) {
-        if (document.querySelector(".full")) {
-          if (!document.querySelector(".winner")) tournamentLobbyCountdown();
-        } else mockWebSocket(); //TODO: open websocket
-      } */
+      // if (/^\/tournament\/\d+\/lobby$/.test(page)) {
+      //   if (document.querySelector(".full")) {
+      //     if (!document.querySelector(".winner")) tournamentLobbyCountdown();
+      //   } else mockWebSocket(); //TODO: open websocket
+      // }
+
       // if url contains "lobby", start mockWebSocket
       var match = page.match(/^\/tournament\/(\d+)\/lobby$/);
       console.log("URL matched websocket");
@@ -71,6 +88,20 @@ async function loadPage(path, redirectUrl = "/", fromNavigate = false) {
         webSocketTest("solo");
       }
     }
+  } catch (error) {
+    console.error("There was a problem with the fetch operation:", error);
+  }
+}
+
+// Fetching the error page for 42 authorization error
+async function fetchOauthErrorPage() {
+  try {
+    const response = await fetch("/page/accounts/oauth_error/");
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+    const data = await response.text();
+    document.getElementById("content").innerHTML = data;
   } catch (error) {
     console.error("There was a problem with the fetch operation:", error);
   }
@@ -105,7 +136,7 @@ function changeRedirectUrlandOauthState(redirectUrl) {
 
   const updatedLogin42Url = new URL(login42UrlElement.href);
   const newStateParam = `qwerty|${encodeURIComponent(
-    `https://localhost:8443${redirectUrl}`
+    `https://localhost${redirectUrl}`
   )}`;
   updatedLogin42Url.searchParams.set("state", newStateParam);
 
@@ -123,7 +154,6 @@ function mockWebSocket() {
 
 // Add player in the tournament lobby
 function tournamentLobbyAddPlayer() {
-  // TODO: connect the below out, pass it to function instead
   const numPlayersInLobby = parseInt(
     document.getElementById("num-players-in-lobby").textContent,
     10
@@ -151,8 +181,6 @@ function tournamentLobbyAddPlayer() {
     .appendChild(playerDiv);
 
   // If the lobby is full, go to handle full tournament lobby. Otherwise, add new players again
-
-  console.log("updatedNumPlayersInLobby", updatedNumPlayersInLobby);
   updatedNumPlayersInLobby === numPlayers
     ? handleFullTournamentLobby()
     : mockWebSocket();
@@ -160,7 +188,6 @@ function tournamentLobbyAddPlayer() {
 
 // Handle full tournament lobby
 function handleFullTournamentLobby() {
-  console.log("HELLO handleFullTournamentLobby");
   setTimeout(() => {
     if (/^\/tournament\/\d+\/lobby$/.test(window.location.pathname)) {
       document.getElementById("tournament-lobby-section").classList.add("full");
@@ -170,14 +197,13 @@ function handleFullTournamentLobby() {
         "dummy vs dummy";
       document.querySelector(".tournament_lobby__player-count").remove();
       document.getElementById("leave-button").remove();
-      console.log("HELLO commented out");
-      //tournamentLobbyCountdown();
+      tournamentLobbyCountdown();
     }
   }, 1000);
 }
 
 // Countdown in lobby page and navigate to the game page after countdown
-/* function tournamentLobbyCountdown() {
+function tournamentLobbyCountdown() {
   let countdownValue = 3;
   const countdownElement = document.getElementById("countdown");
 
@@ -194,7 +220,7 @@ function handleFullTournamentLobby() {
       } else clearInterval(countdownInterval);
     }, 1000);
   }, 500);
-} */
+}
 
 // Load navbar
 async function loadNavBar() {
@@ -212,7 +238,6 @@ async function loadNavBar() {
 
 // Listen to popstate events for back/forward navigation
 window.addEventListener("popstate", () => {
-  // TODO: add custom navigation event here, which will be listened to in websocket as well
   loadPage(window.location.pathname);
 });
 
@@ -221,5 +246,3 @@ document.addEventListener("DOMContentLoaded", () => {
   loadNavBar();
   loadPage(window.location.pathname, "/", false, window.location.search);
 });
-
-export { loadNavBar };

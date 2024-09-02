@@ -12,6 +12,8 @@ import time
 from asgiref.sync import sync_to_async
 
 logging.basicConfig(level=logging.INFO)
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 
 class Player(models.Model):
@@ -21,7 +23,8 @@ class Player(models.Model):
         User, on_delete=models.CASCADE, default=1
     )  # Replace 1 with an appropriate user ID
     username = models.CharField(max_length=255)
-    alias = models.CharField(max_length=255)  # todo put the alias
+    # alias = models.CharField(max_length=255) #todo put the alias
+    alias = models.CharField(max_length=100)
     has_active_tournament = models.BooleanField(
         default=False
     )  # active player in a tournament Rename has_active_tournament
@@ -31,7 +34,16 @@ class Player(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return json.dumps(model_to_dict(self))
+        return self.username
+
+    @receiver(post_save, sender=User)
+    def create_player(sender, instance, created, **kwargs):
+        if created:
+            Player.objects.create(user=instance, username=instance.username)
+
+    @receiver(post_save, sender=User)
+    def save_player(sender, instance, **kwargs):
+        instance.player.save()
 
 
 class Tournament(models.Model):
@@ -531,7 +543,7 @@ class GameLoop:
                         self.match.state = "FINISHED"
                         self.match.player2_score = 0
                         self.match.player1_score = 0
-                        await sync_to_async(self.match.save)()
+                    await sync_to_async(self.match.save)()
                 elif ball_new_x <= settings.BALL_RADIUS:
                     print(
                         "match ",
@@ -547,7 +559,7 @@ class GameLoop:
                         self.match.state = "FINISHED"
                         self.match.player2_score = 0
                         self.match.player1_score = 0
-                        await sync_to_async(self.match.save)()
+                    await sync_to_async(self.match.save)()
             # will this find the correct consumer?
             # print("SENDING GAME STATE TO ALL")
             await self.match.tournament.consumer.send_game_state_to_all(self.match)
@@ -657,9 +669,6 @@ class Match(models.Model):
         print("end of INIT MATCH num all matches: ", num_all_matches)
         matches_with_gameid_8 = Match.objects.filter(game_id=8)
         num_matches_with_gameid_8 = len(matches_with_gameid_8)
-        print(
-            "end of INIT MATCH num matches with game id 8: ", num_matches_with_gameid_8
-        )
         print("GAME LOOP IN MATCH INITIALIZED")
 
     def __str__(self):
@@ -743,11 +752,3 @@ class PlayerTournament(models.Model):
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
-
-
-##TODO: to be replaced replace by real database
-class Alias(models.Model):
-    alias = models.CharField(max_length=100)
-
-    def __str__(self):
-        return self.name

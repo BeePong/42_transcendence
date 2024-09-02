@@ -86,6 +86,7 @@ function webSocketTest(tournament_id) {
   drawBorders();
   drawBall(canvas_width / 2, canvas_height / 2);
   socket.onmessage = function (e) {
+    console.log("WebSocket message received");
     var data = JSON.parse(e.data);
     // parse message
     var jsonData = JSON.parse(data);
@@ -99,6 +100,7 @@ function webSocketTest(tournament_id) {
         loadPage(window.pathname);
       }
     } else {
+      console.log("game data:", jsonData.message);
       updateCanvas(jsonData.message);
     }
 

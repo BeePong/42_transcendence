@@ -6,6 +6,7 @@ import os
 import requests
 import json
 from urllib.parse import urlencode, unquote, quote
+from django.urls import reverse
 
 # Create your views here.
 
@@ -48,10 +49,10 @@ def register(request):
     context = {
         'form': form,
         'form_title': 'REGISTER',
-        'form_action': '/accounts/register/',
+        'form_action': reverse('accounts:register'),
         'form_button_text': 'REGISTER',
         'alt_action': 'OR LOGIN',
-        'alt_action_url': '/accounts/login/',
+        'alt_action_url': reverse('accounts:login'),
         'login_42_url': login_42_url,
     }
     return render(request, 'registration/form.html', context)
@@ -72,10 +73,10 @@ def custom_login(request):
     context = {
         'form': form,
         'form_title': 'LOGIN TO PLAY TOURNAMENTS',
-        'form_action': '/accounts/login/',
+        'form_action': reverse('accounts:login'),
         'form_button_text': 'LOGIN',
         'alt_action': 'OR REGISTER',
-        'alt_action_url': '/accounts/register/',
+        'alt_action_url': reverse('accounts:register'),
         'login_42_url': login_42_url,
     }
     return render(request, 'registration/form.html', context)
@@ -84,7 +85,7 @@ def custom_logout(request):
     if request.method == 'POST':
         if request.user.is_authenticated:
             logout(request)
-            return JsonResponse({'success': True})
+            return JsonResponse({'success': True, 'redirect': '/'})
         else:
             return JsonResponse({'success': False, 'error': 'User not authenticated'}, status=401)
     return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=405)
@@ -159,4 +160,4 @@ def oauth_error(request):
     if from_param == 'oauth_token':
         return JsonResponse({'success': False, 'error': '42 Authorization Error'}, status=400)
     else:
-        return render(request, 'registration/oauth_error.html')
+        return render(request, 'registration/form_error.html', {'error_message': '42 Authorization Error'})

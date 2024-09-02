@@ -23,7 +23,13 @@ SECRET_KEY = os.getenv(
 DEBUG = True
 # DEBUG = False
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "backendummy", "nginx", "c1r3p3.hive.fi"]
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    "beepong-backendDummy",
+    "nginx",
+    "c1r3p3.hive.fi",
+]
 
 # Application definition
 
@@ -43,6 +49,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    #'tournament.apps.TournamentConfig',
 ]
 
 MIDDLEWARE = [

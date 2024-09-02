@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define the container name
-CONTAINER_NAME="backendummy"
+CONTAINER_NAME="beepong-backendDummy"
 
 # Define the path to the script inside the container
 SCRIPT_PATH="/beePong/tournament/ai.py"
