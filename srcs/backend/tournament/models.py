@@ -537,7 +537,7 @@ class GameLoop:
                         "PLAYER 1 SCORED",
                     )
                     self.match.player1_score += 1
-                    self.match.init_new_round()
+                    await sync_to_async(self.match.init_new_round)()
                     if self.match.player1_score == settings.MAX_SCORE:
                         self.match.winner = self.match.player1
                         self.match.state = "FINISHED"
@@ -553,7 +553,7 @@ class GameLoop:
                         "PLAYER 2 SCORED",
                     )
                     self.match.player2_score += 1
-                    self.match.init_new_round()
+                    await sync_to_async(self.match.init_new_round)()
                     if self.match.player2_score == settings.MAX_SCORE:
                         self.match.winner = self.match.player2
                         self.match.state = "FINISHED"

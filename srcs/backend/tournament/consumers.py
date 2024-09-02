@@ -61,8 +61,14 @@ class PongConsumer(AsyncWebsocketConsumer):
             self.pong_group_name = f"tournament_group_{self.tournament_id}"
             print("pong_group_name set: ", self.pong_group_name)
             # init tournament to new instance of Tournament class
+
+        print("group_add pong_group_name: ", self.pong_group_name)
+        await self.channel_layer.group_add(self.pong_group_name, self.channel_name)
         # accept connection
         await self.accept()
+        await self.send(
+            text_data=json.dumps({"type": "tournament", "message": "connected"})
+        )
         # close if tournament is over
         if self.tournament.state == "FINISHED":
             print(
@@ -70,17 +76,14 @@ class PongConsumer(AsyncWebsocketConsumer):
                 self.tournament_id,
                 " is finished, disconnecting",
             )
-            await self.close(code=4005)
+            await self.disconnect(code=4005)
             return
         # close if not authenticated
         if not (self.scope["user"].is_authenticated):
             print("User is not authenticated , disconnecting")
-            await self.close(code=4004)
+            await self.disconnect(code=4004)
             return
         # add consumer to group
-
-        print("group_add pong_group_name: ", self.pong_group_name)
-        await self.channel_layer.group_add(self.pong_group_name, self.channel_name)
 
         # not sure if this bot handling is needed here
         is_bot = self.scope["query_string"].decode().split("=")[1] == "True"
@@ -90,13 +93,14 @@ class PongConsumer(AsyncWebsocketConsumer):
             user = self.scope["user"]
 
         # TODO: first check if a new user actually joined the tournament
+        print("user before connect_player_if_applicable: ", user)
+        await self.tournament.connect_player_if_applicable(user)
         print(
             "tournament state check before send_tournament_state_to_all: ",
             self.tournament.state,
         )
-        if self.tournament.state == "NEW":
-            await self.send_tournament_state_to_all("tournament_update")
-        await self.tournament.connect_player_if_applicable(user)
+        #if self.tournament.state == "NEW":
+            #await self.send_tournament_state_to_all("tournament_update")
         await self.tournament.start_tournament_if_applicable()
 
     async def disconnect(self, close_code):
@@ -125,9 +129,8 @@ class PongConsumer(AsyncWebsocketConsumer):
             # print("match_dict", match_dict)
         except Exception as e:
             print(f"Error serialising game state: {e}")
-        channel_layer = get_channel_layer()
         try:
-            await channel_layer.group_send(
+            await self.channel_layer.group_send(
                 self.pong_group_name,
                 {
                     "type": "send_game_state",
@@ -140,17 +143,18 @@ class PongConsumer(AsyncWebsocketConsumer):
     async def send_game_state(self, event):
         game_state = event["game_state"]
         try:
+            print("send_game_state")
             await self.send(
                 text_data=json.dumps({"type": "game", "message": game_state})
             )
+            print("send_game_state done")
         except Exception as e:
             print(f"Error sending game state: {e}")
 
     async def send_tournament_state_to_all(self, tournament_message):
         print("send_tournament_state_to_all, pong_group_name: ", self.pong_group_name)
-        channel_layer = get_channel_layer()
         try:
-            await channel_layer.group_send(
+            await self.channel_layer.group_send(
                 self.pong_group_name,
                 {
                     "type": "send_tournament_state",
@@ -163,11 +167,13 @@ class PongConsumer(AsyncWebsocketConsumer):
     async def send_tournament_state(self, event):
         tournament_message = event["tournament_message"]
         try:
+            print("send_tournament_state")
             await self.send(
                 text_data=json.dumps(
                     {"type": "tournament", "message": tournament_message}
                 )
             )
+            print("send_tournament_state done")
         except Exception as e:
             print(f"Error sending tournament state: {e}")
 

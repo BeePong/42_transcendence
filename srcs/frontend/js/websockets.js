@@ -121,6 +121,10 @@ function webSocketTest(tournament_id) {
     console.log("WebSocket connection opened");
   };
 
+  socket.onerror = function (error) {
+    console.error("WebSocket error observed:", error);
+  };
+
   socket.onclose = function (e) {
     console.log("WebSocket connection closed");
   };
