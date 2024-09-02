@@ -107,26 +107,37 @@ async def calculate_ai_move(game_state_data):
     ball_vector = game_state_data["ball_vector"]
     ball_speed = game_state_data["ball_speed"]
 
-    # Predict the ball's future y-position when it reaches the AI paddle
-    time_to_paddle = (FIELD_WIDTH - ball_position["x"]) / ball_vector["x"]
-    predicted_ball_y = ball_position["y"] + ball_vector["y"] * time_to_paddle
+    # Debug print
+    print(f"Ball position: x={ball_position['x']:.2f}, y={ball_position['y']:.2f}")
+    print(f"Ball vector: x={ball_vector['x']:.2f}, y={ball_vector['y']:.2f}")
+    print(f"Ball speed: {ball_speed:.2f}")
+    print(f"AI paddle position: y={ai_paddle_position:.2f}")
 
-    # Handle ball bouncing off the top and bottom boundaries
-    if predicted_ball_y < 0:
-        predicted_ball_y = -predicted_ball_y
-    elif predicted_ball_y > FIELD_HEIGHT:
-        predicted_ball_y = 2 * FIELD_HEIGHT - predicted_ball_y
+    # Check if the ball is moving towards the AI paddle (left side)
 
-    print(f"Predicted ball y-position: {predicted_ball_y}")
-    print(f"AI paddle position: {ai_paddle_position}")
+    # Calculate time for the ball to reach the left edge
+    time_to_left_edge = ball_position["x"] / abs(ball_vector["x"] * ball_speed)
 
-    # Determine the move direction
-    if predicted_ball_y < ai_paddle_position:
+    # Predict the y-position where the ball will hit the left edge
+    predicted_y = ball_position["y"] + ball_vector["y"] * ball_speed * time_to_left_edge
+
+    # Handle bounces off top and bottom edges
+    while predicted_y < 0 or predicted_y > FIELD_HEIGHT:
+        if predicted_y < 0:
+            predicted_y = -predicted_y
+        elif predicted_y > FIELD_HEIGHT:
+            predicted_y = 2 * FIELD_HEIGHT - predicted_y
+
+    print(f"Ball will hit left edge at y = {predicted_y:.2f}")
+
+    # Move paddle towards the predicted position
+    paddle_center = ai_paddle_position + PADDLE_HEIGHT / 2
+    if predicted_y < paddle_center - PADDLE_HEIGHT / 4:
         return "ArrowUp"
-    elif predicted_ball_y > ai_paddle_position:
+    elif predicted_y > paddle_center + PADDLE_HEIGHT / 4:
         return "ArrowDown"
     else:
-        return None  # No movement needed
+        return None  # Stay in position
 
 
 async def ai_movement_logic(websocket, game_state_event, game_state_data):
@@ -134,26 +145,34 @@ async def ai_movement_logic(websocket, game_state_event, game_state_data):
         await game_state_event.wait()  # Wait for a new game state
         game_state_event.clear()  # Clear the event
 
-        print("AI movement logic triggered")
-        print(json.dumps(game_state_data, indent=2))
+        # print("AI movement logic triggered")
+        # print(json.dumps(game_state_data, indent=2))
         # Check if the necessary keys are present in the game state data
         if (
             "ball" in game_state_data
             and "player2" in game_state_data
             and "ball_vector" in game_state_data
         ):
-            print("Calculating AI move")
-            # Calculate AI move
-            move = await calculate_ai_move(game_state_data)
-            print(f"AI move: {move}")
+            ball_position = game_state_data["ball"]
+            ball_vector = game_state_data["ball_vector"]
+            # print("Ball vector:", json.dumps(ball_vector, indent=2))
 
-            # Execute the move
-            if move:
-                await send_game_data(websocket, move, "keydown")
-                await asyncio.sleep(random.uniform(0.2, 0.6))
-                await send_game_data(websocket, move, "keyup")
+            # Check if it's the AI's turn to defend
+            if ball_vector["x"] < 0:  # Ball is moving towards the AI paddle
+                print("Ball is moving towards AI paddle (left side)")
+                # Calculate AI move
+                move = await calculate_ai_move(game_state_data)
 
-        await asyncio.sleep(1)  # Wait for 1 second before the next move
+                # Execute the move
+                if move:
+                    await send_game_data(websocket, move, "keydown")
+                    await asyncio.sleep(random.uniform(0.1, 0.5))
+                    await send_game_data(websocket, move, "keyup")
+                # await asyncio.sleep(1)  # Wait for 1 second before the next move
+            # else:
+            #     print("Ball is moving away from AI paddle (right side)")
+
+        # await asyncio.sleep(1)  # Wait for 1 second before the next move
 
 
 async def send_game_data(websocket, key, key_action):
