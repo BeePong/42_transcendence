@@ -45,63 +45,64 @@ class PongConsumer(AsyncWebsocketConsumer):
         print("PONG CONSUMER INITIALISED")
 
     async def connect(self):
-        # init tournament if not initialized yet
-        if self.tournament_id is None:
-            self.tournament_id = self.scope["url_route"]["kwargs"]["tournament_id"]
-            self.tournament = await self.get_tournament_by_id(self.tournament_id)
-            if self.tournament is None:
-                print("CONNECT: Tournament not found")
-                await self.close(code=4004)
+        try:
+            # init tournament if not initialized yet
+            if self.tournament_id is None:
+                self.tournament_id = self.scope["url_route"]["kwargs"]["tournament_id"]
+                self.tournament = await self.get_tournament_by_id(self.tournament_id)
+                if self.tournament is None:
+                    print("CONNECT: Tournament not found")
+                    await self.close(code=4004)
+                    return
+                else:
+                    print("CONNECT: Tournament was found and added")
+                self.tournament.consumer = self
+                await sync_to_async(self.tournament.save)()
+            if self.pong_group_name is None:
+                self.pong_group_name = f"tournament_group_{self.tournament_id}"
+                print("pong_group_name set: ", self.pong_group_name)
+                # init tournament to new instance of Tournament class
+
+            print("group_add pong_group_name: ", self.pong_group_name)
+            await self.channel_layer.group_add(self.pong_group_name, self.channel_name)
+            # accept connection
+            await self.accept()
+            # close if tournament is over
+            if self.tournament.state == "FINISHED":
+                print(
+                    "The tournament ",
+                    self.tournament_id,
+                    " is finished, disconnecting",
+                )
+                await self.disconnect(code=4005)
                 return
-            else:
-                print("CONNECT: Tournament was found and added")
-            self.tournament.consumer = self
-            await sync_to_async(self.tournament.save)()
-        if self.pong_group_name is None:
-            self.pong_group_name = f"tournament_group_{self.tournament_id}"
-            print("pong_group_name set: ", self.pong_group_name)
-            # init tournament to new instance of Tournament class
+            # close if not authenticated
+            if not (self.scope["user"].is_authenticated):
+                print("User is not authenticated , disconnecting")
+                await self.disconnect(code=4004)
+                return
+            # add consumer to group
 
-        print("group_add pong_group_name: ", self.pong_group_name)
-        await self.channel_layer.group_add(self.pong_group_name, self.channel_name)
-        # accept connection
-        await self.accept()
-        await self.send(
-            text_data=json.dumps({"type": "tournament", "message": "connected"})
-        )
-        # close if tournament is over
-        if self.tournament.state == "FINISHED":
-            print(
-                "The tournament ",
-                self.tournament_id,
-                " is finished, disconnecting",
-            )
-            await self.disconnect(code=4005)
-            return
-        # close if not authenticated
-        if not (self.scope["user"].is_authenticated):
-            print("User is not authenticated , disconnecting")
-            await self.disconnect(code=4004)
-            return
-        # add consumer to group
-
-        # not sure if this bot handling is needed here
-        is_bot = self.scope["query_string"].decode().split("=")[1] == "True"
-        if is_bot:
-            user = {"id": 0, "username": "ai_bot"}
-        else:
+            # not sure if this bot handling is needed here
+            # is_bot = self.scope["query_string"].decode().split("=")[1] == "True"
+            # if is_bot:
+            #     user = {"id": 0, "username": "ai_bot"}
+            # else:
             user = self.scope["user"]
 
-        # TODO: first check if a new user actually joined the tournament
-        print("user before connect_player_if_applicable: ", user)
-        await self.tournament.connect_player_if_applicable(user)
-        print(
-            "tournament state check before send_tournament_state_to_all: ",
-            self.tournament.state,
-        )
-        #if self.tournament.state == "NEW":
-            #await self.send_tournament_state_to_all("tournament_update")
-        await self.tournament.start_tournament_if_applicable()
+            # TODO: first check if a new user actually joined the tournament
+            print("user before connect_player_if_applicable: ", user)
+            await self.tournament.connect_player_if_applicable(user)
+            print(
+                "tournament state check before send_tournament_state_to_all: ",
+                self.tournament.state,
+            )
+            # if self.tournament.state == "NEW":
+            # await self.send_tournament_state_to_all("tournament_update")
+            await self.tournament.start_tournament_if_applicable()
+        except Exception as e:
+            print("Error in connect method: %s", e)
+            await self.disconnect(code=4004)
 
     async def disconnect(self, close_code):
         # set player status to false in tournament
