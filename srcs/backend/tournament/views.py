@@ -9,6 +9,7 @@ from .models import Tournament, Player, Match
 from .decorators import login_required_json
 from django.utils.functional import SimpleLazyObject
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 # Create your views here.
 
 @login_required_json
@@ -93,7 +94,7 @@ def create_tournament(request):
             }, status=201)
         else:
             return JsonResponse({'success': False, 'errors': form.errors}, status=400)
-    return render(request, 'tournament/create_tournament.html', {'form': form, 'form_action': '/tournament/create/'})
+    return render(request, 'tournament/create_tournament.html', {'form': form, 'form_action': reverse('tournament:create_tournament')})
 
 
 
