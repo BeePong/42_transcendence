@@ -252,10 +252,10 @@ help:
 ################################################################################
 # Build and run jest
 jest:
-	docker-compose build jest
-	docker-compose run --rm jest
+	docker compose build jest
+	docker compose run --rm jest
 
 # Build and run cypress
 cypress:
-	docker-compose build cypress
-	docker-compose run --rm cypress
+	docker compose build cypress
+	docker compose run --rm cypress
