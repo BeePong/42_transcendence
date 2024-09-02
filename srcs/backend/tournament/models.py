@@ -667,8 +667,6 @@ class Match(models.Model):
         all_matches = Match.objects.all()
         num_all_matches = all_matches.count()
         print("end of INIT MATCH num all matches: ", num_all_matches)
-        matches_with_gameid_8 = Match.objects.filter(game_id=8)
-        num_matches_with_gameid_8 = len(matches_with_gameid_8)
         print("GAME LOOP IN MATCH INITIALIZED")
 
     def __str__(self):

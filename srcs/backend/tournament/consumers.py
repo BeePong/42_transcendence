@@ -23,9 +23,6 @@ from channels.layers import get_channel_layer
 
 class PongConsumer(AsyncWebsocketConsumer):
 
-    tournament = None
-    tournament_id = None
-    pong_group_name = None
     print("PONG CONSUMER root")
 
     @database_sync_to_async
@@ -42,33 +39,48 @@ class PongConsumer(AsyncWebsocketConsumer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.tournament = None
+        self.tournament_id = None
+        self.pong_group_name = None
         print("PONG CONSUMER INITIALISED")
+
+    @database_sync_to_async
+    def connect_prep(self):
+        # init tournament if not initialized yet
+        if self.tournament is None:
+            try:
+                self.tournament = get_object_or_404(
+                    Tournament, tournament_id=self.tournament_id
+                )
+            except Tournament.DoesNotExist:
+                self.tournament = None
+            if self.tournament is None:
+                print("CONNECT: Tournament not found")
+            else:
+                print("CONNECT: Tournament was found and added")
+
+    @database_sync_to_async
+    def get_tournament_state(self):
+        return self.tournament.state
 
     async def connect(self):
         try:
-            # init tournament if not initialized yet
             if self.tournament_id is None:
                 self.tournament_id = self.scope["url_route"]["kwargs"]["tournament_id"]
-                self.tournament = await self.get_tournament_by_id(self.tournament_id)
-                if self.tournament is None:
-                    print("CONNECT: Tournament not found")
-                    await self.close(code=4004)
-                    return
-                else:
-                    print("CONNECT: Tournament was found and added")
-                self.tournament.consumer = self
-                await sync_to_async(self.tournament.save)()
             if self.pong_group_name is None:
                 self.pong_group_name = f"tournament_group_{self.tournament_id}"
-                print("pong_group_name set: ", self.pong_group_name)
-                # init tournament to new instance of Tournament class
-
+            print("pong_group_name set: ", self.pong_group_name)
+            await self.connect_prep()
             print("group_add pong_group_name: ", self.pong_group_name)
             await self.channel_layer.group_add(self.pong_group_name, self.channel_name)
+            print("group_add done")
             # accept connection
             await self.accept()
+            print("accept done")
             # close if tournament is over
-            if self.tournament.state == "FINISHED":
+            tournament_state = await self.get_tournament_state()
+            print("tournament_state: ", tournament_state)
+            if tournament_state == "FINISHED":
                 print(
                     "The tournament ",
                     self.tournament_id,
@@ -92,22 +104,22 @@ class PongConsumer(AsyncWebsocketConsumer):
 
             # TODO: first check if a new user actually joined the tournament
             print("user before connect_player_if_applicable: ", user)
-            await self.tournament.connect_player_if_applicable(user)
+            # await self.tournament.connect_player_if_applicable(user)
             print(
                 "tournament state check before send_tournament_state_to_all: ",
-                self.tournament.state,
+                tournament_state,
             )
             # if self.tournament.state == "NEW":
-            # await self.send_tournament_state_to_all("tournament_update")
-            await self.tournament.start_tournament_if_applicable()
+            await self.send_tournament_state_to_all("tournament_update")
+            # await self.tournament.start_tournament_if_applicable()
         except Exception as e:
             print("Error in connect method: %s", e)
             await self.disconnect(code=4004)
 
-    async def disconnect(self, close_code):
+    async def disconnect(self, code):
         # set player status to false in tournament
-        if self.tournament is not None:
-            await self.tournament.disconnect_player(self.scope["user"])
+        # if self.tournament is not None:
+        #    await self.tournament.disconnect_player(self.scope["user"])
         # remove consumer from group
         print("group_discard pong_group_name: ", self.pong_group_name)
         await self.channel_layer.group_discard(self.pong_group_name, self.channel_name)
