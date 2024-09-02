@@ -473,12 +473,13 @@ class Match(models.Model):
     state = models.CharField(max_length=255, choices=STATE_CHOICES, default="PENDING")
     winner = models.ForeignKey(
         Player,
-        related_name="won_games",
+        related_name="won_match",
         on_delete=models.CASCADE,
         null=True,
         blank=True,
         default=None,
     )
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     def get_larger_random(self):
