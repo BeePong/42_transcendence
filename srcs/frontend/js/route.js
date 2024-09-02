@@ -1,5 +1,5 @@
 import { webSocketTest } from "./websockets.js";
-import { startAIBot } from "./AIbot.js";
+// import { startAIBot } from "./AIbot.js";
 
 // Handle navigation based on path or event
 window.navigate = function navigate(eventOrPath, redirectUrl = "/") {
@@ -67,7 +67,7 @@ async function loadPage(path, redirectUrl = "/", fromNavigate = false) {
       if (match) {
         var tournament_id = match[1];
         webSocketTest(tournament_id);
-        startAIBot(tournament_id);
+        // startAIBot(tournament_id);
       }
       var solo_match = page.match(/^\/tournament\/solo_game$/);
       console.log("solo_game match", solo_match);
