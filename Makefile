@@ -1,4 +1,4 @@
-.PHONY: up down clean clean_volumes clean_orphans clean_images clean_all get_images_id re re_elk re_all re_all_elk  up_backend up_db up_elk up_all up_no_elk logs logs_errors logs_grep logs_nginx logs_backend logs_db logs_elk ps ps_short ps_inspect exec_nginx exec_backend exec_db exec_elk stop_all stats sys_df help nuke
+.PHONY: up down clean clean_volumes clean_orphans clean_images clean_all get_images_id re re_elk re_all re_all_elk  up_backend up_db up_elk up_all up_no_elk logs logs_errors logs_grep logs_nginx logs_backend logs_db logs_elk ps ps_short ps_inspect exec_nginx exec_backend exec_db exec_elk stop_all stats sys_df help nuke jest cypress
 
 ################################################################################
 # Build and Start
@@ -246,3 +246,16 @@ help:
 	@echo ""
 	@echo "Help:"
 	@echo "  help           Show this help message"
+
+################################################################################
+# Build and Run test
+################################################################################
+# Build and run jest
+jest:
+	docker compose build jest
+	docker compose run --rm jest
+
+# Build and run cypress
+cypress:
+	docker compose build cypress
+	docker compose run --rm cypress

@@ -1,0 +1,32 @@
+{
+  "name": "jest-tests",
+  "version": "1.0.0",
+  "description": "Jest testing dependencies",
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.2",
+    "@babel/preset-env": "^7.25.4",
+    "babel-jest": "^29.7.0",
+    "jest": "^27.5.1",
+    "jest-fetch-mock": "^3.0.3"
+  },
+  "jest": {
+    "moduleDirectories": [
+      "node_modules",
+      "./js"
+    ],
+    "testEnvironment": "jsdom",
+    "automock": false,
+    "resetMocks": false,
+    "setupFiles": [
+      "./setupJest.js"
+    ],
+    "transform": {
+      "^.+\\.jsx?$": "babel-jest"
+    },
+    "transformIgnorePatterns": ["/node_modules/"],
+    "moduleFileExtensions": ["js", "jsx", "json", "node"]
+  }
+}

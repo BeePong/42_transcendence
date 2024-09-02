@@ -96,6 +96,22 @@ services:
     depends_on:
       backend_dummy:
         condition: service_healthy
+    
+  jest:
+    container_name: beepong-jest
+    build:
+      context: srcs/frontend
+      dockerfile: tests/Dockerfile
+
+  cypress:
+    container_name: beepong-cypress
+    build:
+      context: ./cypress
+      dockerfile: Dockerfile
+    environment:
+      - CYPRESS_baseUrl=https://nginx
+    depends_on:
+      - nginx
 
   pgadmin:
     container_name: beepong-pgadmin
