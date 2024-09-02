@@ -110,6 +110,9 @@ services:
       dockerfile: Dockerfile
     environment:
       - CYPRESS_baseUrl=https://nginx
+    volumes:
+      - ./cypress/screenshots:/app/cypress/screenshots
+      - ./cypress/videos:/app/cypress/videos
     depends_on:
       - nginx
 
