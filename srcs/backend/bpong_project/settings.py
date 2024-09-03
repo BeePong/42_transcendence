@@ -1,4 +1,3 @@
-
 from pathlib import Path
 import os
 from dotenv import load_dotenv
@@ -13,27 +12,26 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure--5o3-*y!2w25g-%9h^8yt!z(!7f^p_xf8+x5u(9z#*^o#pxtq9')
+SECRET_KEY = os.getenv(
+    "DJANGO_SECRET_KEY",
+    "django-insecure--5o3-*y!2w25g-%9h^8yt!z(!7f^p_xf8+x5u(9z#*^o#pxtq9",
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-# DEBUG = False
 # DEBUG = True
 DEBUG = False
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'nginx']
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "nginx", "172.50.70.189"]
 
 # Application definition
 
 INSTALLED_APPS = [
     # My apps
-    'beePong',
-    'accounts',
-    'tournament',
-
+    "beePong",
+    "accounts",
+    "tournament",
     # Third-party apps
-    'django_bootstrap5',
-
+    "django_bootstrap5",
     # Django apps
     "django.contrib.admin",
     "django.contrib.auth",
@@ -41,7 +39,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    #'tournament.apps.TournamentConfig',
+    # 'tournament.apps.TournamentConfig',
 ]
 
 MIDDLEWARE = [
@@ -78,13 +76,13 @@ WSGI_APPLICATION = "bpong_project.wsgi.application"
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('POSTGRES_DB'),
-        'USER': os.getenv('POSTGRES_USER'),
-        'PASSWORD': os.getenv('POSTGRES_PASSWORD'),
-        'HOST': os.getenv('POSTGRES_HOST'),
-        'PORT': '5432',
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.getenv("POSTGRES_DB"),
+        "USER": os.getenv("POSTGRES_USER"),
+        "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
+        "HOST": os.getenv("POSTGRES_HOST"),
+        "PORT": "5432",
     }
 }
 
@@ -129,11 +127,16 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # My settings
 # Tells Django which URL to redirect to after a successful login attempt.
-LOGIN_REDIRECT_URL = 'beePong:index'
+LOGIN_REDIRECT_URL = "beePong:index"
 # Tells Django to redirect logged-out users back to the home page
-LOGOUT_REDIRECT_URL = 'beePong:index'
-LOGIN_URL = 'accounts:login'
+LOGOUT_REDIRECT_URL = "beePong:index"
+LOGIN_URL = "accounts:login"
 
 # List of trusted origins for CSRF protection
 # Requests from these origins will be allowed to bypass the CSRF protection
-CSRF_TRUSTED_ORIGINS = ["https://localhost", "https://127.0.0.1", "https://nginx"]
+CSRF_TRUSTED_ORIGINS = [
+    "https://localhost",
+    "https://127.0.0.1",
+    "https://nginx",
+    "https://172.50.70.189",
+]
