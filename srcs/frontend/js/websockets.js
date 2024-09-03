@@ -1,14 +1,121 @@
+// Constants
+const CANVAS_HEIGHT = 500;
+const CANVAS_WIDTH = 800;
+const PADDLE_HEIGHT = 100;
+const PADDLE_WIDTH = 26;
+const BALL_RADIUS = 15;
+const PADDING_THICKNESS = 7;
+const THICK_BORDER_THICKNESS = 5;
+const CANVAS_ID = "game_canvas";
+
 let old_ball_speed, new_ball_speed;
 
-function webSocketTest(tournament_id) {
-  const canvas_height = 500;
-  const canvas_width = 800;
-  const paddle_height = 100;
-  const paddle_width = 26;
-  const ball_radius = 15;
-  const padding_thickness = 7;
-  const thick_border_thickness = 5;
+const getContext = () => {
+  const canvas = document.getElementById(CANVAS_ID);
+  if (!canvas) return null;
+  return canvas.getContext("2d");
+};
 
+const drawBorders = (context) => {
+  context.strokeStyle = "white";
+  context.lineWidth = 2;
+  context.beginPath();
+  context.moveTo(0, 0);
+  context.lineTo(CANVAS_WIDTH, 0);
+  context.lineTo(CANVAS_WIDTH, CANVAS_HEIGHT);
+  context.lineTo(0, CANVAS_HEIGHT);
+  context.lineTo(0, 0);
+  context.stroke();
+  context.fillStyle = "white";
+  context.fillRect(0, 0, CANVAS_WIDTH, THICK_BORDER_THICKNESS);
+  context.fillRect(
+    0,
+    CANVAS_HEIGHT - THICK_BORDER_THICKNESS,
+    CANVAS_WIDTH,
+    THICK_BORDER_THICKNESS
+  );
+};
+
+const drawBall = (context, x, y) => {
+  const ballColor = getComputedStyle(document.documentElement).getPropertyValue(
+    "--color-secondary"
+  );
+  context.fillStyle = ballColor;
+  context.beginPath();
+  context.arc(x, y, BALL_RADIUS, 0, Math.PI * 2);
+  context.fill();
+};
+
+const drawCountdown = (context, countdown, x, y) => {
+  context.fillStyle = "black";
+  context.font = "20px Arial";
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+  context.fillText(countdown, x, y);
+};
+
+const insertScores = (player1_score, player2_score) => {
+  const score1 = document.getElementById("score-player1");
+  if (score1) score1.textContent = player1_score;
+  const score2 = document.getElementById("score-player2");
+  if (score2) score2.textContent = player2_score;
+};
+
+const drawPaddle = (context, y, player_type, controlling) => {
+  const x =
+    player_type === "player1"
+      ? CANVAS_WIDTH - PADDING_THICKNESS - PADDLE_WIDTH
+      : PADDING_THICKNESS;
+  context.fillStyle = controlling ? "yellow" : "white";
+  context.fillRect(x, y - PADDLE_HEIGHT / 2, PADDLE_WIDTH, PADDLE_HEIGHT);
+};
+
+const drawEmptyCanvas = (context) => {
+  var backgroundColor = getComputedStyle(
+    document.documentElement
+  ).getPropertyValue("--background-color");
+
+  context.fillStyle = backgroundColor;
+  context.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+  drawBorders(context);
+  drawBall(context, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
+};
+
+function updateCanvas(context, game_data) {
+  if (!context) return;
+  if (new_ball_speed === undefined) new_ball_speed = game_data.ball.speed;
+  old_ball_speed = new_ball_speed;
+  new_ball_speed = game_data.ball.speed;
+  if (old_ball_speed !== new_ball_speed) {
+    console.log("ball speed changed", old_ball_speed, new_ball_speed);
+  }
+  insertScores(game_data.player1.score, game_data.player2.score);
+  if (game_data.state === "finished") {
+    console.log("winner is", game_data.winner.username);
+    socket.close();
+    return;
+  }
+  //console.log("updateCanvas game_data", game_data);
+  context.fillStyle = backgroundColor;
+  context.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+  drawBorders(context);
+  drawBall(context, game_data.ball.x, game_data.ball.y);
+  if (game_data.state === "countdown") {
+    drawCountdown(
+      context,
+      game_data.countdown,
+      game_data.ball.x,
+      game_data.ball.y
+    );
+  }
+  // TODO: pass controlling param to drawPaddle
+  drawPaddle(context, game_data.player1.y, "player1");
+  drawPaddle(context, game_data.player2.y, "player2");
+}
+
+function webSocketTest(tournament_id) {
+  const canvasContext = getContext();
+  if (canvasContext) drawEmptyCanvas(canvasContext);
   const url =
     (window.location.protocol == "https:" ? "wss://" : "ws://") +
     window.location.host +
@@ -19,80 +126,23 @@ function webSocketTest(tournament_id) {
 
   console.log("Starting WebSocket on URL: ", url);
   var socket = new WebSocket(url);
+  console.log("WebSocket created: ", socket);
   // TODO: remember to close websocket after the tournament is over
-  var canvas = document.getElementById("game_canvas");
-  var context = canvas.getContext("2d");
 
-  const drawBorders = () => {
-    context.strokeStyle = "white";
-    context.lineWidth = 2;
-    context.beginPath();
-    context.moveTo(0, 0);
-    context.lineTo(canvas_width, 0);
-    context.lineTo(canvas_width, canvas_height);
-    context.lineTo(0, canvas_height);
-    context.lineTo(0, 0);
-    context.stroke();
-    context.fillStyle = "white";
-    context.fillRect(0, 0, canvas_width, thick_border_thickness);
-    context.fillRect(
-      0,
-      canvas_height - thick_border_thickness,
-      canvas_width,
-      thick_border_thickness
-    );
-  };
-
-  const drawBall = (x, y) => {
-    context.fillStyle = primaryColor;
-    context.beginPath();
-    context.arc(x, y, ball_radius, 0, Math.PI * 2);
-    context.fill();
-  };
-
-  const drawCountdown = (countdown, x, y) => {
-    context.fillStyle = "black";
-    context.font = "20px Arial";
-    context.textAlign = "center";
-    context.textBaseline = "middle";
-    context.fillText(countdown, x, y);
-  };
-
-  const insertScores = (player1_score, player2_score) => {
-    const score1 = document.getElementById("score-player1");
-    if (score1) score1.textContent = player1_score;
-    const score2 = document.getElementById("score-player2");
-    if (score2) score2.textContent = player2_score;
-  };
-
-  const drawPaddle = (y, player_type, controlling) => {
-    const x =
-      player_type === "player1"
-        ? canvas_width - padding_thickness - paddle_width
-        : padding_thickness;
-    context.fillStyle = controlling ? "yellow" : "white";
-    context.fillRect(x, y - paddle_height / 2, paddle_width, paddle_height);
-  };
-
-  var backgroundColor = getComputedStyle(
-    document.documentElement
-  ).getPropertyValue("--background-color");
-  var primaryColor = getComputedStyle(
-    document.documentElement
-  ).getPropertyValue("--color-secondary");
-
-  context.fillStyle = backgroundColor;
-  context.fillRect(0, 0, canvas_width, canvas_height);
-  drawBorders();
-  drawBall(canvas_width / 2, canvas_height / 2);
   socket.onmessage = function (e) {
     console.log("WebSocket message received");
     var data = JSON.parse(e.data);
+    console.log("parsed data:", data);
     // parse message
-    var jsonData = JSON.parse(data);
+    // try {
+    //   var jsonData = JSON.parse(data);
+    // } catch (e) {
+    //   console.log("Error parsing JSON data", e);
+    //   return false;
+    // }
     // if type is tournament
-    if (jsonData.type === "tournament") {
-      var tournament_data = jsonData.message;
+    if (data.type === "tournament") {
+      var tournament_data = data.message;
       console.log("tournament_data:", tournament_data);
       console.log("window.pathname", window.pathname);
       if (tournament_data.state === "NEW") {
@@ -100,8 +150,8 @@ function webSocketTest(tournament_id) {
         loadPage(window.pathname);
       }
     } else {
-      console.log("game data:", jsonData.message);
-      updateCanvas(jsonData.message);
+      console.log("game data:", data.message);
+      updateCanvas(canvasContext, jsonData.message);
     }
 
     // Here tournament_lobby function will be called once the winner is determined, call loadPage on window.pathname (reload page)
@@ -109,13 +159,11 @@ function webSocketTest(tournament_id) {
     // if tpirnament not full
     // navigate to refresh page
     // when new player joins, send player into to tournamentLobbyAddPlayer(player), numPlayers and updatedNumPlayersInLobby
-    // state is countdown, seconds number is 2, 1, 0 and call function to change number in countdown
+    // state is countdown, seconds number is 2, 1, 0 and call function to change number in countdown 
 
     // when state is playing
     return false;
   };
-
-  // console.log("webSocketTest SOCKET", socket); // for debugging
 
   socket.onopen = function (e) {
     console.log("WebSocket connection opened");
@@ -152,32 +200,6 @@ function webSocketTest(tournament_id) {
       sendGameData(event.key, "keyup");
     }
   });
-
-  function updateCanvas(game_data) {
-    if (new_ball_speed === undefined) new_ball_speed = game_data.ball.speed;
-    old_ball_speed = new_ball_speed;
-    new_ball_speed = game_data.ball.speed;
-    if (old_ball_speed !== new_ball_speed) {
-      console.log("ball speed changed", old_ball_speed, new_ball_speed);
-    }
-    insertScores(game_data.player1.score, game_data.player2.score);
-    if (game_data.state === "finished") {
-      console.log("winner is", game_data.winner.username);
-      socket.close();
-      return;
-    }
-    //console.log("updateCanvas game_data", game_data);
-    context.fillStyle = backgroundColor;
-    context.fillRect(0, 0, canvas_width, canvas_height);
-    drawBorders();
-    drawBall(game_data.ball.x, game_data.ball.y);
-    if (game_data.state === "countdown") {
-      drawCountdown(game_data.countdown, game_data.ball.x, game_data.ball.y);
-    }
-    // TODO: pass controlling param to drawPaddle
-    drawPaddle(game_data.player1.y, "player1");
-    drawPaddle(game_data.player2.y, "player2");
-  }
 }
 
 export { webSocketTest };

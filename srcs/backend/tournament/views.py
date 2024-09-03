@@ -61,7 +61,7 @@ def tournament(request):
                     )
                     tournament.state = "PLAYING"
                     tournament.save()
-                    async_to_sync(tournament.start_tournament_if_applicable)()
+                    # async_to_sync(tournament.start_tournament_if_applicable)()
                 else:
                     logging.info(
                         f"Tournament {tournament_id} doesn't have enough players yet. Current: {tournament.players.count()}, Required: {tournament.num_players}"

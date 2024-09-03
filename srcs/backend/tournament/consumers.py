@@ -29,25 +29,24 @@ class PongConsumer(AsyncWebsocketConsumer):
         self.pong_group_name = None
         print("PONG CONSUMER INITIALISED")
 
-    # @database_sync_to_async
-    # def get_tournament_by_id(self, tournament_id):
-    #     try:
-    #         tournament_object = get_object_or_404(
-    #             Tournament, tournament_id=tournament_id
-    #         )
-    #         return tournament_object
-    #     except Tournament.DoesNotExist:
-    #         return None
-    #     except Http404:
-    #         return None
+    @database_sync_to_async
+    def get_tournament_by_id(self, tournament_id):
+        try:
+            tournament_object = get_object_or_404(
+                Tournament, tournament_id=tournament_id
+            )
+            return tournament_object
+        except Tournament.DoesNotExist:
+            return None
+        except Http404:
+            return None
 
     async def connect(self):
         try:
-            if self.tournament_id is None:
-                self.tournament_id = self.scope["url_route"]["kwargs"]["tournament_id"]
+            print("url_route: ", self.scope["url_route"])
+            self.tournament_id = self.scope["url_route"]["kwargs"]["tournament_id"]
             print("tournament_id set: ", self.tournament_id)
-            if self.pong_group_name is None:
-                self.pong_group_name = f"tournament_group_{self.tournament_id}"
+            self.pong_group_name = f"tournament_group_{self.tournament_id}"
             print("pong_group_name set: ", self.pong_group_name)
             await self.channel_layer.group_add(self.pong_group_name, self.channel_name)
             print("group_add done")
@@ -81,7 +80,10 @@ class PongConsumer(AsyncWebsocketConsumer):
         tournament_message = event["tournament_message"]
         try:
             print("send_tournament_state, tournament_message: ", tournament_message)
-            await self.send("hello")
+            message = await sync_to_async(json.dumps)(
+                {"type": "tournament", "message": tournament_message}
+            )
+            await self.send(text_data=message)
             print("send_tournament_state done")
         except Exception as e:
             print(f"Error sending tournament state: {e}")

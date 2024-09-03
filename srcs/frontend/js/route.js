@@ -246,3 +246,5 @@ document.addEventListener("DOMContentLoaded", () => {
   loadNavBar();
   loadPage(window.location.pathname, "/", false, window.location.search);
 });
+
+export { loadPage };
