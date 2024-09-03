@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Player, Tournament, Match, PlayerTournament
+from .models import Player, Tournament, Match
 
 
 @admin.register(Player)
@@ -22,12 +22,11 @@ class TournamentAdmin(admin.ModelAdmin):
         "state",
         "player_count",
         "num_players",
-        "is_started",
         "is_final",
         "created_at",
     )
     search_fields = ("title",)
-    list_filter = ("state", "is_started", "is_final")
+    list_filter = ("state", "is_final")
 
     def player_count(self, obj):
         return obj.players.count()
@@ -65,9 +64,3 @@ class MatchAdmin(admin.ModelAdmin):
     player1__username.short_description = "Player 1"
     player2__username.short_description = "Player 2"
     winner.short_description = "Winner"
-
-
-@admin.register(PlayerTournament)
-class PlayerTournamentAdmin(admin.ModelAdmin):
-    list_display = ("player", "tournament", "created_at")
-    search_fields = ("player__username", "tournament__title")

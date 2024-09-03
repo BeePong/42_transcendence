@@ -34,37 +34,52 @@ def tournament(request):
         if form.is_valid():
             print("form is valid")
             tournament = get_object_or_404(Tournament, tournament_id=tournament_id)
-            logging.info(f"Tournament state: {tournament.state}, Players: {tournament.players.count()}/{tournament.num_players}")
-            
+            logging.info(
+                f"Tournament state: {tournament.state}, Players: {tournament.players.count()}/{tournament.num_players}"
+            )
+
             if tournament.state == "NEW":
-                logging.info(f"Adding player {player.username} to tournament {tournament_id}")
+                logging.info(
+                    f"Adding player {player.username} to tournament {tournament_id}"
+                )
                 form.save()
-                
+
                 if player not in tournament.players.all():
                     tournament.players.add(player)
                     player.has_active_tournament = True
                     player.current_tournament_id = tournament.tournament_id
                     player.save()
                     tournament.save()
-                    logging.info(f"Player {player.username} added to tournament {tournament_id}")
-                
+                    logging.info(
+                        f"Player {player.username} added to tournament {tournament_id}"
+                    )
+
                 # Check if the tournament should start
                 if tournament.players.count() == tournament.num_players:
-                    logging.info(f"Tournament {tournament_id} has enough players. Attempting to start.")
+                    logging.info(
+                        f"Tournament {tournament_id} has enough players. Attempting to start."
+                    )
                     tournament.state = "PLAYING"
-                    tournament.is_started = True
                     tournament.save()
                     async_to_sync(tournament.start_tournament_if_applicable)()
                 else:
-                    logging.info(f"Tournament {tournament_id} doesn't have enough players yet. Current: {tournament.players.count()}, Required: {tournament.num_players}")
+                    logging.info(
+                        f"Tournament {tournament_id} doesn't have enough players yet. Current: {tournament.players.count()}, Required: {tournament.num_players}"
+                    )
             else:
-                logging.info(f"Tournament {tournament_id} is not in NEW state. Current state: {tournament.state}")
+                logging.info(
+                    f"Tournament {tournament_id} is not in NEW state. Current state: {tournament.state}"
+                )
 
             tournament.refresh_from_db()  # Refresh the tournament object to get the latest state
             logging.info(f"Tournament {tournament_id} final state: {tournament.state}")
 
             return JsonResponse(
-                {"success": True, "redirect": f"/tournament/{tournament_id}/lobby", "tournament_state": tournament.state},
+                {
+                    "success": True,
+                    "redirect": f"/tournament/{tournament_id}/lobby",
+                    "tournament_state": tournament.state,
+                },
                 status=201,
             )
         else:

@@ -10,6 +10,7 @@ import math
 import asyncio
 import time
 from asgiref.sync import sync_to_async
+from channels.db import database_sync_to_async
 
 logging.basicConfig(level=logging.INFO)
 from django.db.models.signals import post_save
@@ -46,6 +47,155 @@ class Player(models.Model):
         instance.player.save()
 
 
+class Match(models.Model):
+
+    STATE_CHOICES = [
+        ("PENDING", "Pending"),
+        ("COUNTDOWN", "New"),
+        ("PLAYING", "Started"),
+        ("FINISHED", "Final"),
+    ]
+
+    game_id = models.AutoField(primary_key=True)
+    player1 = models.ForeignKey(
+        Player, related_name="player1_matches", on_delete=models.CASCADE
+    )
+    player1_score = models.IntegerField(default=0)
+    player1_up_pressed = models.BooleanField(default=False)
+    player1_down_pressed = models.BooleanField(default=False)
+    player1_y = models.IntegerField(default=settings.FIELD_HEIGHT / 2)
+    player2 = models.ForeignKey(
+        Player, related_name="player2_matches", on_delete=models.CASCADE
+    )
+    player2_score = models.IntegerField(default=0)
+    player2_up_pressed = models.BooleanField(default=False)
+    player2_down_pressed = models.BooleanField(default=False)
+    player2_y = models.IntegerField(default=settings.FIELD_HEIGHT / 2)
+    state = models.CharField(max_length=255, choices=STATE_CHOICES, default="PENDING")
+    winner = models.ForeignKey(
+        Player,
+        related_name="won_games",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        default=None,
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def get_larger_random(self):
+        y = 0
+        while abs(y) < 0.2 or abs(y) > 0.9:
+            y = random.uniform(-1, 1)
+        return y
+
+    def normalize_vector(self, x, y):
+        magnitude = math.sqrt(x**2 + y**2)
+        return {"x": x / magnitude, "y": y / magnitude}
+
+    def __init__(self, *args, **kwargs):
+        print("INIT MATCH")
+        super().__init__(*args, **kwargs)
+        print("tournament", kwargs.get("tournament"))
+        print("player1", kwargs.get("player1"))
+        print("player2", kwargs.get("player2"))
+        self.countdown = 3
+        self.ball = {"x": settings.FIELD_WIDTH / 2, "y": settings.FIELD_HEIGHT / 2}
+        self.ball_speed = settings.BALL_STARTING_SPEED
+        self.hit_count = 0
+        self.ball_vector = self.normalize_vector(
+            self.get_larger_random(), random.uniform(-1, 1)
+        )
+        self.player1_game_state = {
+            "y": settings.FIELD_HEIGHT / 2,
+            "up_pressed": False,
+            "down_pressed": False,
+        }
+        self.player2_game_state = {
+            "y": settings.FIELD_HEIGHT / 2,
+            "up_pressed": False,
+            "down_pressed": False,
+        }
+        print("MATCH INITIALIZED")
+        self.game_loop = GameLoop(self)
+        self.round_start_time = time.time()
+        print("GAME LOOP IN MATCH INITIALIZED")
+
+    def __str__(self):
+        return f"{self.player1.alias} vs {self.player2.alias}"
+
+    async def start_match(self):
+        print("START MATCH")
+        self.state = "COUNTDOWN"
+        self.round_start_time = time.time()
+        await self.game_loop.loop()
+        await sync_to_async(self.save)()
+
+    def determine_winner(self):
+        print("DETERMINE WINNER")
+        if self.player1_score > self.player2_score:
+            return self.player1
+        return self.player2
+
+    def determine_loser(self):
+        print("DETERMINE LOSER")
+        if self.player1_score < self.player2_score:
+            return self.player1
+        return self.player2
+
+    def init_new_round(self):
+        print("INIT NEW ROUND")
+        self.round_start_time = time.time()
+        self.state = "COUNTDOWN"
+        self.countdown = 3
+        self.hit_count = 0
+        self.ball = {"x": settings.FIELD_WIDTH / 2, "y": settings.FIELD_HEIGHT / 2}
+        self.ball_speed = settings.BALL_STARTING_SPEED
+        self.hit_count = 0
+        self.ball_vector = self.normalize_vector(
+            self.get_larger_random(), random.uniform(-1, 1)
+        )
+        self.save()
+        print("NEW ROUND INITIALIZED")
+
+    def init_new_game(self):
+        print("INIT NEW GAME")
+        self.init_new_round()
+        self.player1_score = 0
+        self.player2_score = 0
+        self.winner = None
+        self.state = "PENDING"
+        self.save()
+
+    @sync_to_async
+    def to_dict(self):
+        return {
+            "round_start_time": self.round_start_time,
+            "state": self.state,
+            "countdown": self.countdown,
+            "ball": self.ball,
+            "ball_speed": self.ball_speed,
+            "hit_count": self.hit_count,
+            "ball_vector": self.ball_vector,
+            "player1": {
+                "player_id": self.player1.player_id,
+                "player_name": self.player1.username,
+                "score": self.player1_score,
+                "y": self.player1_y,
+                "up_pressed": self.player1_up_pressed,
+                "down_pressed": self.player1_down_pressed,
+            },
+            "player2": {
+                "player_id": self.player2.player_id,
+                "player_name": self.player2.username,
+                "score": self.player2_score,
+                "y": self.player2_y,
+                "up_pressed": self.player2_up_pressed,
+                "down_pressed": self.player2_down_pressed,
+            },
+            "winner": self.winner,
+        }
+
+
 class Tournament(models.Model):
 
     STATE_CHOICES = [
@@ -60,6 +210,27 @@ class Tournament(models.Model):
     state = models.CharField(max_length=50, choices=STATE_CHOICES, default="NEW")
     num_players = models.IntegerField()
     players = models.ManyToManyField(Player, related_name="tournaments", blank=True)
+    match1 = models.ForeignKey(
+        Match,
+        related_name="tournament_match1",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+    )
+    match2 = models.ForeignKey(
+        Match,
+        related_name="tournament_match2",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+    )
+    match_final = models.ForeignKey(
+        Match,
+        related_name="tournament_match_final",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+    )
     # matches = models.ManyToManyField("Match", related_name="tournament", blank=True)
 
     # players = ArrayField(models.CharField(max_length=100), blank=True, default=list)
@@ -71,10 +242,8 @@ class Tournament(models.Model):
         on_delete=models.CASCADE,
         null=True,
         blank=True,
-        default=None,
     )
     created_at = models.DateTimeField(auto_now_add=True)
-    is_started = models.BooleanField(default=False)
     is_final = models.BooleanField(default=False)
 
     def __init__(self, *args, **kwargs):
@@ -90,13 +259,13 @@ class Tournament(models.Model):
     async def start_tournament_if_applicable(self):
         logging.info(f"Starting tournament {self.tournament_id} if applicable")
         num_players = await sync_to_async(self.players.count)()
-        logging.info(f"Current players: {num_players}, Required players: {self.num_players}")
+        logging.info(
+            f"Current players: {num_players}, Required players: {self.num_players}"
+        )
 
         if self.num_players == num_players and self.state == "PLAYING":
             logging.info("Conditions met to start the tournament")
             await self.create_1st_match()
-            
-            self.is_started = True
             await sync_to_async(self.save)()
             logging.info(f"Tournament {self.tournament_id} is_started set to True")
 
@@ -108,7 +277,9 @@ class Tournament(models.Model):
                 logging.info(f"Started match {match.game_id}")
 
         else:
-            logging.info(f"Conditions not met to start the tournament. State: {self.state}, Players: {num_players}/{self.num_players}")
+            logging.info(
+                f"Conditions not met to start the tournament. State: {self.state}, Players: {num_players}/{self.num_players}"
+            )
 
     async def create_1st_match(self):
         logging.info(f"Creating first match(es) for tournament {self.tournament_id}")
@@ -130,7 +301,9 @@ class Tournament(models.Model):
                 match2 = await sync_to_async(Match.objects.create)(
                     player1=players[2], player2=players[3], tournament=self
                 )
-                logging.info(f"Created matches {match1.game_id} and {match2.game_id} for 4 players")
+                logging.info(
+                    f"Created matches {match1.game_id} and {match2.game_id} for 4 players"
+                )
                 await sync_to_async(self.matches.add)(match1)
                 await sync_to_async(self.matches.add)(match2)
             else:
@@ -140,7 +313,9 @@ class Tournament(models.Model):
             await sync_to_async(self.save)()
             logging.info(f"First match(es) created for tournament {self.tournament_id}")
         else:
-            logging.warning(f"Not enough players to create matches. Current: {num_players}, Required: {self.num_players}")
+            logging.warning(
+                f"Not enough players to create matches. Current: {num_players}, Required: {self.num_players}"
+            )
 
     def handle_key_action(self, user, key, keyAction):
         print("HANDLE KEY ACTION")
@@ -553,165 +728,3 @@ class GameLoop:
         if self.loop_task:
             self.loop_task.cancel()
             self.loop_task = None
-
-
-class Match(models.Model):
-
-    STATE_CHOICES = [
-        ("PENDING", "Pending"),
-        ("COUNTDOWN", "New"),
-        ("PLAYING", "Started"),
-        ("FINISHED", "Final"),
-    ]
-
-    game_id = models.AutoField(primary_key=True)
-    tournament = models.ForeignKey(
-        Tournament, related_name="matches", on_delete=models.CASCADE
-    )
-    player1 = models.ForeignKey(
-        Player, related_name="player1_matches", on_delete=models.CASCADE
-    )
-    player1_score = models.IntegerField(default=0)
-    player1_up_pressed = models.BooleanField(default=False)
-    player1_down_pressed = models.BooleanField(default=False)
-    player1_y = models.IntegerField(default=settings.FIELD_HEIGHT / 2)
-    player2 = models.ForeignKey(
-        Player, related_name="player2_matches", on_delete=models.CASCADE
-    )
-    player2_score = models.IntegerField(default=0)
-    player2_up_pressed = models.BooleanField(default=False)
-    player2_down_pressed = models.BooleanField(default=False)
-    player2_y = models.IntegerField(default=settings.FIELD_HEIGHT / 2)
-    state = models.CharField(max_length=255, choices=STATE_CHOICES, default="PENDING")
-    winner = models.ForeignKey(
-        Player,
-        related_name="won_games",
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True,
-        default=None,
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def get_larger_random(self):
-        y = 0
-        while abs(y) < 0.2 or abs(y) > 0.9:
-            y = random.uniform(-1, 1)
-        return y
-
-    def normalize_vector(self, x, y):
-        magnitude = math.sqrt(x**2 + y**2)
-        return {"x": x / magnitude, "y": y / magnitude}
-
-    def __init__(self, *args, **kwargs):
-        print("INIT MATCH")
-        super().__init__(*args, **kwargs)
-        print("tournament", kwargs.get("tournament"))
-        print("player1", kwargs.get("player1"))
-        print("player2", kwargs.get("player2"))
-        self.countdown = 3
-        self.ball = {"x": settings.FIELD_WIDTH / 2, "y": settings.FIELD_HEIGHT / 2}
-        self.ball_speed = settings.BALL_STARTING_SPEED
-        self.hit_count = 0
-        self.ball_vector = self.normalize_vector(
-            self.get_larger_random(), random.uniform(-1, 1)
-        )
-        self.player1_game_state = {
-            "y": settings.FIELD_HEIGHT / 2,
-            "up_pressed": False,
-            "down_pressed": False,
-        }
-        self.player2_game_state = {
-            "y": settings.FIELD_HEIGHT / 2,
-            "up_pressed": False,
-            "down_pressed": False,
-        }
-        print("MATCH INITIALIZED")
-        self.game_loop = GameLoop(self)
-        self.round_start_time = time.time()
-        all_matches = Match.objects.all()
-        num_all_matches = all_matches.count()
-        print("end of INIT MATCH num all matches: ", num_all_matches)
-        print("GAME LOOP IN MATCH INITIALIZED")
-
-    def __str__(self):
-        return f"{self.player1.alias} vs {self.player2.alias}"
-
-    async def start_match(self):
-        print("START MATCH")
-        self.state = "COUNTDOWN"
-        self.round_start_time = time.time()
-        await self.game_loop.loop()
-        await sync_to_async(self.save)()
-
-    def determine_winner(self):
-        print("DETERMINE WINNER")
-        if self.player1_score > self.player2_score:
-            return self.player1
-        return self.player2
-
-    def determine_loser(self):
-        print("DETERMINE LOSER")
-        if self.player1_score < self.player2_score:
-            return self.player1
-        return self.player2
-
-    def init_new_round(self):
-        print("INIT NEW ROUND")
-        self.round_start_time = time.time()
-        self.state = "COUNTDOWN"
-        self.countdown = 3
-        self.hit_count = 0
-        self.ball = {"x": settings.FIELD_WIDTH / 2, "y": settings.FIELD_HEIGHT / 2}
-        self.ball_speed = settings.BALL_STARTING_SPEED
-        self.hit_count = 0
-        self.ball_vector = self.normalize_vector(
-            self.get_larger_random(), random.uniform(-1, 1)
-        )
-        self.save()
-        print("NEW ROUND INITIALIZED")
-
-    def init_new_game(self):
-        print("INIT NEW GAME")
-        self.init_new_round()
-        self.player1_score = 0
-        self.player2_score = 0
-        self.winner = None
-        self.state = "PENDING"
-        self.save()
-
-    @sync_to_async
-    def to_dict(self):
-        return {
-            "round_start_time": self.round_start_time,
-            "state": self.state,
-            "countdown": self.countdown,
-            "ball": self.ball,
-            "ball_speed": self.ball_speed,
-            "hit_count": self.hit_count,
-            "ball_vector": self.ball_vector,
-            "player1": {
-                "player_id": self.player1.player_id,
-                "player_name": self.player1.username,
-                "score": self.player1_score,
-                "y": self.player1_y,
-                "up_pressed": self.player1_up_pressed,
-                "down_pressed": self.player1_down_pressed,
-            },
-            "player2": {
-                "player_id": self.player2.player_id,
-                "player_name": self.player2.username,
-                "score": self.player2_score,
-                "y": self.player2_y,
-                "up_pressed": self.player2_up_pressed,
-                "down_pressed": self.player2_down_pressed,
-            },
-            "winner": self.winner,
-        }
-
-
-class PlayerTournament(models.Model):
-    player_tournament_id = models.AutoField(primary_key=True)
-    player = models.ForeignKey(Player, on_delete=models.CASCADE)
-    tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
