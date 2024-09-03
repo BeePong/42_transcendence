@@ -88,50 +88,59 @@ class Tournament(models.Model):
         return json.dumps(self.__dict__, default=str)
 
     async def start_tournament_if_applicable(self):
-
-        print("START TOURNAMENT IF APPLICABLE")
+        logging.info(f"Starting tournament {self.tournament_id} if applicable")
         num_players = await sync_to_async(self.players.count)()
-        print("num_players: ", num_players)
-        print("self.num_players: ", self.num_players)
-        if self.num_players == num_players and self.state == "NEW":
-            print("about to create first match")
+        logging.info(f"Current players: {num_players}, Required players: {self.num_players}")
+
+        if self.num_players == num_players and self.state == "PLAYING":
+            logging.info("Conditions met to start the tournament")
             await self.create_1st_match()
+            
             self.is_started = True
-            self.state = "PLAYING"
             await sync_to_async(self.save)()
-            print(
-                "number of matches in the tournament that is about to start: ",
-                await sync_to_async(self.matches.count)(),
-            )
+            logging.info(f"Tournament {self.tournament_id} is_started set to True")
+
+            # Start matches
             ordered_matches = self.matches.order_by("-created_at")
-            match = await sync_to_async(ordered_matches.first)()
-            match_dict = await match.to_dict()
-            print("MATCH: ", match_dict)
-            await match.start_match()
-            winner = match.winner
-            if self.num_players > 2:
-                await self.create_next_match()
-                ordered_matches = self.matches.order_by("-created_at")
-                next_match = filter(state=Match.PENDING).first()
-                await next_match.start_match()
-                await self.create_next_match()
-                ordered_matches = self.matches.order_by("-created_at")
-                next_match = filter(state=Match.PENDING).first()
-                await next_match.start_match()
-                winner = next_match.winner
-            self.state = "FINISHED"
-            # set has_active_tournament to false for all players
-            players = await sync_to_async(list)(self.players.all())
-            for player in players:
-                player.has_active_tournament = False
-                player.current_tournament_id = -1
-                await sync_to_async(player.save)()
-            print("TOURNAMENT ", self.title, " FINISHED")
-            if winner:
-                print("WINNER: ", winner.username)
+            matches = await sync_to_async(list)(ordered_matches)
+            for match in matches:
+                await match.start_match()
+                logging.info(f"Started match {match.game_id}")
+
+        else:
+            logging.info(f"Conditions not met to start the tournament. State: {self.state}, Players: {num_players}/{self.num_players}")
+
+    async def create_1st_match(self):
+        logging.info(f"Creating first match(es) for tournament {self.tournament_id}")
+        players = await sync_to_async(list)(self.players.all())
+        num_players = len(players)
+
+        if num_players == self.num_players:
+            random.shuffle(players)
+            if self.num_players == 2:
+                match = await sync_to_async(Match.objects.create)(
+                    player1=players[0], player2=players[1], tournament=self
+                )
+                logging.info(f"Created match {match.game_id} for 2 players")
+                await sync_to_async(self.matches.add)(match)
+            elif self.num_players == 4:
+                match1 = await sync_to_async(Match.objects.create)(
+                    player1=players[0], player2=players[1], tournament=self
+                )
+                match2 = await sync_to_async(Match.objects.create)(
+                    player1=players[2], player2=players[3], tournament=self
+                )
+                logging.info(f"Created matches {match1.game_id} and {match2.game_id} for 4 players")
+                await sync_to_async(self.matches.add)(match1)
+                await sync_to_async(self.matches.add)(match2)
             else:
-                print("NO WINNER, ERROR")
+                logging.warning(f"Unsupported number of players: {self.num_players}")
+                return
+
             await sync_to_async(self.save)()
+            logging.info(f"First match(es) created for tournament {self.tournament_id}")
+        else:
+            logging.warning(f"Not enough players to create matches. Current: {num_players}, Required: {self.num_players}")
 
     def handle_key_action(self, user, key, keyAction):
         print("HANDLE KEY ACTION")
@@ -226,50 +235,6 @@ class Tournament(models.Model):
             player = self.players.get(user=user)
             player.is_online = False
             player.save()
-
-    async def create_1st_match(self):
-        print("CREATE 1ST MATCH")
-        players = await sync_to_async(list)(self.players.all())
-        random.shuffle(players)
-        if await sync_to_async(self.players.count)() >= 2:
-            # get all match objects
-            all_matches = await sync_to_async(Match.objects.all)()
-            num_all_matches = await sync_to_async(len)(all_matches)
-            print("num all matches: ", num_all_matches)
-            matches_this_tournament = await sync_to_async(list)(
-                Match.objects.filter(tournament=self)
-            )
-            num_matches_this_tournament = await sync_to_async(len)(
-                matches_this_tournament
-            )
-            print("num matches this tournament: ", num_matches_this_tournament)
-            filtered_matches = await sync_to_async(list)(
-                Match.objects.filter(
-                    player1=players[0], player2=players[1], tournament=self
-                )
-            )
-            num_filtered_matches = await sync_to_async(len)(filtered_matches)
-            print("num filtered matches: ", num_filtered_matches)
-            matches_with_id_7 = await sync_to_async(list)(
-                Match.objects.filter(game_id=7)
-            )
-            num_matches_with_id_7 = await sync_to_async(len)(matches_with_id_7)
-            print("num matches with id 7: ", num_matches_with_id_7)
-            print("creating 1st match")
-            print("creating 1st match player 1 id: ", players[0].player_id)
-            print("creating 1st match player 2 id: ", players[1].player_id)
-            match, created = await sync_to_async(Match.objects.get_or_create)(
-                player1=players[0], player2=players[1], tournament=self
-            )
-            print("match created bool: ", created)
-            logging.info(
-                "match created id: %s",
-                match.game_id,
-            )
-            print("player1: ", await sync_to_async(lambda: match.player1.player_id)())
-            print("player2: ", await sync_to_async(lambda: match.player2.player_id)())
-            # await sync_to_async(self.matches.add)(match)
-            await sync_to_async(self.save)()
 
     @sync_to_async
     def create_next_match(self):

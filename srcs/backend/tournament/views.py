@@ -9,13 +9,16 @@ from .models import Tournament, Player, Match
 from django.utils.functional import SimpleLazyObject
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
+import asyncio
+import logging
+from asgiref.sync import async_to_sync
 
 # Create your views here.
 
 
 @login_required_json
 def tournament(request):
-    print("tournament")
+    logging.info("Tournament view called")
     """The tournament page for BeePong."""
     player, created = Player.objects.get_or_create(user=request.user)
     if request.method != "POST":
@@ -31,47 +34,41 @@ def tournament(request):
         if form.is_valid():
             print("form is valid")
             tournament = get_object_or_404(Tournament, tournament_id=tournament_id)
-            if player.has_active_tournament == False and tournament.state == "NEW":
-                print(
-                    "Player has no active tournament and tournament is new, proceeding with adding player to tournament"
-                )
+            logging.info(f"Tournament state: {tournament.state}, Players: {tournament.players.count()}/{tournament.num_players}")
+            
+            if tournament.state == "NEW":
+                logging.info(f"Adding player {player.username} to tournament {tournament_id}")
                 form.save()
-                print("list_players coming next")
-                list_players = tournament.players.all()
-                list_player_ids = [p.player_id for p in list_players]
-                print("list_player_ids:", list_player_ids)
-                if player.player_id in list_player_ids:
-                    print(f"{player.alias} is in the list.")
+                
+                if player not in tournament.players.all():
+                    tournament.players.add(player)
+                    player.has_active_tournament = True
+                    player.current_tournament_id = tournament.tournament_id
+                    player.save()
+                    tournament.save()
+                    logging.info(f"Player {player.username} added to tournament {tournament_id}")
+                
+                # Check if the tournament should start
+                if tournament.players.count() == tournament.num_players:
+                    logging.info(f"Tournament {tournament_id} has enough players. Attempting to start.")
+                    tournament.state = "PLAYING"
+                    tournament.is_started = True
+                    tournament.save()
+                    async_to_sync(tournament.start_tournament_if_applicable)()
                 else:
-                    print(f"{player.alias} is not in the list.")
-                    player.is_online = True
-                    if player.has_active_tournament == False:
-                        print(
-                            "player has no active tournament, adding them to this tournament"
-                        )
-                        player.current_tournament_id = tournament_id
-                        player.has_active_tournament = True
-                        player.save()
-                        tournament.players.add(player)
-                    else:
-                        print("player already has an active tournament")
-                        return JsonResponse(
-                            {
-                                "success": False,
-                                "error": "Player already has an active tournament",
-                            },
-                            status=404,
-                        )
-                # if tournament.num_players_in >= tournament.num_players:
-                #    tournament.state = 'READY'
-                tournament.save()
+                    logging.info(f"Tournament {tournament_id} doesn't have enough players yet. Current: {tournament.players.count()}, Required: {tournament.num_players}")
             else:
-                print("Player has active tournament or tournament is not new")
+                logging.info(f"Tournament {tournament_id} is not in NEW state. Current state: {tournament.state}")
+
+            tournament.refresh_from_db()  # Refresh the tournament object to get the latest state
+            logging.info(f"Tournament {tournament_id} final state: {tournament.state}")
+
             return JsonResponse(
-                {"success": True, "redirect": f"/tournament/{tournament_id}/lobby"},
+                {"success": True, "redirect": f"/tournament/{tournament_id}/lobby", "tournament_state": tournament.state},
                 status=201,
             )
         else:
+            logging.warning(f"Form is invalid: {form.errors}")
             return JsonResponse({"success": False, "errors": form.errors}, status=400)
 
     # Prepare tournaments data for the template
