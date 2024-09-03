@@ -22,14 +22,16 @@ export async function loadPage(path, redirectUrl = '/', fromNavigate = false, qu
 			if (!response.ok && response.status !== 404) {
 					if (response.status === 400 || response.status === 401) {
 						if (response.status === 400)
-							return loadPage('/accounts/oauth_error'); // Handle oauth error response by fetching the error page
+							return loadPage('/accounts/oauth_error/'); // Handle oauth error response by fetching the error page
 						else
-							return navigate('/accounts/login', redirectUrl); // Redirect to login page if the user is not authenticated	
+							return navigate('/accounts/login/', redirectUrl); // Redirect to login page if the user is not authenticated	
 					}
 					else {
 						throw new Error('Network response was not ok');
 					}
 			}
+
+
 
 			if (fromNavigate === true) // If this function is called by navigate(), update the browser's history to the new path without reloading the page
 				history.pushState(null, null, path);

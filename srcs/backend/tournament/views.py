@@ -46,7 +46,7 @@ def tournament(request):
                 if tournament.num_players_in >= tournament.num_players:
                    tournament.state = 'READY'
                 tournament.save()
-            return JsonResponse({'success': True, 'redirect': f'/tournament/{tournament_id}/lobby'}, status=201)
+            return JsonResponse({'success': True, 'redirect': f'/tournament/{tournament_id}/lobby/'}, status=201)
         else:
             return JsonResponse({'success': False, 'errors': form.errors}, status=400)
     
@@ -65,7 +65,7 @@ def tournament(request):
     return render(request, 'tournament/tournament.html', {
         'tournaments': tournament_data,
         'form': form,
-        'form_action': '/tournament/',
+        'form_action': reverse('tournament:tournament'),
     })
 
 
@@ -83,7 +83,7 @@ def create_tournament(request):
             form.save_m2m()
             return JsonResponse({
                 'success': True,
-                'redirect': '/tournament',
+                'redirect': reverse('tournament:tournament'),
                 'name': tournament.title,
                 'description': tournament.description,
                 'num_players': tournament.num_players,
