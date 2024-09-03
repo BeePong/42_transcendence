@@ -1,4 +1,4 @@
-.PHONY: up down clean clean_volumes clean_orphans clean_images clean_all get_images_id re re_elk re_all re_all_elk  up_backend up_db up_elk up_all up_no_elk logs logs_errors logs_grep logs_nginx logs_backend logs_db logs_elk ps ps_short ps_inspect exec_nginx exec_backend exec_db exec_elk stop_all stats sys_df help nuke jest cypress
+.PHONY: up down clean clean_volumes clean_orphans clean_images clean_all get_images_id re re_elk re_all re_all_elk  up_backend up_db up_elk up_all up_no_elk logs logs_errors logs_grep logs_nginx logs_backend logs_db logs_elk ps ps_short ps_inspect exec_nginx exec_backend exec_db exec_elk stop_all stats sys_df help nuke jest run_jest cypress run_cypress cypress_firefox run_cypress_firefox
 
 ################################################################################
 # Build and Start
@@ -181,7 +181,39 @@ sys_df:
 ################################################################################
 nuke:
 	git clean -dxf
-	git reset --hard	
+	git reset --hard
+
+
+################################################################################
+# Tests
+################################################################################
+# Build and run jest
+jest:
+	docker compose build jest
+	docker compose run --rm jest
+
+# Run jest
+run_jest:
+	docker compose run --rm jest
+
+# Build and run cypress
+cypress:
+	docker compose build cypress
+	docker compose run --rm cypress
+
+# Run cypress
+run_cypress:
+	docker compose run --rm cypress
+
+# Build and run cypress with firefox
+cypress_firefox:
+	docker compose build cypress
+	CYPRESS_BROWSER=firefox docker compose run --rm cypress
+
+# Run cypress with firefox
+run_cypress_firefox:
+	CYPRESS_BROWSER=firefox docker compose run --rm cypress
+
 
 ################################################################################
 # Help
@@ -244,18 +276,14 @@ help:
 	@echo "Reset repository:"
 	@echo "  nuke           Reset repository to the last commit (destructive action, removes all untracked files)"
 	@echo ""
+	@echo "Tests:"
+	@echo "  jest           Build and run jest"
+	@echo "  run_jest       Run jest"
+	@echo "  cypress        Build and run cypress"
+	@echo "  run_cypress    Run cypress"
+	@echo "  cypress_firefox Build and run cypress with firefox"
+	@echo "  run_cypress_firefox Run cypress with firefox"
+	@echo ""
 	@echo "Help:"
 	@echo "  help           Show this help message"
 
-################################################################################
-# Build and Run test
-################################################################################
-# Build and run jest
-jest:
-	docker compose build jest
-	docker compose run --rm jest
-
-# Build and run cypress
-cypress:
-	docker compose build cypress
-	docker compose run --rm cypress
