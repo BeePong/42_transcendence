@@ -40,21 +40,23 @@
 						{% endfor %}
 					</div>
 					{% if tournament.state == 'NEW' %}
-					<form onsubmit="handleFormSubmit(event)" action="{{ form_action }}">
-						{% csrf_token %}
-						<input type="hidden" name="tournament_id" value="{{ tournament.tournament_id }}">
-						<div class="form__input-button-container">
-							<div>
-								<label for="id_alias">Alias</label>
-								{{ form.alias }}
+					<div class="form__actions">
+						<form onsubmit="handleFormSubmit(event)" action="{{ form_action }}">
+							{% csrf_token %}
+							<input type="hidden" name="tournament_id" value="{{ tournament.tournament_id }}">
+							<div class="form__input-button-container">
+								<div>
+									<label for="id_alias">Alias</label>
+									{{ form.alias }}
+								</div>
+								<button type="submit" class="button--primary button--with-icon">
+									<span class="button__text">JOIN</span>
+									<img src="/img/arrow.svg" alt="arrow" width="21" height="12">
+								</button>
 							</div>
-							<button type="submit" class="button--primary button--with-icon">
-								<span class="button__text">JOIN</span>
-								<img src="/img/arrow.svg" alt="arrow" width="21" height="12">
-							</button>
-						</div>
-					</form>
-					<div class="form__error-message"></div>  
+						</form>
+						<div class="form__error-message"></div>
+					</div>
 					{% endif %}
 				</div>
 			</div>
