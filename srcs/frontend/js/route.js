@@ -77,14 +77,14 @@ async function loadPage(
 
       // if url contains "lobby", start mockWebSocket
       var match = page.match(/^\/tournament\/(\d+)\/lobby$/);
-      console.log("URL matched websocket");
       if (match) {
+        console.log("URL matched websocket");
         var tournament_id = match[1];
         webSocketTest(tournament_id);
       }
       var solo_match = page.match(/^\/tournament\/solo_game$/);
-      console.log("solo_game match", solo_match);
       if (solo_match) {
+        console.log("solo_game match", solo_match);
         webSocketTest("solo");
       }
     }

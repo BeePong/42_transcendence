@@ -144,10 +144,11 @@ function webSocketTest(tournament_id) {
     if (data.type === "tournament") {
       var tournament_data = data.message;
       console.log("tournament_data:", tournament_data);
-      console.log("window.pathname", window.pathname);
+      console.log("window.location.pathname", window.location.pathname);
+      console.log("tournament_data.state", tournament_data.state);
       if (tournament_data.state === "NEW") {
         console.log("tournament is new, reloading page");
-        loadPage(window.pathname);
+        loadPage(window.location.pathname);
       }
     } else {
       console.log("game data:", data.message);
