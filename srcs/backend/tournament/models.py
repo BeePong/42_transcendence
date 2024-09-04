@@ -66,6 +66,7 @@ class Tournament(models.Model):
 
     STATE_CHOICES = [
         ("NEW", "New"),
+        ("COUNTDOWN", "Countdown"),
         ("PLAYING", "Started"),
         ("FINISHED", "Final"),
     ]

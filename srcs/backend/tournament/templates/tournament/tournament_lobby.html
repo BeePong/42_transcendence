@@ -1,14 +1,14 @@
 <section
   id="tournament-lobby-section"
-  class="{% if players_in_lobby|length == num_players %}full{% endif %} {% if num_players == 2 %}two-players{% endif %}"
+  class="{% if num_players_in_tournament == num_players %}full{% endif %} {% if num_players == 2 %}two-players{% endif %}"
 >
-  {% if players_in_lobby|length < num_players %}
+  {% if num_players_in_tournament < num_players %}
   <h1 class="tournament_lobby__header">BEEPONG CUP</h1>
   <p class="tournament_lobby__description font--alt font-size--sm">
     The mighty Pong contest for the best of the best bees!
   </p>
   <p class="tournament_lobby__player-count">
-    <span id="num-players-in-lobby">{{ players_in_lobby|length }}</span>/<span
+    <span id="num-players-in-lobby">{{ num_players_in_tournament }}</span>/<span
       id="num-players"
       >{{ num_players }}</span
     >
@@ -16,7 +16,7 @@
   </p>
   {% else %}
   <h1 class="tournament_lobby__header">
-    BEEPONG CUP IS STARTING IN <span id="countdown">3</span>...
+    BEEPONG CUP IS STARTING IN <span id="countdown">{{ countdown }}</span>...
   </h1>
   {% if match_players|length == 2 %}
   <p class="tournament_lobby__description font--alt font-size--sm">
@@ -31,7 +31,7 @@
     </div>
     {% endfor %}
   </div>
-  {% if players_in_lobby|length < num_players %}
+  {% if num_players_in_tournament < num_players %}
   <button
     id="leave-button"
     class="button--tertiary button--with-icon"

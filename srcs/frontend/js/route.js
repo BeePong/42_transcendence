@@ -1,4 +1,4 @@
-import { webSocketTest } from "./websockets.js";
+import { openWebSocket } from "./websockets.js";
 
 // Handle navigation based on path or event
 window.navigate = function navigate(eventOrPath, redirectUrl = "/") {
@@ -80,12 +80,12 @@ async function loadPage(
       console.log("URL matched websocket");
       if (match) {
         var tournament_id = match[1];
-        webSocketTest(tournament_id);
+        openWebSocket(tournament_id);
       }
       var solo_match = page.match(/^\/tournament\/solo_game$/);
       console.log("solo_game match", solo_match);
       if (solo_match) {
-        webSocketTest("solo");
+        openWebSocket("solo");
       }
     }
   } catch (error) {
@@ -143,49 +143,6 @@ function changeRedirectUrlandOauthState(redirectUrl) {
   login42UrlElement.href = updatedLogin42Url.toString();
 }
 
-// TODO: replace by websocket
-// Mock WebSocket connection
-function mockWebSocket() {
-  setTimeout(() => {
-    if (/^\/tournament\/\d+\/lobby$/.test(window.location.pathname))
-      tournamentLobbyAddPlayer();
-  }, 1000); // Simulate a new player joining every second
-}
-
-// Add player in the tournament lobby
-function tournamentLobbyAddPlayer() {
-  const numPlayersInLobby = parseInt(
-    document.getElementById("num-players-in-lobby").textContent,
-    10
-  );
-  const numPlayers = parseInt(
-    document.getElementById("num-players").textContent,
-    10
-  );
-
-  // Update number of players in lobby
-  const updatedNumPlayersInLobby = numPlayersInLobby + 1;
-  document.getElementById(
-    "num-players-in-lobby"
-  ).textContent = `${updatedNumPlayersInLobby}`;
-
-  // Add new div for new player
-  const playerDiv = document.createElement("div");
-  playerDiv.classList.add("tournament_lobby__name-container");
-  playerDiv.innerHTML = `
-		<div class="tournament_lobby__name">Dummy</div>
-		<span class="tournament_lobby__match-num"></span>
-	`;
-  document
-    .querySelector(".tournament_lobby__name-list-container")
-    .appendChild(playerDiv);
-
-  // If the lobby is full, go to handle full tournament lobby. Otherwise, add new players again
-  updatedNumPlayersInLobby === numPlayers
-    ? handleFullTournamentLobby()
-    : mockWebSocket();
-}
-
 // Handle full tournament lobby
 function handleFullTournamentLobby() {
   setTimeout(() => {
@@ -221,30 +178,5 @@ function tournamentLobbyCountdown() {
     }, 1000);
   }, 500);
 }
-
-// Load navbar
-async function loadNavBar() {
-  try {
-    const response = await fetch("/page/navbar/");
-    if (!response.ok) {
-      throw new Error("Network response was not ok");
-    }
-    const data = await response.text();
-    document.getElementById("navbar-content").innerHTML = data;
-  } catch (error) {
-    console.error("There was a problem with the fetch operation:", error);
-  }
-}
-
-// Listen to popstate events for back/forward navigation
-window.addEventListener("popstate", () => {
-  loadPage(window.location.pathname);
-});
-
-// Initial page load
-document.addEventListener("DOMContentLoaded", () => {
-  loadNavBar();
-  loadPage(window.location.pathname, "/", false, window.location.search);
-});
 
 export { loadPage };

@@ -1,3 +1,11 @@
+import { loadPage } from "./route.js";
+import {
+  appendNewPlayerDiv,
+  updateNumPlayersInLobby,
+  insertCountdown,
+  handleFullTournamentLobby,
+} from "./tournament.js";
+
 // Constants
 const CANVAS_HEIGHT = 500;
 const CANVAS_WIDTH = 800;
@@ -71,7 +79,7 @@ const drawPaddle = (context, y, player_type, controlling) => {
 };
 
 const drawEmptyCanvas = (context) => {
-  var backgroundColor = getComputedStyle(
+  const backgroundColor = getComputedStyle(
     document.documentElement
   ).getPropertyValue("--background-color");
 
@@ -113,9 +121,8 @@ function updateCanvas(context, game_data) {
   drawPaddle(context, game_data.player2.y, "player2");
 }
 
-function webSocketTest(tournament_id) {
+function openWebSocket(tournament_id) {
   const canvasContext = getContext();
-  if (canvasContext) drawEmptyCanvas(canvasContext);
   const url =
     (window.location.protocol == "https:" ? "wss://" : "ws://") +
     window.location.host +
@@ -125,33 +132,62 @@ function webSocketTest(tournament_id) {
     "?is_bot=False";
 
   console.log("Starting WebSocket on URL: ", url);
-  var socket = new WebSocket(url);
+  const socket = new WebSocket(url);
   console.log("WebSocket created: ", socket);
   // TODO: remember to close websocket after the tournament is over
 
   socket.onmessage = function (e) {
     console.log("WebSocket message received");
-    var data = JSON.parse(e.data);
+    console.log("window.location.pathname", window.location.pathname);
+    let data;
+    try {
+      data = JSON.parse(e.data);
+    } catch (e) {
+      console.log("Error parsing JSON data", e);
+      return false;
+    }
     console.log("parsed data:", data);
-    // parse message
-    // try {
-    //   var jsonData = JSON.parse(data);
-    // } catch (e) {
-    //   console.log("Error parsing JSON data", e);
-    //   return false;
-    // }
-    // if type is tournament
-    if (data.type === "tournament") {
-      var tournament_data = data.message;
-      console.log("tournament_data:", tournament_data);
-      console.log("window.pathname", window.pathname);
-      if (tournament_data.state === "NEW") {
-        console.log("tournament is new, reloading page");
-        loadPage(window.pathname);
-      }
-    } else {
-      console.log("game data:", data.message);
-      updateCanvas(canvasContext, jsonData.message);
+    switch (data.type) {
+      case "tournament":
+        const tournamentMessage = data.message;
+        switch (tournamentMessage.event) {
+          case "new_player":
+            console.log("new_player");
+            appendNewPlayerDiv(tournamentMessage.player_alias);
+            updateNumPlayersInLobby(
+              tournamentMessage.num_players_in_tournament
+            );
+            if (
+              tournamentMessage.num_players_in_tournament ===
+              tournamentMessage.num_players
+            )
+              handleFullTournamentLobby();
+            break;
+          case "countdown":
+            console.log("countdown");
+            handleFullTournamentLobby(
+              tournamentMessage.player1_alias,
+              tournamentMessage.player2_alias
+            );
+            insertCountdown(tournamentMessage.countdown);
+            break;
+          case "game_started":
+            console.log("game_started");
+            const canvasContext = getContext();
+            if (canvasContext) drawEmptyCanvas(canvasContext);
+            break;
+          case "game_finished":
+            console.log("game_finished");
+            // TODO: render winner page
+            break;
+          default:
+            loadPage(window.location.pathname);
+        }
+
+      case "game":
+        const gameState = data.message;
+        updateCanvas(canvasContext, gameState);
+        break;
     }
 
     // Here tournament_lobby function will be called once the winner is determined, call loadPage on window.pathname (reload page)
@@ -159,7 +195,7 @@ function webSocketTest(tournament_id) {
     // if tpirnament not full
     // navigate to refresh page
     // when new player joins, send player into to tournamentLobbyAddPlayer(player), numPlayers and updatedNumPlayersInLobby
-    // state is countdown, seconds number is 2, 1, 0 and call function to change number in countdown 
+    // state is countdown, seconds number is 2, 1, 0 and call function to change number in countdown
 
     // when state is playing
     return false;
@@ -202,4 +238,4 @@ function webSocketTest(tournament_id) {
   });
 }
 
-export { webSocketTest };
+export { openWebSocket };

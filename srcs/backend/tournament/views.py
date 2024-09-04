@@ -136,8 +136,8 @@ def create_tournament(request):
             tournament = form.save(commit=False)
             tournament.save()
             form.save_m2m()
-            players = list(tournament.players.values("username"))
-            player_usernames = [player["username"] for player in players]
+            players = list(tournament.players.values("alias"))
+            player_aliases = [player["alias"] for player in players]
             return JsonResponse(
                 {
                     "success": True,
@@ -147,7 +147,7 @@ def create_tournament(request):
                     "num_players": tournament.num_players,
                     "tournament_id": tournament.tournament_id,
                     "state": tournament.state,
-                    "players": player_usernames,
+                    "players": player_aliases,
                     "winner": "",
                 },
                 status=201,
@@ -168,46 +168,11 @@ def tournament_lobby(request, tournament_id):
     try:
         # Safely retrieve the tournament object
         tournament = get_object_or_404(Tournament, tournament_id=tournament_id)
-
-        players = list(tournament.players.values("username"))
-        usernames = [player["username"] for player in players]
+        players = list(tournament.players.values("alias"))
+        aliases = [player["alias"] for player in players]
         num_players_in_tournament = tournament.players.count()
         print("num_players_in_tournament:", num_players_in_tournament)
-        # if tournament.state == "NEW":
-        #     user1 = request.user
-        #     if tournament.is_user_in_tournament(user1):
-        #         print(f"{user1} is in the list.")
-        #     else:
-        #         print(f"{user1} is not in the list.")
-        #         print(f"Adding {user1} to the list.")
-        #         player, _ = Player.objects.get_or_create(user=request.user)
-
-        #         player.is_online = True
-        #         player.username = request.user.username
-        #         print("created or got player", player.username)
-        #         if player.has_active_tournament == False:
-        #             print(
-        #                 "player has no active tournament, adding them to this tournament"
-        #             )
-        #             player.current_tournament_id = tournament_id
-        #             player.has_active_tournament = True
-        #             player.save()
-        #             tournament.players.add(player)
-        #         else:
-        #             print("player already has an active tournament")
-        #             return JsonResponse(
-        #                 {
-        #                     "success": False,
-        #                     "error": "Player already has an active tournament",
-        #                 },
-        #                 status=404,
-        #             )
-        #         # if tournament.players.count() >= tournament.num_players:
-        #         #     print("tournament is full, starting the tournament")
-        #         #     tournament.state = "PLAYING"
-        #         tournament.save()
         print("tournament_lobby ready to render")
-        print("num_players_in_tournament before rendering:", num_players_in_tournament)
         if (
             tournament.state == "NEW"
             and num_players_in_tournament < tournament.num_players
@@ -217,17 +182,18 @@ def tournament_lobby(request, tournament_id):
                 request,
                 "tournament/tournament_waiting_lobby.html",
                 {
-                    "players_in_lobby": usernames,
+                    "players_in_lobby": aliases,
+                    "num_players_in_tournament": num_players_in_tournament,
                     "num_players": tournament.num_players,
                 },
             )
-        if tournament.state == "PLAYING":
+        elif tournament.state == "PLAYING":
             print("tournament is playing, rendering canvas")
             return render(
                 request,
                 "tournament/tournament_game.html",
                 {
-                    "players_in_lobby": usernames,
+                    "players_in_lobby": aliases,
                     "num_players_in_tournament": num_players_in_tournament,
                     "num_players": tournament.num_players,
                 },
@@ -246,7 +212,7 @@ def tournament_lobby(request, tournament_id):
                 request,
                 "tournament/tournament_winner.html",
                 {
-                    "players_in_lobby": usernames,
+                    "players_in_lobby": aliases,
                     "num_players": tournament.num_players,
                     "lose_players": lose_players,
                 },
@@ -257,8 +223,8 @@ def tournament_lobby(request, tournament_id):
                 request,
                 "tournament/tournament_full_lobby.html",
                 {
-                    "match_players": usernames,
-                    "players_in_lobby": usernames,
+                    "match_players": aliases,
+                    "players_in_lobby": aliases,
                     "num_players": tournament.num_players,
                     "lose_players": lose_players,
                     "is_final": tournament.is_final,
