@@ -105,7 +105,7 @@ class Tournament(models.Model):
         blank=True,
     )
     created_at = models.DateTimeField(auto_now_add=True)
-    is_final = models.BooleanField(default=False)  # do we need this?
+    is_final = models.BooleanField(default=False)  # do we need this? yes for the signal
 
     def __str__(self):
         return json.dumps(self.__dict__, default=str)
