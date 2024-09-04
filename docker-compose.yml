@@ -110,11 +110,17 @@ services:
       dockerfile: Dockerfile
     environment:
       - CYPRESS_baseUrl=https://nginx
+      - CYPRESS_BROWSER=${CYPRESS_BROWSER:-chrome}
     volumes:
       - ./cypress/screenshots:/app/cypress/screenshots
       - ./cypress/videos:/app/cypress/videos
     depends_on:
       - nginx
+      - CYPRESS_BROWSER=${CYPRESS_BROWSER:-chrome}
+    depends_on:
+      - nginx
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["npx cypress run --browser ${CYPRESS_BROWSER:-chrome}"]
 
   pgadmin:
     container_name: beepong-pgadmin

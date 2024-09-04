@@ -13,11 +13,11 @@ class TournamentForm(forms.ModelForm):
         widgets = {
             'title': forms.TextInput(attrs={
                 'placeholder': 'TITLE',
-                'class': 'form-input'
+                'class': 'form__input'
             }),
             'description': forms.TextInput(attrs={
                 'placeholder': 'DESCRIPTION',
-                'class': 'form-input'
+                'class': 'form__input'
             })
         }
 
@@ -28,7 +28,7 @@ class AliasForm(forms.ModelForm):
         widgets = {
             'alias': forms.TextInput(attrs={
                 'placeholder': 'ALIAS',
-                'class': 'form-input'
+                'class': 'form__input'
             }),
         }
 

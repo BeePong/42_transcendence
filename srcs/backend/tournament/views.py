@@ -9,6 +9,8 @@ from .models import Tournament, Player, Match
 from .decorators import login_required_json
 from django.utils.functional import SimpleLazyObject
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
+from beePong.views import custom_404
 # Create your views here.
 
 @login_required_json
@@ -20,34 +22,37 @@ def tournament(request):
         tournaments = Tournament.objects.all().order_by('-tournament_id')
         form = AliasForm(username=request.user.username)
     else:
-        tournament_id = request.POST.get('tournament_id')
-        #username = request.session.get('username', None)
-        form = AliasForm(data=request.POST, instance=player)
-        if form.is_valid():
-            if player.has_active_tournament == False:
-                form.save()
-         #Safely retrieve the tournament object
-            tournament = get_object_or_404(Tournament, tournament_id=tournament_id)
-            if tournament.state != 'READY':
-                #user1 = request.user
-                list_players = tournament.players
-                if player.alias in list_players:
-                    print(f"{player.alias} is in the list.")
-                else:
-                    print(f"{player.alias} is not in the list.")
-                    player.is_online = True
-                    if player.has_active_tournament == False:
-                        player.current_tournament_id = tournament_id
-                        player.has_active_tournament = True
-                        player.save()
-                        tournament.players.append(player.alias)
-                        tournament.num_players_in += 1
-                if tournament.num_players_in >= tournament.num_players:
-                   tournament.state = 'READY'
-                tournament.save()
-            return JsonResponse({'success': True, 'redirect': f'/tournament/{tournament_id}/lobby'}, status=201)
-        else:
-            return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+        try:
+            tournament_id = request.POST.get('tournament_id')
+            #username = request.session.get('username', None)
+            form = AliasForm(data=request.POST, instance=player)
+            if form.is_valid():
+                if player.has_active_tournament == False:
+                    form.save()
+            #Safely retrieve the tournament object
+                tournament = get_object_or_404(Tournament, tournament_id=tournament_id)
+                if tournament.state != 'READY':
+                    #user1 = request.user
+                    list_players = tournament.players
+                    if player.alias in list_players:
+                        print(f"{player.alias} is in the list.")
+                    else:
+                        print(f"{player.alias} is not in the list.")
+                        player.is_online = True
+                        if player.has_active_tournament == False:
+                            player.current_tournament_id = tournament_id
+                            player.has_active_tournament = True
+                            player.save()
+                            tournament.players.append(player.alias)
+                            tournament.num_players_in += 1
+                    if tournament.num_players_in >= tournament.num_players:
+                        tournament.state = 'READY'
+                    tournament.save()
+                return JsonResponse({'success': True, 'redirect': f'/tournament/{tournament_id}/lobby/'}, status=201)
+            else:
+                return JsonResponse({'success': False, 'errors': form.errors}, status=400)
+        except Exception as error:
+            return JsonResponse({'success': False, 'errors': {'tournament_id': ['Invalid tournament ID']}}, status=400)
     
     # Prepare tournaments data for the template
     tournament_data = []
@@ -64,7 +69,7 @@ def tournament(request):
     return render(request, 'tournament/tournament.html', {
         'tournaments': tournament_data,
         'form': form,
-        'form_action': '/tournament/',
+        'form_action': reverse('tournament:tournament'),
     })
 
 
@@ -82,7 +87,7 @@ def create_tournament(request):
             form.save_m2m()
             return JsonResponse({
                 'success': True,
-                'redirect': '/tournament',
+                'redirect': reverse('tournament:tournament'),
                 'name': tournament.title,
                 'description': tournament.description,
                 'num_players': tournament.num_players,
@@ -93,7 +98,7 @@ def create_tournament(request):
             }, status=201)
         else:
             return JsonResponse({'success': False, 'errors': form.errors}, status=400)
-    return render(request, 'tournament/create_tournament.html', {'form': form, 'form_action': '/tournament/create/'})
+    return render(request, 'tournament/create_tournament.html', {'form': form, 'form_action': reverse('tournament:create_tournament')})
 
 
 
@@ -115,4 +120,4 @@ def tournament_lobby(request, tournament_id):
         else:
             return render(request, 'tournament/tournament_full_lobby.html', {'match_players': tournament.players, 'players_in_lobby': tournament.players, 'num_players': tournament.num_players, 'lose_players': lose_players, 'is_final': tournament.is_final})
     except Exception as error:
-        return JsonResponse({'success': False, 'error': error}, status=404)
+        return custom_404(request, None)
