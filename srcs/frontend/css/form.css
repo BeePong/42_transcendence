@@ -35,6 +35,10 @@ form label {
 	width: 100%
 }
 
+.legend--hidden {
+	display: none;
+}
+
 .radio-group {
 	display: flex;
 	gap: 1em;
