@@ -13,6 +13,8 @@ PADDLE_HEIGHT = 100
 PADDLE_WIDTH = 10
 BALL_SIZE = 10
 
+games_states = {}
+
 class PongConsumer(AsyncWebsocketConsumer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -118,7 +120,7 @@ class PongConsumer(AsyncWebsocketConsumer):
         except json.JSONDecodeError:
             print("Received invalid JSON data")
         except Exception as e:
-            print(f"Error in receive method: {e}")
+            print(f"Error in receive method: {e}") #/ self.scope['user'].is_authenticated
 
     async def update_game_state(self, message):
         if self.tournament:
