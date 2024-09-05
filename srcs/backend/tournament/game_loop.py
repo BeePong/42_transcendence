@@ -39,6 +39,7 @@ class GameLoop:
         self.match.save()
 
     async def loop(self):
+        logger.info("Game loop started")
         self.set_state("COUNTDOWN")
         if not self.loop_task or self.loop_task.done():
             self.loop_task = asyncio.create_task(self.game_loop())

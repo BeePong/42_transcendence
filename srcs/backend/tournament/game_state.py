@@ -57,9 +57,7 @@ class GameState:
         self.ball = Ball()
         self.ball_speed = settings.BALL_STARTING_SPEED
         self.hit_count = 0
-        self.ball_vector = self.normalize_vector(
-            self.get_larger_random(), random.uniform(-1, 1)
-        )
+        self.ball_vector = normalize_vector(get_larger_random(), random.uniform(-1, 1))
         self.player1 = GamePlayer(
             self.match.player1.player_id,
             self.match.player1.alias,
