@@ -70,6 +70,7 @@ class PongConsumer(AsyncWebsocketConsumer):
             games[self.tournament.tournament_id] = GameLoop(
                 self.tournament.current_match, self.tournament.tournament_id
             )
+            logger.info("Game loop created")
         self.game_loop = games[self.tournament.tournament_id]
 
     @database_sync_to_async
@@ -91,6 +92,7 @@ class PongConsumer(AsyncWebsocketConsumer):
         return {"event": "tournament_finished", "winner": self.tournament.winner.alias}
 
     async def start_tournament(self):
+        self.set_tournament(is_started=True)
         logger.info("Starting tournament")
         try:
             if await self.get_tournament_property("num_players") == 2:
@@ -173,8 +175,10 @@ class PongConsumer(AsyncWebsocketConsumer):
                 return
 
             # Send a message to all users that a new player has joined the tournament ? or should it be handled in views.py?
-            # message = await self.form_new_player_message(self.scope["user"])
-            # await self.send_message_to_all(message, "tournament")
+            message = {
+                "event": "someone connected - test",
+            }
+            await self.send_message_to_all(message, "tournament")
 
             # await self.add_player_to_tournament(self.scope["user"])
             tournament_state = await self.get_tournament_property("state")

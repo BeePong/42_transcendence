@@ -4,7 +4,7 @@ import {
   updateNumPlayersInLobby,
   insertCountdown,
   handleFullTournamentLobby,
-  insertPlayersInMatch
+  insertPlayersInMatch,
 } from "./tournament.js";
 
 // Constants
@@ -17,7 +17,9 @@ const PADDING_THICKNESS = 7;
 const THICK_BORDER_THICKNESS = 5;
 const CANVAS_ID = "game_canvas";
 
-let old_ball_speed, new_ball_speed;
+let old_ball_speed, new_ball_speed; // for debugging purposes
+
+let socket = null;
 
 const getContext = () => {
   const canvas = document.getElementById(CANVAS_ID);
@@ -63,12 +65,12 @@ const drawCountdown = (context, countdown, x, y) => {
   context.fillText(countdown, x, y);
 };
 
-const insertScores = (player1_score, player2_score) => {
-  const score1 = document.getElementById("score-player1");
-  if (score1) score1.textContent = player1_score;
-  const score2 = document.getElementById("score-player2");
-  if (score2) score2.textContent = player2_score;
-};
+// const insertScores = (player1_score, player2_score) => {
+//   const score1 = document.getElementById("score-player1");
+//   if (score1) score1.textContent = player1_score;
+//   const score2 = document.getElementById("score-player2");
+//   if (score2) score2.textContent = player2_score;
+// };
 
 const drawPaddle = (context, y, playerType, isControlling) => {
   context.fillStyle = isControlling ? "yellow" : "white";
@@ -114,20 +116,25 @@ const drawEmptyCanvas = (context) => {
 // }
 
 function updateCanvas(context, game_data) {
+  console.log("updateCanvas game_data", game_data);
   if (!context) return;
-  if (new_ball_speed === undefined) new_ball_speed = game_data.ball.speed;
+  if (new_ball_speed === undefined) new_ball_speed = game_data.ball_speed;
   old_ball_speed = new_ball_speed;
-  new_ball_speed = game_data.ball.speed;
+  new_ball_speed = game_data.ball_speed;
   if (old_ball_speed !== new_ball_speed) {
     console.log("ball speed changed", old_ball_speed, new_ball_speed);
   }
-  insertScores(game_data.player1.score, game_data.player2.score);
+  //insertScores(game_data.player1.score, game_data.player2.score);
   if (game_data.state === "finished") {
     console.log("winner is", game_data.winner.username);
     socket.close();
     return;
   }
   console.log("updateCanvas game_data", game_data);
+  const backgroundColor = getComputedStyle(
+    document.documentElement
+  ).getPropertyValue("--background-color");
+
   context.fillStyle = backgroundColor;
   context.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
   drawBorders(context);
@@ -146,7 +153,11 @@ function updateCanvas(context, game_data) {
 }
 
 function openWebSocket(tournament_id) {
-  const canvasContext = getContext();
+  if (socket) {
+    console.log("Socket already open, returning from openWebSocket");
+    return;
+  }
+  // const canvasContext = getContext();
   const url =
     (window.location.protocol == "https:" ? "wss://" : "ws://") +
     window.location.host +
@@ -156,8 +167,8 @@ function openWebSocket(tournament_id) {
     "?is_bot=False";
 
   console.log("Starting WebSocket on URL: ", url);
-  const socket = new WebSocket(url);
-  console.log("WebSocket created: ", socket);
+  socket = new WebSocket(url);
+
   // TODO: remember to close websocket after the tournament is over
 
   socket.onmessage = function (e) {
@@ -170,7 +181,7 @@ function openWebSocket(tournament_id) {
       console.log("Error parsing JSON data", e);
       return false;
     }
-    console.log("parsed data:", data);
+    console.log("Message from websocket:", data);
     switch (data.type) {
       case "tournament":
         // BELOW DIEGO'S VERSION
@@ -205,18 +216,19 @@ function openWebSocket(tournament_id) {
             if (
               tournamentMessage.num_players_in_tournament ===
               tournamentMessage.num_players
-            )
-            {
-              console.log('here handleFullTournamentLobby');
+            ) {
+              console.log("here handleFullTournamentLobby");
               handleFullTournamentLobby();
             }
             break;
           case "countdown":
             console.log("countdown");
-            if (tournamentMessage.countdown === 3)
-            {
+            if (tournamentMessage.countdown === 3) {
               console.log("countdown is 3");
-              insertPlayersInMatch(tournamentMessage.player1_alias, tournamentMessage.player2_alias);
+              insertPlayersInMatch(
+                tournamentMessage.player1_alias,
+                tournamentMessage.player2_alias
+              );
             }
             // loadPage(window.location.pathname);
             insertCountdown(tournamentMessage.countdown);
@@ -224,8 +236,8 @@ function openWebSocket(tournament_id) {
           // maybe not needed? just send game message instead
           case "game_started":
             console.log("game_started");
-            // const canvasContext = getContext();
-            // if (canvasContext) drawEmptyCanvas(canvasContext);
+            const canvasContext = getContext();
+            if (canvasContext) drawEmptyCanvas(canvasContext);
             break;
           case "game_finished":
             console.log("game_finished");
@@ -235,15 +247,20 @@ function openWebSocket(tournament_id) {
             console.log("tournament_finished");
             console.log("winner is", tournamentMessage.winner);
             break;
+          case "test":
+            console.log("test");
+            break;
           default:
             console.log("default");
-            // loadPage(window.location.pathname);
+          // loadPage(window.location.pathname);
         }
+        break;
 
-      // case "game":
-      //   const gameState = data.message;
-      //   updateCanvas(canvasContext, gameState);
-      //   break;
+      case "game":
+        const gameState = data.message;
+        const canvasContext = getContext();
+        if (canvasContext) updateCanvas(canvasContext, gameState);
+        break;
     }
 
     // Here tournament_lobby function will be called once the winner is determined, call loadPage on window.pathname (reload page)
