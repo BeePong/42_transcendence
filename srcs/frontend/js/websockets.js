@@ -4,6 +4,7 @@ import {
   updateNumPlayersInLobby,
   insertCountdown,
   handleFullTournamentLobby,
+  insertPlayersInMatch
 } from "./tournament.js";
 
 // Constants
@@ -213,7 +214,10 @@ function openWebSocket(tournament_id) {
           case "countdown":
             console.log("countdown");
             if (tournamentMessage.countdown === 3)
+            {
               console.log("countdown is 3");
+              insertPlayersInMatch(tournamentMessage.player1_alias, tournamentMessage.player2_alias);
+            }
             // loadPage(window.location.pathname);
             insertCountdown(tournamentMessage.countdown);
             break;
