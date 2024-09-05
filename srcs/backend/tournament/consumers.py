@@ -1,18 +1,21 @@
-import json
-from channels.generic.websocket import AsyncWebsocketConsumer
-from django.http import Http404
-from asgiref.sync import sync_to_async
-from django.shortcuts import get_object_or_404
-from channels.db import database_sync_to_async
-from channels.layers import get_channel_layer
-from .game_state import GameState
 import asyncio
+import json
+
+from asgiref.sync import sync_to_async
+from channels.db import database_sync_to_async
+from channels.generic.websocket import AsyncWebsocketConsumer
+from channels.layers import get_channel_layer
+from django.http import Http404
+from django.shortcuts import get_object_or_404
+
 from .game_loop import GameLoop
+from .game_state import GameState
 
 games = {}
 
-from .models import Tournament, Player, Match
 import logging
+
+from .models import Match, Player, Tournament
 
 logger = logging.getLogger(__name__)
 
@@ -57,19 +60,22 @@ class PongConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def create_1st_match(self):
         logger.info("Creating 1st match")
-        self.tournament.current_match, created = Match.objects.get_or_create(
-            player1=self.tournament.players.all()[0],
-            player2=self.tournament.players.all()[1],
-            tournament=self.tournament,
-        )
-        if created:
-            logger.info("1st match created")
-        else:
-            logger.info("1st match already exists")
+        if not self.tournament.current_match:
+            self.tournament.current_match, created = Match.objects.get_or_create(
+                player1=self.tournament.players.all()[0],
+                player2=self.tournament.players.all()[1],
+                tournament=self.tournament,
+            )
+            if created:
+                self.tournament.save()
+                logger.info("1st match created")
+            else:
+                logger.info("1st match already exists")
         if not games.get(self.tournament.tournament_id):
             games[self.tournament.tournament_id] = GameLoop(
                 self.tournament.current_match, self.tournament.tournament_id
             )
+            logger.info("Game loop created")
         self.game_loop = games[self.tournament.tournament_id]
 
     @database_sync_to_async
@@ -86,26 +92,36 @@ class PongConsumer(AsyncWebsocketConsumer):
     def destroy_game(self):
         logger.info("Destroying game")
         del games[self.tournament.tournament_id]
+        self.game_loop = None
+        self.tournament.current_match = None
+        self.tournament.save()
+        # TODO handle tournamernt state. needs to be set to FINISHED at some point
 
     def form_tournament_finished_message(self):
         return {"event": "tournament_finished", "winner": self.tournament.winner.alias}
 
     async def start_tournament(self):
+        self.set_tournament(is_started=True)
         logger.info("Starting tournament")
         try:
             if await self.get_tournament_property("num_players") == 2:
+
                 await self.create_1st_match()
-                if not games.get(self.tournament.tournament_id):
-                    await self.game_loop.loop()
-                    await self.determine_tournament_winner()
-                    await self.send_message_to_all(
-                        self.form_tournament_finished_message(), "tournament"
-                    )
-                    await self.destroy_game()
+                # TODO this condition is wrong, check for it to work. We only want loop to run once
+                if self.game_loop.running:
+                    return
+                # if not games.get(self.tournament.tournament_id):
+                await self.game_loop.loop()
+                await self.determine_tournament_winner()
+                await self.send_message_to_all(
+                    self.form_tournament_finished_message(), "tournament"
+                )
+                await self.destroy_game()
+                await self.set_tournament(state="FINISHED", is_started=False)
             else:
                 logger.info("Not 2 players in tournament")
         except Exception as e:
-            print("Error in start_tournament method: %s", e)
+            logger.error(f"Error starting tournament: {e}")
             pass
 
     @database_sync_to_async
@@ -173,23 +189,21 @@ class PongConsumer(AsyncWebsocketConsumer):
                 return
 
             # Send a message to all users that a new player has joined the tournament ? or should it be handled in views.py?
-            message = await self.form_new_player_message(self.scope["user"])
+            message = {
+                "event": "someone connected - test",
+            }
             await self.send_message_to_all(message, "tournament")
 
             # await self.add_player_to_tournament(self.scope["user"])
-
-            if await self.is_tournament_full():
-                logger.info("Tournament is full, starting countdown")
-                self.set_tournament(state="COUNTDOWN")
-                for countdown in range(3, 0, -1):
-                    logger.info(f"Countdown: {countdown}")
-                    countdown_message = await self.form_countdown_message(countdown)
-                    await self.send_message_to_all(countdown_message, "tournament")
-                    await asyncio.sleep(1)
-                self.set_tournament(state="PLAYING")
-                self.start_tournament()
+            tournament_state = await self.get_tournament_property("state")
+            logger.info(f"Current tournament state: {tournament_state}")
+            tournament_is_started = await self.get_tournament_property("is_started")
+            logger.info(f"Current tournament is_started: {tournament_is_started}")
+            if tournament_is_started is False and tournament_state == "PLAYING":
+                logger.info("Starting tournament")
+                await self.start_tournament()
             else:
-                print("Tournament is not full, waiting for more players to join")
+                logger.info("Tournament is not started")
 
         except Exception as e:
             print(f"Error in connect method: {e}")

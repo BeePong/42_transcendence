@@ -1,12 +1,16 @@
-from django.http import JsonResponse
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, get_object_or_404
-from django.urls import reverse
-from .forms import TournamentForm, AliasForm
-from .decorators import login_required_json
-from .models import Tournament, Player, Match
 import logging
+
+from asgiref.sync import async_to_sync
 from beePong.views import custom_404
+from channels.layers import get_channel_layer
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, render
+from django.urls import reverse
+
+from .decorators import login_required_json
+from .forms import AliasForm, TournamentForm
+from .models import Match, Player, Tournament
 
 logger = logging.getLogger(__name__)
 
@@ -74,28 +78,96 @@ def handle_tournament_post(request, player):
         return JsonResponse({"success": False, "error": str(error)}, status=400)
 
 
+def send_message_to_all(tournament_id, message, message_type):
+    pong_group_name = f"group_{tournament_id}"
+    logger.info(f"Sending {message_type} message to all in group {pong_group_name}")
+    channel_layer = get_channel_layer()
+    try:
+        async_to_sync(channel_layer.group_send)(
+            pong_group_name,
+            {
+                "type": "send_message",
+                "message": message,
+                "message_type": message_type,
+            },
+        )
+    except Exception as e:
+        print(f"Error sending message to all: {e}")
+
+
+def form_new_player_message(tournament, player):
+    return {
+        "event": "new_player",
+        "player_alias": player.alias,
+        "num_players_in_tournament": tournament.players.count(),
+        "num_players": tournament.num_players,
+    }
+
+
+def form_game_started_message():
+    return {
+        "event": "game_started",
+    }
+
+
+def form_countdown_message(player1_alias, player2_alias, countdown):
+    return {
+        "event": "countdown",
+        "countdown": countdown,
+        "player1_alias": player1_alias,
+        "player2_alias": player2_alias,
+    }
+
+
 def handle_new_tournament(tournament, player, form):
     logger.info(
-        f"Adding player {player.username} to tournament {tournament.tournament_id}"
+        f"Adding player {player.username} with alias {player.alias} to tournament {tournament.tournament_id}"
     )
     form.save()
 
     if player not in tournament.players.all():
+        if player.has_active_tournament:
+            # TODO: check if correct
+            return JsonResponse(
+                {"success": False, "error": "Player already has an active tournament"},
+                status=400,
+            )
         tournament.players.add(player)
         player.has_active_tournament = True
         player.current_tournament_id = tournament.tournament_id
         player.save()
         tournament.save()
         logger.info(
-            f"Player {player.username} added to tournament {tournament.tournament_id}"
+            f"Player {player.username} with alias {player.alias} added to tournament {tournament.tournament_id}"
         )
+        message = form_new_player_message(tournament, player)
+        send_message_to_all(tournament.tournament_id, message, "tournament")
+        # TODO: send message to player that they have joined the tournament. Check if it is working.
 
     if tournament.is_full():
         logger.info(
             f"Tournament {tournament.tournament_id} has enough players. Starting tournament."
         )
+        # tournament.state = "COUNTDOWN"
+        # tournament.save()
+        logger.info(
+            "Tournament is full, we could start countdown but fuck it MVP only so PLAYING"
+        )
+        # for countdown in [3, 2, 1]:
+        #     logger.info(f"Countdown: {countdown}")
+        #     countdown_message = form_countdown_message("alias1", "alias2", countdown)
+        #     send_message_to_all(
+        #         tournament.tournament_id, countdown_message, "tournament"
+        #     )
+        #     time.sleep(1)
+        game_started_message = form_game_started_message()
+        send_message_to_all(
+            tournament.tournament_id, game_started_message, "tournament"
+        )
         tournament.state = "PLAYING"
+        tournament.is_started = False
         tournament.save()
+
     else:
         logger.info(
             f"Tournament {tournament.tournament_id} doesn't have enough players yet. Current: {tournament.players.count()}, Required: {tournament.num_players}"
@@ -216,10 +288,5 @@ def render_winner_page(request, context):
 
 def render_full_lobby(request, context):
     logger.info("Rendering full lobby")
-    context.update(
-        {
-            "match_players": context["players_in_lobby"],
-            "is_final": context["num_players"] == 2,
-        }
-    )
+    context.update({"match_players": context["players_in_lobby"]})
     return render(request, "tournament/tournament_full_lobby.html", context)

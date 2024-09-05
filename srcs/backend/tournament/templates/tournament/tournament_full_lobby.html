@@ -2,16 +2,10 @@
   id="tournament-lobby-section"
   class="full {% if num_players == 2 %}two-players{% endif %}"
 >
-  {% if is_final %}
-  <h1 class="tournament_lobby__header">
-    BEEPONG CUP FINALS STARTING IN <span id="countdown">3</span>...
-  </h1>
-  {% else %}
-  <h1 class="tournament_lobby__header">
+  <h1 class="tournament_lobbyheader">
     BEEPONG CUP IS STARTING IN <span id="countdown">3</span>...
   </h1>
-  {% endif %}
-  <p class="tournament_lobby__description font--alt">
+  <p class="tournament_lobbydescription font--alt">
     {{ match_players.0 }} vs {{ match_players.1 }}
   </p>
 

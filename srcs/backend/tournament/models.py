@@ -65,6 +65,11 @@ class Match(models.Model):
     def __str__(self):
         return json.dumps(self.__dict__, default=str)
 
+    def determine_loser(self):
+        if self.winner == self.player1:
+            return self.player2
+        return self.player1
+
 
 class Tournament(models.Model):
 
@@ -88,6 +93,7 @@ class Tournament(models.Model):
         null=True,
         blank=True,
     )
+    is_started = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     is_final = models.BooleanField(default=False)  # do we need this? yes for the signal
     current_match = models.ForeignKey(
