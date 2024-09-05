@@ -86,5 +86,5 @@ function changeRedirectUrlandOauthState(redirectUrl) {
   login42UrlElement.href = updatedLogin42Url.toString();
 }
 
-
+window.navigate = navigate;
 // export { loadPage };

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Player, Tournament, Match, PlayerTournament
+from .models import Player, Tournament, Match
 
 
 @admin.register(Player)
