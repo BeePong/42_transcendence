@@ -29,19 +29,6 @@ function tournamentLobbyAddPlayer() {
 	(updatedNumPlayersInLobby === numPlayers) ? handleFullTournamentLobby() : mockWebSocket();
 }
 
-// Handle full tournament lobby
-function handleFullTournamentLobby() {
-	setTimeout(() => {
-		if (/^\/tournament\/\d+\/lobby\/$/.test(window.location.pathname)) {
-			document.getElementById('tournament-lobby-section').classList.add('full');
-			document.querySelector('.tournament_lobby__header').innerHTML = 'BEEPONG CUP IS STARTING IN <span id="countdown">3</span>...';
-			document.querySelector('.tournament_lobby__description').textContent = 'dummy vs dummy';
-			document.querySelector('.tournament_lobby__player-count').remove();
-			document.getElementById('leave-button').remove();
-			tournamentLobbyCountdown();
-		}
-	}, 1000);
-}
 
 // Countdown in lobby page and navigate to the game page after countdown
 export function tournamentLobbyCountdown() {
