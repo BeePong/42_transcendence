@@ -131,9 +131,23 @@ section.full .tournament_lobby__name-container:nth-child(3)::before {
   border-bottom-left-radius: 10em;
   top: -10px;
 }
+<<<<<<< HEAD
+=======
+.game-info__container {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+}
+>>>>>>> 010-server-side-pong
 
 @media (max-width: 700px) {
 	section.full .tournament_lobby__name-list-container {
     transform: translateX(50px);
   }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 010-server-side-pong

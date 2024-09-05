@@ -65,3 +65,39 @@ export function tournamentLobbyCountdown() {
     }, 1000);
   }, 500);
 }
+const appendNewPlayerDiv = (playerAlias) => {
+  console.log("appendNewPlayerDiv");
+  const playerDiv = document.createElement("div");
+  playerDiv.classList.add("tournament_lobby__name-container");
+  playerDiv.innerHTML = `
+		  <div class="tournament_lobby__name">${playerAlias}</div>
+		  <span class="tournament_lobby__match-num"></span>
+	  `;
+  const nameListContainer = document.querySelector(
+    ".tournament_lobby__name-list-container"
+  );
+  if (nameListContainer) {
+    nameListContainer.appendChild(playerDiv);
+  }
+};
+
+const updateNumPlayersInLobby = (numPlayersInLobby) => {
+  console.log("updateNumPlayersInLobby");
+  document.getElementById(
+    "num-players-in-lobby"
+  ).textContent = `${numPlayersInLobby}`;
+};
+
+
+function insertCountdown(countdownValue) {
+  console.log("insertCountdown");
+  const countdownElement = document.getElementById("countdown");
+  countdownElement.textContent = `${countdownValue}`;
+}
+
+export {
+  appendNewPlayerDiv,
+  //handleFullTournamentLobby,
+  updateNumPlayersInLobby,
+  insertCountdown,
+};

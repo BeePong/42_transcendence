@@ -2,6 +2,7 @@ import { updateNavBar } from "./navbar.js";
 import { loadPage } from "./route.js";
 
 // Initial page load
+<<<<<<< HEAD
 document.addEventListener('DOMContentLoaded', () => {
 	updateNavBar();
 	loadPage(window.location.pathname, '/', false, window.location.search);
@@ -10,4 +11,14 @@ document.addEventListener('DOMContentLoaded', () => {
 // Listen to popstate events for back/forward navigation
 window.addEventListener('popstate', () => {
 	loadPage(window.location.pathname);
+=======
+document.addEventListener("DOMContentLoaded", () => {
+  updateNavBar();
+  loadPage(window.location.pathname, "/", false, window.location.search);
+});
+
+// Listen to popstate events for back/forward navigation
+window.addEventListener("popstate", () => {
+  loadPage(window.location.pathname);
+>>>>>>> 010-server-side-pong
 });
