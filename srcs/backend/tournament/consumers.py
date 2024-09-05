@@ -105,7 +105,7 @@ class PongConsumer(AsyncWebsocketConsumer):
             else:
                 logger.info("Not 2 players in tournament")
         except Exception as e:
-            print("Error in start_tournament method: %s", e)
+            logger.error(f"Error starting tournament: {e}")
             pass
 
     @database_sync_to_async
@@ -173,23 +173,19 @@ class PongConsumer(AsyncWebsocketConsumer):
                 return
 
             # Send a message to all users that a new player has joined the tournament ? or should it be handled in views.py?
-            message = await self.form_new_player_message(self.scope["user"])
-            await self.send_message_to_all(message, "tournament")
+            # message = await self.form_new_player_message(self.scope["user"])
+            # await self.send_message_to_all(message, "tournament")
 
             # await self.add_player_to_tournament(self.scope["user"])
-
-            if await self.is_tournament_full():
-                logger.info("Tournament is full, starting countdown")
-                self.set_tournament(state="COUNTDOWN")
-                for countdown in range(3, 0, -1):
-                    logger.info(f"Countdown: {countdown}")
-                    countdown_message = await self.form_countdown_message(countdown)
-                    await self.send_message_to_all(countdown_message, "tournament")
-                    await asyncio.sleep(1)
-                self.set_tournament(state="PLAYING")
-                self.start_tournament()
+            tournament_state = await self.get_tournament_property("state")
+            logger.info(f"Current tournament state: {tournament_state}")
+            tournament_is_started = await self.get_tournament_property("is_started")
+            logger.info(f"Current tournament is_started: {tournament_is_started}")
+            if tournament_is_started is False and tournament_state == "PLAYING":
+                logger.info("Starting tournament")
+                await self.start_tournament()
             else:
-                print("Tournament is not full, waiting for more players to join")
+                logger.info("Tournament is not started")
 
         except Exception as e:
             print(f"Error in connect method: {e}")

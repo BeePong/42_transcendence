@@ -6,6 +6,9 @@ from .forms import TournamentForm, AliasForm
 from .decorators import login_required_json
 from .models import Tournament, Player, Match
 import logging
+import time
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
 
 logger = logging.getLogger(__name__)
 
@@ -69,9 +72,44 @@ def handle_tournament_post(request, player):
     )
 
 
+def send_message_to_all(tournament_id, message, message_type):
+    pong_group_name = f"group_{tournament_id}"
+    logger.info(f"Sending message to all in group {pong_group_name}")
+    channel_layer = get_channel_layer()
+    try:
+        async_to_sync(channel_layer.group_send)(
+            pong_group_name,
+            {
+                "type": "send_message",
+                "message": message,
+                "message_type": message_type,
+            },
+        )
+    except Exception as e:
+        print(f"Error sending message to all: {e}")
+
+
+def form_new_player_message(tournament, player):
+    return {
+        "event": "new_player",
+        "player_alias": player.alias,
+        "num_players_in_tournament": tournament.players.count(),
+        "num_players": tournament.num_players,
+    }
+
+
+def form_countdown_message(player1_alias, player2_alias, countdown):
+    return {
+        "event": "countdown",
+        "countdown": countdown,
+        "player1_alias": player1_alias,
+        "player2_alias": player2_alias,
+    }
+
+
 def handle_new_tournament(tournament, player, form):
     logger.info(
-        f"Adding player {player.username} to tournament {tournament.tournament_id}"
+        f"Adding player {player.username} with alias {player.alias} to tournament {tournament.tournament_id}"
     )
     form.save()
 
@@ -82,19 +120,34 @@ def handle_new_tournament(tournament, player, form):
         player.save()
         tournament.save()
         logger.info(
-            f"Player {player.username} added to tournament {tournament.tournament_id}"
+            f"Player {player.username} with alias {player.alias} added to tournament {tournament.tournament_id}"
         )
 
-    # if tournament.is_full():
-    #     logger.info(
-    #         f"Tournament {tournament.tournament_id} has enough players. Starting tournament."
-    #     )
-    #     tournament.state = "PLAYING"
-    #     tournament.save()
-    # else:
-    #     logger.info(
-    #         f"Tournament {tournament.tournament_id} doesn't have enough players yet. Current: {tournament.players.count()}, Required: {tournament.num_players}"
-    #     )
+        message = form_new_player_message(tournament, player)
+        send_message_to_all(tournament.tournament_id, message, "new_player")
+
+    if tournament.is_full():
+        logger.info(
+            f"Tournament {tournament.tournament_id} has enough players. Starting tournament."
+        )
+        tournament.state = "COUNTDOWN"
+        tournament.save()
+        logger.info("Tournament is full, we could start countdown but fuck it MVP only")
+        # for countdown in [3, 2, 1]:
+        #     logger.info(f"Countdown: {countdown}")
+        #     countdown_message = form_countdown_message("alias1", "alias2", countdown)
+        #     send_message_to_all(
+        #         tournament.tournament_id, countdown_message, "tournament"
+        #     )
+        #     time.sleep(1)
+        tournament.state = "PLAYING"
+        tournament.is_started = False
+        tournament.save()
+
+    else:
+        logger.info(
+            f"Tournament {tournament.tournament_id} doesn't have enough players yet. Current: {tournament.players.count()}, Required: {tournament.num_players}"
+        )
 
 
 def prepare_tournament_data(tournaments):
