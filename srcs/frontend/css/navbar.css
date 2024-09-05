@@ -18,11 +18,19 @@ nav ul {
 	gap: 2em;
 }
 
+#username {
+  max-width: 250px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+
 #username svg {
 	margin-right: 0.3em;
 }
 
-@media (max-width: 700px) {
+@media (max-width: 850px) {
 	nav {
 		flex-direction: column;
 		gap: 2em;
