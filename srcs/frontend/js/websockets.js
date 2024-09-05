@@ -17,6 +17,7 @@ const THICK_BORDER_THICKNESS = 5;
 const CANVAS_ID = "game_canvas";
 
 let old_ball_speed, new_ball_speed;
+let playerNumber;
 
 const getContext = () => {
   const canvas = document.getElementById(CANVAS_ID);
@@ -69,12 +70,12 @@ const insertScores = (player1_score, player2_score) => {
   if (score2) score2.textContent = player2_score;
 };
 
-const drawPaddle = (context, y, player_type, controlling) => {
+const drawPaddle = (context, y, playerType, isControlling) => {
+  context.fillStyle = isControlling ? "yellow" : "white";
   const x =
-    player_type === "player1"
-      ? CANVAS_WIDTH - PADDING_THICKNESS - PADDLE_WIDTH
-      : PADDING_THICKNESS;
-  context.fillStyle = controlling ? "yellow" : "white";
+    playerType === "player1"
+      ? PADDING_THICKNESS
+      : CANVAS_WIDTH - PADDLE_WIDTH - PADDING_THICKNESS;
   context.fillRect(x, y - PADDLE_HEIGHT / 2, PADDLE_WIDTH, PADDLE_HEIGHT);
 };
 
@@ -88,6 +89,29 @@ const drawEmptyCanvas = (context) => {
   drawBorders(context);
   drawBall(context, CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2);
 };
+
+// function updateCanvas(context, game_data) {
+//   if (!context || !game_data) return;
+
+//   // Clear the canvas
+//   context.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+
+//   // Draw the paddles
+//   drawPaddle(context, game_data.player1_paddle_y, "player1", playerNumber === 1);
+//   drawPaddle(context, game_data.player2_paddle_y, "player2", playerNumber === 2);
+
+//   // Draw the ball
+//   drawBall(context, game_data.ball.x, game_data.ball.y);
+
+//   // Draw the borders
+//   drawBorders(context);
+
+//   // Update scores
+//   insertScores(game_data.player1_score, game_data.player2_score);
+
+//   // Debug output
+//   console.log("Drawing paddles:", game_data.player1_paddle_y, game_data.player2_paddle_y);
+// }
 
 function updateCanvas(context, game_data) {
   if (!context) return;
@@ -149,6 +173,31 @@ function openWebSocket(tournament_id) {
     console.log("parsed data:", data);
     switch (data.type) {
       case "tournament":
+        // BELOW DIEGO'S VERSION
+        //   var tournament_data = data.message;
+        // console.log("tournament_data:", tournament_data);
+        // console.log("window.location.pathname", window.location.pathname);
+        // console.log("tournament_data.state", tournament_data.state);
+        // // Store the player number if it's provided
+        // if (tournament_data.player_number) {
+        //   playerNumber = tournament_data.player_number;
+        //   console.log("You are player", playerNumber);
+        // }
+
+        // if (tournament_data.state === "PLAYING" && tournament_data.game_data) {
+        //   console.log("tournament is playing, updating canvas");
+        //   const canvasContext = getContext();
+        //   if (canvasContext && tournament_data.game_data) {
+        //     updateCanvas(canvasContext, tournament_data.game_data);
+        //   }
+        // } else if (tournament_data.state === "FINISHED") {
+        //   console.log("Tournament finished. Winner:", tournament_data.winner);
+        //   // Handle end of tournament (e.g., display winner, offer to start new game)
+        // } else if (tournament_data.state === "WAITING") {
+        //   console.log("Waiting for players. Current players:", tournament_data.players);
+        //   // Update UI to show waiting state and current players
+        // }
+        // updateTournamentInfo(tournament_data);
         const tournamentMessage = data.message;
         switch (tournamentMessage.event) {
           case "new_player":
@@ -200,7 +249,35 @@ function openWebSocket(tournament_id) {
     // when state is playing
     return false;
   };
+  function updateTournamentInfo(tournament_data) {
+    // Update tournament state
+    const stateElement = document.getElementById("tournament-state");
+    if (stateElement) {
+      stateElement.textContent = tournament_data.state;
+    }
 
+    // Update player list
+    const playerListElement = document.getElementById("player-list");
+    if (playerListElement) {
+      playerListElement.textContent = tournament_data.players.join(", ");
+    }
+
+    // Update number of players
+    const numPlayersElement = document.getElementById("num-players");
+    if (numPlayersElement) {
+      numPlayersElement.textContent = tournament_data.num_players;
+    }
+
+    // Update winner (if the tournament is finished)
+    if (tournament_data.state === "FINISHED") {
+      const winnerElement = document.getElementById("winner");
+      if (winnerElement) {
+        winnerElement.textContent = tournament_data.winner;
+      }
+    }
+
+    // You can add more updates here based on your specific UI needs
+  }
   socket.onopen = function (e) {
     console.log("WebSocket connection opened");
   };
@@ -219,6 +296,7 @@ function openWebSocket(tournament_id) {
         message: {
           key: key,
           keyAction: keyAction,
+          //playerNumber: playerNumber,
         },
         type: "game",
       })

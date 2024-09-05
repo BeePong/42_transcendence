@@ -1,115 +1,30 @@
 from django.http import JsonResponse
-from collections import namedtuple
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render, get_object_or_404
+from django.urls import reverse
 from .forms import TournamentForm, AliasForm
 from .decorators import login_required_json
-from django.http import JsonResponse
-from collections import namedtuple
-from django.contrib.auth.decorators import login_required
 from .models import Tournament, Player, Match
-from django.utils.functional import SimpleLazyObject
-from django.shortcuts import render, redirect, get_object_or_404
-from django.urls import reverse
-import asyncio
 import logging
-from asgiref.sync import async_to_sync
 
-# Create your views here.
+logger = logging.getLogger(__name__)
 
 
 @login_required_json
 def tournament(request):
-    logging.info("Tournament view called")
-    """The tournament page for BeePong."""
-    player, created = Player.objects.get_or_create(user=request.user)
-    if request.method != "POST":
-        print("NOT POST")
-        # Fetch tournaments from the database, ordered by the most recent
-        tournaments = Tournament.objects.all().order_by("-tournament_id")
-        form = AliasForm(username=request.user.username)
-    else:
-        print("POST")
-        tournament_id = request.POST.get("tournament_id")
-        # username = request.session.get('username', None)
-        form = AliasForm(data=request.POST, instance=player)
-        if form.is_valid():
-            print("form is valid")
-            tournament = get_object_or_404(Tournament, tournament_id=tournament_id)
-            logging.info(
-                f"Tournament state: {tournament.state}, Players: {tournament.players.count()}/{tournament.num_players}"
-            )
+    logger.info("Tournament view called")
+    player, _ = Player.objects.get_or_create(user=request.user)
 
-            if tournament.state == "NEW":
-                logging.info(
-                    f"Adding player {player.username} to tournament {tournament_id}"
-                )
-                form.save()
+    if request.method == "POST":
+        return handle_tournament_post(request, player)
 
-                if player not in tournament.players.all():
-                    tournament.players.add(player)
-                    player.has_active_tournament = True
-                    player.current_tournament_id = tournament.tournament_id
-                    player.save()
-                    tournament.save()
-                    logging.info(
-                        f"Player {player.username} added to tournament {tournament_id}"
-                    )
+    tournaments = Tournament.objects.all().order_by("-tournament_id")
+    form = AliasForm(username=request.user.username)
+    tournament_data = prepare_tournament_data(tournaments)
 
-                # Check if the tournament should start
-                if tournament.players.count() == tournament.num_players:
-                    logging.info(
-                        f"Tournament {tournament_id} has enough players. Attempting to start."
-                    )
-                    tournament.state = "PLAYING"
-                    tournament.save()
-                    # async_to_sync(tournament.start_tournament_if_applicable)()
-                else:
-                    logging.info(
-                        f"Tournament {tournament_id} doesn't have enough players yet. Current: {tournament.players.count()}, Required: {tournament.num_players}"
-                    )
-            else:
-                logging.info(
-                    f"Tournament {tournament_id} is not in NEW state. Current state: {tournament.state}"
-                )
+    logger.debug(f"Number of tournaments: {len(tournament_data)}")
+    logger.debug(f"Tournament data: {tournament_data}")
 
-            tournament.refresh_from_db()  # Refresh the tournament object to get the latest state
-            logging.info(f"Tournament {tournament_id} final state: {tournament.state}")
-
-            return JsonResponse(
-                {
-                    "success": True,
-                    "redirect": f"/tournament/{tournament_id}/lobby",
-                    "tournament_state": tournament.state,
-                },
-                status=201,
-            )
-        else:
-            logging.warning(f"Form is invalid: {form.errors}")
-            return JsonResponse({"success": False, "errors": form.errors}, status=400)
-
-    # Prepare tournaments data for the template
-    tournament_data = []
-    print("num of tournaments:", tournaments.count())
-    for tournament in tournaments:
-        print(
-            "tournament:",
-            tournament.tournament_id,
-        )
-        players = list(tournament.players.values("username"))
-        player_usernames = [player["username"] for player in players]
-        winner_username = tournament.winner.username if tournament.winner else ""
-        tournament_data.append(
-            {
-                "tournament_id": tournament.tournament_id,
-                "name": tournament.title,
-                "description": tournament.description,
-                "state": tournament.state,
-                "num_players": tournament.num_players,
-                "players": player_usernames,
-                "winner": winner_username,
-            }
-        )
-    print("before render")
-    print("tournament_data:", tournament_data)
     return render(
         request,
         "tournament/tournament.html",
@@ -119,6 +34,82 @@ def tournament(request):
             "form_action": "/tournament/",
         },
     )
+
+
+def handle_tournament_post(request, player):
+    tournament_id = request.POST.get("tournament_id")
+    form = AliasForm(data=request.POST, instance=player)
+
+    if not form.is_valid():
+        logger.warning(f"Form is invalid: {form.errors}")
+        return JsonResponse({"success": False, "errors": form.errors}, status=400)
+
+    tournament = get_object_or_404(Tournament, tournament_id=tournament_id)
+    logger.info(
+        f"Tournament state: {tournament.state}, Players: {tournament.players.count()}/{tournament.num_players}"
+    )
+
+    if tournament.state == "NEW":
+        handle_new_tournament(tournament, player, form)
+    else:
+        logger.info(
+            f"Tournament {tournament_id} is not in NEW state. Current state: {tournament.state}"
+        )
+
+    tournament.refresh_from_db()
+    logger.info(f"Tournament {tournament_id} final state: {tournament.state}")
+
+    return JsonResponse(
+        {
+            "success": True,
+            "redirect": f"/tournament/{tournament_id}/lobby",
+            "tournament_state": tournament.state,
+        },
+        status=201,
+    )
+
+
+def handle_new_tournament(tournament, player, form):
+    logger.info(
+        f"Adding player {player.username} to tournament {tournament.tournament_id}"
+    )
+    form.save()
+
+    if player not in tournament.players.all():
+        tournament.players.add(player)
+        player.has_active_tournament = True
+        player.current_tournament_id = tournament.tournament_id
+        player.save()
+        tournament.save()
+        logger.info(
+            f"Player {player.username} added to tournament {tournament.tournament_id}"
+        )
+
+    if tournament.is_full():
+        logger.info(
+            f"Tournament {tournament.tournament_id} has enough players. Starting tournament."
+        )
+        tournament.state = "PLAYING"
+        tournament.save()
+    else:
+        logger.info(
+            f"Tournament {tournament.tournament_id} doesn't have enough players yet. Current: {tournament.players.count()}, Required: {tournament.num_players}"
+        )
+
+
+def prepare_tournament_data(tournaments):
+    return [
+        {
+            "tournament_id": tournament.tournament_id,
+            "name": tournament.title,
+            "description": tournament.description,
+            "state": tournament.state,
+            "num_players": tournament.num_players,
+            "players": [player.username for player in tournament.players.all()],
+            "winner": tournament.winner.username if tournament.winner else "",
+        }
+        for tournament in tournaments
+    ]
 
 
 def solo_game(request):
@@ -136,6 +127,7 @@ def create_tournament(request):
             tournament = form.save(commit=False)
             tournament.save()
             form.save_m2m()
+            # when tournament is created, there's actually no players yet, so we can just send an empty list
             players = list(tournament.players.values("alias"))
             player_aliases = [player["alias"] for player in players]
             return JsonResponse(
@@ -163,73 +155,66 @@ def create_tournament(request):
 
 @login_required
 def tournament_lobby(request, tournament_id):
-    print("views.py tournament_lobby")
-    """The tournament lobby page for BeePong."""
+    logger.info("Tournament lobby view called")
     try:
-        # Safely retrieve the tournament object
         tournament = get_object_or_404(Tournament, tournament_id=tournament_id)
-        players = list(tournament.players.values("alias"))
-        aliases = [player["alias"] for player in players]
-        num_players_in_tournament = tournament.players.count()
-        print("num_players_in_tournament:", num_players_in_tournament)
-        print("tournament_lobby ready to render")
-        if (
-            tournament.state == "NEW"
-            and num_players_in_tournament < tournament.num_players
-        ):
-            print("tournament is new, rendering waiting lobby")
-            return render(
-                request,
-                "tournament/tournament_waiting_lobby.html",
-                {
-                    "players_in_lobby": aliases,
-                    "num_players_in_tournament": num_players_in_tournament,
-                    "num_players": tournament.num_players,
-                },
-            )
-        elif tournament.state == "PLAYING":
-            print("tournament is playing, rendering canvas")
-            return render(
-                request,
-                "tournament/tournament_game.html",
-                {
-                    "players_in_lobby": aliases,
-                    "num_players_in_tournament": num_players_in_tournament,
-                    "num_players": tournament.num_players,
-                },
-            )
-        # todo: do it in a new way now that matches list is in tournament
-        matches = Match.objects.filter(
-            tournament=tournament
-        )  # Retrieve all matches associated with the tournament
-        lose_players = [
-            match.determine_loser().alias for match in matches
-        ]  # TODO: replace username with alias
+        context = prepare_tournament_context(tournament)
+        logger.info(f"Context: {context}")
+
+        if tournament.state == "NEW" and not tournament.is_full():
+            return render_waiting_lobby(request, context)
+
+        if tournament.state == "PLAYING":
+            return render_game_canvas(request, context)
 
         if tournament.winner:
-            print("tournament has a winner, rendering winner page")
-            return render(
-                request,
-                "tournament/tournament_winner.html",
-                {
-                    "players_in_lobby": aliases,
-                    "num_players": tournament.num_players,
-                    "lose_players": lose_players,
-                },
-            )
-        else:
-            print("tournament is not new, playing, or finished, rendering full lobby")
-            return render(
-                request,
-                "tournament/tournament_full_lobby.html",
-                {
-                    "match_players": aliases,
-                    "players_in_lobby": aliases,
-                    "num_players": tournament.num_players,
-                    "lose_players": lose_players,
-                    "is_final": tournament.is_final,
-                },
-            )
+            return render_winner_page(request, context)
+
+        return render_full_lobby(request, context)
+
     except Exception as error:
-        print(error)
+        logger.error(f"Error in tournament lobby: {error}", exc_info=True)
         return JsonResponse({"success": False, "error": str(error)}, status=404)
+
+
+def prepare_tournament_context(tournament):
+    players = list(tournament.players.values_list("username", flat=True))
+    num_players_in_tournament = len(players)
+
+    context = {
+        "players_in_lobby": players,
+        "num_players": tournament.num_players,
+        "num_players_in_tournament": num_players_in_tournament,
+    }
+
+    matches = Match.objects.filter(tournament=tournament)
+    lose_players = [match.determine_loser().alias for match in matches]
+    context["lose_players"] = lose_players
+
+    return context
+
+
+def render_waiting_lobby(request, context):
+    logger.info("Rendering waiting lobby")
+    return render(request, "tournament/tournament_waiting_lobby.html", context)
+
+
+def render_game_canvas(request, context):
+    logger.info("Rendering game canvas")
+    return render(request, "tournament/tournament_game.html", context)
+
+
+def render_winner_page(request, context):
+    logger.info("Rendering winner page")
+    return render(request, "tournament/tournament_winner.html", context)
+
+
+def render_full_lobby(request, context):
+    logger.info("Rendering full lobby")
+    context.update(
+        {
+            "match_players": context["players_in_lobby"],
+            "is_final": context["num_players"] == 2,
+        }
+    )
+    return render(request, "tournament/tournament_full_lobby.html", context)

@@ -57,6 +57,9 @@ class Match(models.Model):
         blank=True,
     )
     created_at = models.DateTimeField(auto_now_add=True)
+    tournament = models.ForeignKey(
+        "Tournament", related_name="matches", on_delete=models.CASCADE
+    )
 
     def __str__(self):
         return json.dumps(self.__dict__, default=str)
@@ -77,27 +80,6 @@ class Tournament(models.Model):
     state = models.CharField(max_length=50, choices=STATE_CHOICES, default="NEW")
     num_players = models.IntegerField()
     players = models.ManyToManyField(Player, related_name="tournaments", blank=True)
-    match1 = models.ForeignKey(
-        Match,
-        related_name="tournament_match1",
-        on_delete=models.CASCADE,
-        blank=True,
-        null=True,
-    )
-    match2 = models.ForeignKey(
-        Match,
-        related_name="tournament_match2",
-        on_delete=models.CASCADE,
-        blank=True,
-        null=True,
-    )
-    match_final = models.ForeignKey(
-        Match,
-        related_name="tournament_match_final",
-        on_delete=models.CASCADE,
-        blank=True,
-        null=True,
-    )
     winner = models.ForeignKey(
         Player,
         related_name="won_tournaments",
@@ -106,7 +88,13 @@ class Tournament(models.Model):
         blank=True,
     )
     created_at = models.DateTimeField(auto_now_add=True)
-    is_final = models.BooleanField(default=False)  # do we need this?
+    is_final = models.BooleanField(default=False)  # do we need this? yes for the signal
 
     def __str__(self):
         return json.dumps(self.__dict__, default=str)
+
+    def is_full(self):
+        return self.players.count() == self.num_players
+
+    def get_matches_by_id(self, match_id):
+        return self.matches.filter(id=match_id)
