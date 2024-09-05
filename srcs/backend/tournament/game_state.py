@@ -49,6 +49,7 @@ class GameState:
     def __init__(self, match, tournament):
         print("INIT GAME STATE")
         self.tournament = tournament
+        self.state = "NEW"
         self.match = match
         # init game state
         self.round_start_time = time.time()
@@ -83,4 +84,5 @@ class GameState:
             "ball_vector": self.ball_vector,
             "player1": self.player1.to_dict(),
             "player2": self.player2.to_dict(),
+            # winner?
         }

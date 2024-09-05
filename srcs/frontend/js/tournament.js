@@ -21,28 +21,28 @@ const updateNumPlayersInLobby = (numPlayersInLobby) => {
   ).textContent = `${numPlayersInLobby}`;
 };
 
-function handleFullTournamentLobby() {
-  console.log("handleFullTournamentLobby");
-  setTimeout(() => {
-    if (/^\/tournament\/\d+\/lobby$/.test(window.location.pathname)) {
-      document.getElementById("tournament-lobby-section").classList.add("full");
-      document.querySelector(".tournament_lobby__header").innerHTML =
-        'BEEPONG CUP IS STARTING IN <span id="countdown">3</span>...';
-      document.querySelector(".tournament_lobby__description").textContent =
-        "dummy vs dummy";
-      const playerCount = document.querySelector(
-        ".tournament_lobby__player-count"
-      );
-      if (playerCount) {
-        playerCount.remove();
-      }
-      const leaveButton = document.getElementById("leave-button");
-      if (leaveButton) {
-        leaveButton.remove();
-      }
-    }
-  }, 1000);
-}
+// function handleFullTournamentLobby() {
+//   console.log("handleFullTournamentLobby");
+//   setTimeout(() => {
+//     if (/^\/tournament\/\d+\/lobby$/.test(window.location.pathname)) {
+//       document.getElementById("tournament-lobby-section").classList.add("full");
+//       document.querySelector(".tournament_lobby__header").innerHTML =
+//         'BEEPONG CUP IS STARTING IN <span id="countdown">3</span>...';
+//       document.querySelector(".tournament_lobby__description").textContent =
+//         "dummy vs dummy";
+//       const playerCount = document.querySelector(
+//         ".tournament_lobby__player-count"
+//       );
+//       if (playerCount) {
+//         playerCount.remove();
+//       }
+//       const leaveButton = document.getElementById("leave-button");
+//       if (leaveButton) {
+//         leaveButton.remove();
+//       }
+//     }
+//   }, 1000);
+// }
 
 function insertCountdown(countdownValue) {
   console.log("insertCountdown");
@@ -52,7 +52,7 @@ function insertCountdown(countdownValue) {
 
 export {
   appendNewPlayerDiv,
-  handleFullTournamentLobby,
+  //handleFullTournamentLobby,
   updateNumPlayersInLobby,
   insertCountdown,
 };

@@ -89,6 +89,13 @@ class Tournament(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     is_final = models.BooleanField(default=False)  # do we need this? yes for the signal
+    current_match = models.ForeignKey(
+        Match,
+        related_name="current_tournament",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+    )
 
     def __str__(self):
         return json.dumps(self.__dict__, default=str)

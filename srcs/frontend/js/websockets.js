@@ -3,7 +3,7 @@ import {
   appendNewPlayerDiv,
   updateNumPlayersInLobby,
   insertCountdown,
-  handleFullTournamentLobby,
+  //handleFullTournamentLobby,
 } from "./tournament.js";
 
 // Constants
@@ -17,7 +17,6 @@ const THICK_BORDER_THICKNESS = 5;
 const CANVAS_ID = "game_canvas";
 
 let old_ball_speed, new_ball_speed;
-let playerNumber;
 
 const getContext = () => {
   const canvas = document.getElementById(CANVAS_ID);
@@ -127,7 +126,7 @@ function updateCanvas(context, game_data) {
     socket.close();
     return;
   }
-  //console.log("updateCanvas game_data", game_data);
+  console.log("updateCanvas game_data", game_data);
   context.fillStyle = backgroundColor;
   context.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
   drawBorders(context);
@@ -174,15 +173,7 @@ function openWebSocket(tournament_id) {
     switch (data.type) {
       case "tournament":
         // BELOW DIEGO'S VERSION
-        //   var tournament_data = data.message;
-        // console.log("tournament_data:", tournament_data);
-        // console.log("window.location.pathname", window.location.pathname);
-        // console.log("tournament_data.state", tournament_data.state);
-        // // Store the player number if it's provided
-        // if (tournament_data.player_number) {
-        //   playerNumber = tournament_data.player_number;
-        //   console.log("You are player", playerNumber);
-        // }
+        // var tournament_data = data.message;
 
         // if (tournament_data.state === "PLAYING" && tournament_data.game_data) {
         //   console.log("tournament is playing, updating canvas");
@@ -194,10 +185,14 @@ function openWebSocket(tournament_id) {
         //   console.log("Tournament finished. Winner:", tournament_data.winner);
         //   // Handle end of tournament (e.g., display winner, offer to start new game)
         // } else if (tournament_data.state === "WAITING") {
-        //   console.log("Waiting for players. Current players:", tournament_data.players);
+        //   console.log(
+        //     "Waiting for players. Current players:",
+        //     tournament_data.players
+        //   );
         //   // Update UI to show waiting state and current players
         // }
         // updateTournamentInfo(tournament_data);
+
         const tournamentMessage = data.message;
         switch (tournamentMessage.event) {
           case "new_player":
@@ -214,12 +209,12 @@ function openWebSocket(tournament_id) {
             break;
           case "countdown":
             console.log("countdown");
-            handleFullTournamentLobby(
-              tournamentMessage.player1_alias,
-              tournamentMessage.player2_alias
-            );
+            if (tournamentMessage.countdown === 3)
+              console.log("countdown is 3");
+            loadPage(window.location.pathname);
             insertCountdown(tournamentMessage.countdown);
             break;
+          // maybe not needed? just send game message instead
           case "game_started":
             console.log("game_started");
             const canvasContext = getContext();
@@ -228,6 +223,10 @@ function openWebSocket(tournament_id) {
           case "game_finished":
             console.log("game_finished");
             // TODO: render winner page
+            break;
+          case "tournament_finished":
+            console.log("tournament_finished");
+            console.log("winner is", tournamentMessage.winner);
             break;
           default:
             loadPage(window.location.pathname);
