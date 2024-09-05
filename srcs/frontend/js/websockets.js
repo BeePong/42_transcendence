@@ -2,13 +2,14 @@
 const CANVAS_HEIGHT = 500;
 const CANVAS_WIDTH = 800;
 const PADDLE_HEIGHT = 100;
-const PADDLE_WIDTH = 26;
+const PADDLE_WIDTH = 10;
 const BALL_RADIUS = 15;
-const PADDING_THICKNESS = 7;
+const PADDING_THICKNESS = 10;
 const THICK_BORDER_THICKNESS = 5;
 const CANVAS_ID = "game_canvas";
 
 let old_ball_speed, new_ball_speed;
+let playerNumber;
 
 const getContext = () => {
   const canvas = document.getElementById(CANVAS_ID);
@@ -61,12 +62,9 @@ const insertScores = (player1_score, player2_score) => {
   if (score2) score2.textContent = player2_score;
 };
 
-const drawPaddle = (context, y, player_type, controlling) => {
-  const x =
-    player_type === "player1"
-      ? CANVAS_WIDTH - PADDING_THICKNESS - PADDLE_WIDTH
-      : PADDING_THICKNESS;
-  context.fillStyle = controlling ? "yellow" : "white";
+const drawPaddle = (context, y, playerType, isControlling) => {
+  context.fillStyle = isControlling ? "yellow" : "white";
+  const x = playerType === "player1" ? PADDING_THICKNESS : CANVAS_WIDTH - PADDLE_WIDTH - PADDING_THICKNESS;
   context.fillRect(x, y - PADDLE_HEIGHT / 2, PADDLE_WIDTH, PADDLE_HEIGHT);
 };
 
@@ -82,35 +80,26 @@ const drawEmptyCanvas = (context) => {
 };
 
 function updateCanvas(context, game_data) {
-  if (!context) return;
-  if (new_ball_speed === undefined) new_ball_speed = game_data.ball.speed;
-  old_ball_speed = new_ball_speed;
-  new_ball_speed = game_data.ball.speed;
-  if (old_ball_speed !== new_ball_speed) {
-    console.log("ball speed changed", old_ball_speed, new_ball_speed);
-  }
-  insertScores(game_data.player1.score, game_data.player2.score);
-  if (game_data.state === "finished") {
-    console.log("winner is", game_data.winner.username);
-    socket.close();
-    return;
-  }
-  //console.log("updateCanvas game_data", game_data);
-  context.fillStyle = backgroundColor;
-  context.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-  drawBorders(context);
+  if (!context || !game_data) return;
+  
+  // Clear the canvas
+  context.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+  
+  // Draw the paddles
+  drawPaddle(context, game_data.player1_paddle_y, "player1", playerNumber === 1);
+  drawPaddle(context, game_data.player2_paddle_y, "player2", playerNumber === 2);
+  
+  // Draw the ball
   drawBall(context, game_data.ball.x, game_data.ball.y);
-  if (game_data.state === "countdown") {
-    drawCountdown(
-      context,
-      game_data.countdown,
-      game_data.ball.x,
-      game_data.ball.y
-    );
-  }
-  // TODO: pass controlling param to drawPaddle
-  drawPaddle(context, game_data.player1.y, "player1");
-  drawPaddle(context, game_data.player2.y, "player2");
+  
+  // Draw the borders
+  drawBorders(context);
+  
+  // Update scores
+  insertScores(game_data.player1_score, game_data.player2_score);
+
+  // Debug output
+  console.log("Drawing paddles:", game_data.player1_paddle_y, game_data.player2_paddle_y);
 }
 
 function webSocketTest(tournament_id) {
@@ -146,10 +135,26 @@ function webSocketTest(tournament_id) {
       console.log("tournament_data:", tournament_data);
       console.log("window.location.pathname", window.location.pathname);
       console.log("tournament_data.state", tournament_data.state);
-      // if (tournament_data.state === "NEW") {
-      //   console.log("tournament is new, reloading page");
-      //   loadPage(window.location.pathname); //TODO: console logging error that loadPoge is not defined here. Also, we should not reload page 'cause it tries to connect to websocket again and might cause errors. Asked Wing about this.
-      // }
+      // Store the player number if it's provided
+      if (tournament_data.player_number) {
+        playerNumber = tournament_data.player_number;
+        console.log("You are player", playerNumber);
+      }
+
+      if (tournament_data.state === "PLAYING" && tournament_data.game_data) {
+        console.log("tournament is playing, updating canvas");
+        const canvasContext = getContext();
+        if (canvasContext && tournament_data.game_data) {
+          updateCanvas(canvasContext, tournament_data.game_data);
+        }
+      } else if (tournament_data.state === "FINISHED") {
+        console.log("Tournament finished. Winner:", tournament_data.winner);
+        // Handle end of tournament (e.g., display winner, offer to start new game)
+      } else if (tournament_data.state === "WAITING") {
+        console.log("Waiting for players. Current players:", tournament_data.players);
+        // Update UI to show waiting state and current players
+      }
+      updateTournamentInfo(tournament_data);
     } else {
       console.log("game data:", data.message);
       updateCanvas(canvasContext, jsonData.message);
@@ -165,7 +170,35 @@ function webSocketTest(tournament_id) {
     // when state is playing
     return false;
   };
-
+  function updateTournamentInfo(tournament_data) {
+    // Update tournament state
+    const stateElement = document.getElementById('tournament-state');
+    if (stateElement) {
+      stateElement.textContent = tournament_data.state;
+    }
+  
+    // Update player list
+    const playerListElement = document.getElementById('player-list');
+    if (playerListElement) {
+      playerListElement.textContent = tournament_data.players.join(', ');
+    }
+  
+    // Update number of players
+    const numPlayersElement = document.getElementById('num-players');
+    if (numPlayersElement) {
+      numPlayersElement.textContent = tournament_data.num_players;
+    }
+  
+    // Update winner (if the tournament is finished)
+    if (tournament_data.state === 'FINISHED') {
+      const winnerElement = document.getElementById('winner');
+      if (winnerElement) {
+        winnerElement.textContent = tournament_data.winner;
+      }
+    }
+  
+    // You can add more updates here based on your specific UI needs
+  }
   socket.onopen = function (e) {
     console.log("WebSocket connection opened");
   };
@@ -184,6 +217,7 @@ function webSocketTest(tournament_id) {
         message: {
           key: key,
           keyAction: keyAction,
+          playerNumber: playerNumber
         },
         type: "game",
       })
@@ -191,13 +225,13 @@ function webSocketTest(tournament_id) {
   }
 
   window.addEventListener("keydown", function (event) {
-    if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+    if ((event.key === "ArrowUp" || event.key === "ArrowDown") && playerNumber) {
       sendGameData(event.key, "keydown");
     }
   });
 
   window.addEventListener("keyup", function (event) {
-    if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+    if ((event.key === "ArrowUp" || event.key === "ArrowDown") && playerNumber) {
       sendGameData(event.key, "keyup");
     }
   });
