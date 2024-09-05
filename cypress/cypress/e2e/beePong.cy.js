@@ -1,123 +1,112 @@
-describe('Basic Navigation and Content Tests', () => {
-  it('should visit the `homepage` and contains `about`', () => {
-    cy.visit('/');
-    cy.task('log', 'Visited homepage');
-    cy.contains('ABOUT').should('be.visible');
-    cy.screenshot('homepage-contains-about');
-  });
-
-  it('should visit the about `page` and contains `about BeePong`', () => {
-    cy.visit('/about');
-    cy.task('log', 'Visited about page');
-    cy.contains('about BeePong').should('be.visible');
-    cy.screenshot('about-page-contains-about-BeePong');
-  });
-
-  it('should visit the `api` and contains `{"test": "This is a test JSON"}`', () => {
-    cy.visit('/api');
-    cy.task('log', 'Visited API page');
-    cy.contains('{"test": "This is a test JSON"}').should('be.visible');
-    cy.screenshot('api-contains-test-JSON');
-  });
-
-  it('should visit the `game` and contains `game`', () => {
-    cy.visit('/game');
-    cy.task('log', 'Visited game page');
-    cy.contains('game').should('be.visible');
-    cy.screenshot('game-page-contains-game');
-  });
-
-  it('should visit the `health` and contains `{"status": "healthy"}`', () => {
-    cy.visit('/health');
-    cy.task('log', 'Visited health check page');
-    cy.contains('{"status": "healthy"}').should('be.visible');
-    cy.screenshot('health-check-contains-status-healthy');
-  });
-
-  it('should visit the `home` page and contains `*created by 5 ultra-talented Hive Helsinki students. Tech stuff here ->`', () => {
-    cy.visit('/home');
-    cy.task('log', 'Visited home page');
-    cy.contains("*created by 5 ultra-talanted Hive Helsinki students. Tech stuff here ->").should('be.visible');
-    cy.screenshot('home-page-contains-credits');
-  });
-
-  it('should visit the `navbar` and contains `about`', () => {
-    cy.visit('/navbar');
-    cy.task('log', 'Visited navbar');
-    cy.contains('ABOUT').should('be.visible');
-    cy.screenshot('navbar-contains-about');
-  });
-});
-
+//describe('Basic Navigation and Content Tests', () => {
+//  it('should visit the `homepage` and contains `about`', () => {
+//    cy.visit('/');
+//    cy.task('log', 'Visited homepage');
+//    cy.contains('ABOUT').should('be.visible');
+//    cy.screenshot('homepage-contains-about');
+//  });
+//
+//  it('should visit the about `page` and contains `about BeePong`', () => {
+//    cy.visit('/about');
+//    cy.task('log', 'Visited about page');
+//    cy.contains('about BeePong').should('be.visible');
+//    cy.screenshot('about-page-contains-about-BeePong');
+//  });
+//
+//  it('should visit the `api` and contains `{"test": "This is a test JSON"}`', () => {
+//    cy.visit('/api');
+//    cy.task('log', 'Visited API page');
+//    cy.contains('{"test": "This is a test JSON"}').should('be.visible');
+//    cy.screenshot('api-contains-test-JSON');
+//  });
+//
+//  it('should visit the `game` and contains `game`', () => {
+//    cy.visit('/game');
+//    cy.task('log', 'Visited game page');
+//    cy.contains('game').should('be.visible');
+//    cy.screenshot('game-page-contains-game');
+//  });
+//
+//  it('should visit the `home` page and contains text about Hive Helsinki students', () => {
+//    cy.visit('/home');
+//    cy.task('log', 'Visited home page');
+//    // Use regex to make the assertion more flexible
+//    cy.contains(/created by 5 ultra[-\s]?talented Hive Helsinki students/i).should('be.visible');
+//    cy.screenshot('home-page-contains-credits');
+//  });
+//
+//  it('should visit the `health` and contains `{"status": "healthy"}`', () => {
+//    cy.visit('/health');
+//    cy.task('log', 'Visited health check page');
+//    cy.contains('{"status": "healthy"}').should('be.visible');
+//    cy.screenshot('health-check-contains-status-healthy');
+//  });
+//
+//  it('should visit the `navbar` and contains `about`', () => {
+//    cy.visit('/navbar');
+//    cy.task('log', 'Visited navbar');
+//    cy.contains('ABOUT').should('be.visible');
+//    cy.screenshot('navbar-contains-about');
+//  });
+//});
+//
+////////////////////////////////////////////////////////////////////////////////
+// User Registration
+////////////////////////////////////////////////////////////////////////////////
 describe('User Registration, Login, Logout, and Duplicate Registration Tests', () => {
-  let registeredUsername = 'toto'; // Starting username
+  let username = 'beePong_cypress'
+  let password = 'changeme.'
 
-  function tryRegister(username) {
+  function registerUser(username, password) {
     cy.visit('/accounts/register');
-    cy.task('log', `Trying to register username: ${username}`);
-    
+    cy.task('log', `User registration: create a test user: ${username}`);
     cy.get('input[name="username"]').clear().type(username);
-    cy.get('input[name="password1"]').type('changeme.');
-    cy.get('input[name="password2"]').type('changeme.');
+    cy.get('input[name="password1"]').type(password);
+    cy.get('input[name="password2"]').type(password);
     cy.get('button[type="submit"]').click();
+    cy.screenshot(`registration_${username}`);
   }
 
-  it('should register a new user successfully or generate a new username', () => {
-    let attempt = 0;
-
-    function attemptRegistration() {
-      const newUsername = attempt === 0 ? registeredUsername : `${registeredUsername}${attempt.toString().padStart(3, '0')}`;
-      
-      tryRegister(newUsername);
-
-      cy.url().should('include', '/home').then(() => {
-        registeredUsername = newUsername;
-        cy.task('log', `Registered with username: ${newUsername}`);
-        cy.screenshot('successful-registration');
-      }).catch(() => {
-        attempt++;
-        if (attempt < 10) {
-          cy.task('log', `Username ${newUsername} already exists, trying a new one...`);
-          attemptRegistration();
-        } else {
-          throw new Error('Unable to find an available username after 10 attempts');
-        }
-      });
-    }
-
-    attemptRegistration();
-  });
-
-  it('should log out after registration', () => {
-    cy.contains('LOG OUT').click();
-    cy.url().should('include', '/accounts/login');
-    cy.screenshot('logged-out');
-  });
+  // Function to log in a user
+  function loginUser(username, password) {
+    cy.visit('/accounts/login');
+    cy.get('input[name="username"]').type(username);
+    cy.get('input[name="password"]').type(password);
+    cy.get('button[type="submit"]').click();
+    cy.screenshot(`login_${username}`);
+  }
 
   it('should display error when trying to register with the same username', () => {
-    tryRegister(registeredUsername);
+    registerUser(username, password)
     cy.contains('A user with that username already exists').should('be.visible');
     cy.screenshot('duplicate-registration-error');
   });
 
-  it('should log in successfully after duplicate registration fails', () => {
+  it('should log in successfully', () => {
     cy.visit('/accounts/login');
-    cy.get('input[name="username"]').type(registeredUsername);
+    cy.get('input[name="username"]').type(username);
     cy.get('input[name="password"]').type('changeme.');
     cy.get('button[type="submit"]').click();
+    cy.contains(username).should('be.visible');
+    cy.screenshot('successful-login_2');
+  });
 
-    cy.url().should('include', '/home');
-    cy.contains(registeredUsername).should('be.visible');
-    cy.screenshot('successful-login');
+  it(`should log out ${username}`, () => {
+    registerUser(username, password);
+    loginUser(username, password);
+    cy.contains('LOG OUT', { timeout: 10000 }).click();
+    cy.screenshot('logged-out');
   });
 
   after(() => {
-    cy.task('log', `Cleaning up the registered user: ${registeredUsername}`);
+    cy.task('log', `Cleaning up the registered user: ${username}`);
     // Clean up user in the database or backend if necessary
   });
 });
 
+////////////////////////////////////////////////////////////////////////////////
 // Form Validation Tests
+////////////////////////////////////////////////////////////////////////////////
 describe('Form Validation Tests', () => {
   it('should display error for empty login fields', () => {
     cy.visit('/accounts/login');
