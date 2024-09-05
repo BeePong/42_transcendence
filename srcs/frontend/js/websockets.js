@@ -3,7 +3,7 @@ import {
   appendNewPlayerDiv,
   updateNumPlayersInLobby,
   insertCountdown,
-  //handleFullTournamentLobby,
+  handleFullTournamentLobby,
 } from "./tournament.js";
 
 // Constants
@@ -205,20 +205,23 @@ function openWebSocket(tournament_id) {
               tournamentMessage.num_players_in_tournament ===
               tournamentMessage.num_players
             )
+            {
+              console.log('here handleFullTournamentLobby');
               handleFullTournamentLobby();
+            }
             break;
           case "countdown":
             console.log("countdown");
             if (tournamentMessage.countdown === 3)
               console.log("countdown is 3");
-            loadPage(window.location.pathname);
+            // loadPage(window.location.pathname);
             insertCountdown(tournamentMessage.countdown);
             break;
           // maybe not needed? just send game message instead
           case "game_started":
             console.log("game_started");
-            const canvasContext = getContext();
-            if (canvasContext) drawEmptyCanvas(canvasContext);
+            // const canvasContext = getContext();
+            // if (canvasContext) drawEmptyCanvas(canvasContext);
             break;
           case "game_finished":
             console.log("game_finished");
@@ -229,13 +232,14 @@ function openWebSocket(tournament_id) {
             console.log("winner is", tournamentMessage.winner);
             break;
           default:
-            loadPage(window.location.pathname);
+            console.log("default");
+            // loadPage(window.location.pathname);
         }
 
-      case "game":
-        const gameState = data.message;
-        updateCanvas(canvasContext, gameState);
-        break;
+      // case "game":
+      //   const gameState = data.message;
+      //   updateCanvas(canvasContext, gameState);
+      //   break;
     }
 
     // Here tournament_lobby function will be called once the winner is determined, call loadPage on window.pathname (reload page)
@@ -246,7 +250,7 @@ function openWebSocket(tournament_id) {
     // state is countdown, seconds number is 2, 1, 0 and call function to change number in countdown
 
     // when state is playing
-    return false;
+    // return false;
   };
   function updateTournamentInfo(tournament_data) {
     // Update tournament state

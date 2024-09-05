@@ -85,16 +85,16 @@ def handle_new_tournament(tournament, player, form):
             f"Player {player.username} added to tournament {tournament.tournament_id}"
         )
 
-    if tournament.is_full():
-        logger.info(
-            f"Tournament {tournament.tournament_id} has enough players. Starting tournament."
-        )
-        tournament.state = "PLAYING"
-        tournament.save()
-    else:
-        logger.info(
-            f"Tournament {tournament.tournament_id} doesn't have enough players yet. Current: {tournament.players.count()}, Required: {tournament.num_players}"
-        )
+    # if tournament.is_full():
+    #     logger.info(
+    #         f"Tournament {tournament.tournament_id} has enough players. Starting tournament."
+    #     )
+    #     tournament.state = "PLAYING"
+    #     tournament.save()
+    # else:
+    #     logger.info(
+    #         f"Tournament {tournament.tournament_id} doesn't have enough players yet. Current: {tournament.players.count()}, Required: {tournament.num_players}"
+    #     )
 
 
 def prepare_tournament_data(tournaments):
