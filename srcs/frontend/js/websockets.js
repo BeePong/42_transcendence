@@ -146,10 +146,10 @@ function webSocketTest(tournament_id) {
       console.log("tournament_data:", tournament_data);
       console.log("window.location.pathname", window.location.pathname);
       console.log("tournament_data.state", tournament_data.state);
-      if (tournament_data.state === "NEW") {
-        console.log("tournament is new, reloading page");
-        loadPage(window.location.pathname);
-      }
+      // if (tournament_data.state === "NEW") {
+      //   console.log("tournament is new, reloading page");
+      //   loadPage(window.location.pathname); //TODO: console logging error that loadPoge is not defined here. Also, we should not reload page 'cause it tries to connect to websocket again and might cause errors. Asked Wing about this.
+      // }
     } else {
       console.log("game data:", data.message);
       updateCanvas(canvasContext, jsonData.message);
