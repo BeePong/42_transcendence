@@ -29,7 +29,9 @@ const getContext = () => {
 };
 
 const drawBorders = (context) => {
-  context.strokeStyle = "white";
+  context.strokeStyle = getComputedStyle(
+    document.documentElement
+  ).getPropertyValue("--color-tertiary");
   context.lineWidth = 2;
   context.beginPath();
   context.moveTo(0, 0);
@@ -38,7 +40,9 @@ const drawBorders = (context) => {
   context.lineTo(0, CANVAS_HEIGHT);
   context.lineTo(0, 0);
   context.stroke();
-  context.fillStyle = "white";
+  context.fillStyle = getComputedStyle(
+    document.documentElement
+  ).getPropertyValue("--color-tertiary");
   context.fillRect(0, 0, CANVAS_WIDTH, THICK_BORDER_THICKNESS);
   context.fillRect(
     0,
@@ -73,12 +77,16 @@ const insertAliasesGameInfo = (player1_alias, player2_alias) => {
   if (alias2) alias2.textContent = player2_alias;
 };
 
-const drawPaddle = (context, y, playerType, isControlling) => {
-  context.fillStyle = isControlling ? "yellow" : "white";
+const drawPaddle = (context, y, playerType /* isControlling */) => {
+  //context.fillStyle = isControlling ? "yellow" : "white";
+  context.fillStyle = getComputedStyle(
+    document.documentElement
+  ).getPropertyValue("--color-tertiary");
   const x =
-    playerType === "player2"
+    playerType === "player1"
       ? PADDING_THICKNESS
       : CANVAS_WIDTH - PADDLE_WIDTH - PADDING_THICKNESS;
+  console.log("drawPaddle x:", x, "y:", y, "playerType:", playerType);
   context.fillRect(x, y - PADDLE_HEIGHT / 2, PADDLE_WIDTH, PADDLE_HEIGHT);
 };
 
@@ -152,7 +160,19 @@ function updateCanvas(context, game_data) {
     );
   }
   // TODO: pass controlling param to drawPaddle
+  console.log(
+    "drawing paddle for player1 ",
+    game_data.player1.player_name,
+    "at y",
+    game_data.player1.y
+  );
   drawPaddle(context, game_data.player1.y, "player1");
+  console.log(
+    "drawing paddle for player2 ",
+    game_data.player2.player_name,
+    "at y",
+    game_data.player2.y
+  );
   drawPaddle(context, game_data.player2.y, "player2");
 }
 

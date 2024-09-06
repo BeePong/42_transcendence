@@ -71,9 +71,6 @@ class GameLoop:
     async def handle_countdown(self):
         try:
             if time.time() - self.game_state.round_start_time <= 3:
-                logger.info(
-                    f"Countdown: {3 - int(time.time() - self.game_state.round_start_time)}"
-                )
                 self.game_state.countdown = 3 - int(
                     time.time() - self.game_state.round_start_time
                 )
@@ -96,9 +93,9 @@ class GameLoop:
             logger.error(f"Error sending message: {e}") """
 
     async def send_message_to_all(self, message, message_type):
-        logger.info(
-            f"Sending message to group_name from game loop: {self.pong_group_name}"
-        )
+        # logger.info(
+        #     f"Sending message to group_name from game loop: {self.pong_group_name}"
+        # )
 
         try:
             await self.channel_layer.group_send(
@@ -159,7 +156,6 @@ class GameLoop:
             logger.error(f"Error moving paddles: {e}")
 
     def calculate_new_ball_position(self):
-        logger.info("Calculating new ball position")
         try:
             self.ball_new_x = (
                 self.game_state.ball.x
@@ -171,10 +167,8 @@ class GameLoop:
             )
         except Exception as e:
             logger.error(f"Error calculating new ball position: {e}")
-        logger.info("calculated new ball position")
 
     def calculate_collisions(self):
-        logger.info("Calculating collisions")
         try:
             # top border
             if (
@@ -209,7 +203,6 @@ class GameLoop:
                     self.game_state.ball.y
                     - remaining_movement * self.game_state.ball_vector["y"]
                 )
-            logger.info("middle of calculate_collisions")
             # left paddle
             if (
                 self.ball_new_x
@@ -288,7 +281,7 @@ class GameLoop:
     @database_sync_to_async
     def check_win(self):
         try:
-            logger.info("Checking for winner")
+            # logger.info("Checking for winner")
             winner = self.get_winner_if_someone_scored()
             if winner:
                 logger.info("we have a winner")
@@ -311,15 +304,9 @@ class GameLoop:
                 if self.game_state.state == "COUNTDOWN":
                     await self.handle_countdown()
                 elif self.game_state.state == "PLAYING":
-                    logger.info("Game loop state PLAYING")
+                    # logger.info("Game loop state PLAYING")
                     await sync_to_async(self.calculate_new_ball_position)()
-                    logger.info(
-                        f"Ball new x: {self.ball_new_x}, ball new y: {self.ball_new_y}"
-                    )
                     await sync_to_async(self.calculate_collisions)()
-                    logger.info(
-                        f"After collision: Ball new x: {self.ball_new_x}, ball new y: {self.ball_new_y}"
-                    )
                     self.game_state.ball.x = self.ball_new_x
                     self.game_state.ball.y = self.ball_new_y
                     await self.check_win()
