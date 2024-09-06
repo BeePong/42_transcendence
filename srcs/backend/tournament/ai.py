@@ -230,7 +230,7 @@ async def ai_bot(session):
                     game_state = await websocket.recv()
                     game_state_data.update(json.loads(game_state))
                     current_time = time.time()
-                    # print(f"Received game state at {current_time}:")
+                    print(f"Received game state at {current_time}:")
                     # print(json.dumps(game_state_data, indent=2))
 
                     # Calculate and print the delay
@@ -240,20 +240,6 @@ async def ai_bot(session):
 
                     # Signal that a new game state has been received
                     game_state_event.set()
-
-                    # Clear the message queue
-                    # while websocket.messages:
-                    #     _ = await websocket.recv()
-                    #     print("Skipped an old message")
-
-                    # # Calculate AI move
-                    # move = await calculate_ai_move(game_state_data)
-
-                    # # Execute the move
-                    # if move:
-                    #     await send_game_data(websocket, move, "keydown")
-                    #     await asyncio.sleep(random.uniform(0.2, 0.6))
-                    #     await send_game_data(websocket, move, "keyup")
 
             except websockets.ConnectionClosedError as e:
                 print(f"WebSocket connection closed: {e}")
