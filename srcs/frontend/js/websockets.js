@@ -176,22 +176,40 @@ function updateCanvas(context, game_data) {
   drawPaddle(context, game_data.player2.y, "player2");
 }
 
-function openWebSocket(tournament_id) {
+function openWebSocket(tournament_id, type = 'tournament') {
   if (socket && socket_tournament_id === tournament_id) {
     console.log("Socket already open, returning from openWebSocket");
     return;
   }
   // const canvasContext = getContext();
-  const url =
+  
+  var url;
+  if (type === 'solo')
+    url =
     (window.location.protocol == "https:" ? "wss://" : "ws://") +
     window.location.host +
     "/ws/pong/" +
     tournament_id +
     "/" +
-    "?is_bot=False";
+    "?is_bot=True";
+  else
+    url =
+      (window.location.protocol == "https:" ? "wss://" : "ws://") +
+      window.location.host +
+      "/ws/pong/" +
+      tournament_id +
+      "/" +
+      "?is_bot=False";
 
   console.log("Starting WebSocket on URL: ", url);
   socket = new WebSocket(url);
+
+  if (type === 'solo')
+  {
+    const canvasContext = getContext();
+    console.log("canvasContext", canvasContext);
+    if (canvasContext) drawEmptyCanvas(canvasContext);
+  }
 
   // TODO: remember to close websocket after the tournament is over
 
