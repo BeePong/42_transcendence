@@ -31,6 +31,10 @@ def about(request):
     """The about page for BeePong."""
     return render(request, 'beePong/about.html')
 
+def custom_404_frontend(request):
+    """The 404 page for BeePong."""
+    return render(request, 'beePong/error.html', {'error_message': '404 not found'}, status=404)
+
 def custom_404(request, exception):
     """The 404 page for BeePong."""
     return render(request, 'beePong/error.html', {'error_message': '404 not found'}, status=404)

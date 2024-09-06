@@ -108,16 +108,16 @@ database, they are logged in. If the user does not exist, a new user is created
 def oauth_token(request):
     code = request.GET.get('code')
     if code is None:
-        return redirect('/accounts/oauth_error/?from=oauth_token')
+        return redirect('/accounts/oauth_error?from=oauth_token')
 
     # Use the redirect url to frontend stored in state
     state = request.GET.get('state')
     if not state:
-        return redirect('/accounts/oauth_error/?from=oauth_token')
+        return redirect('/accounts/oauth_error?from=oauth_token')
     # Split the state to extract the redirect url
     state_parts = state.split('|')
     if len(state_parts) < 2:
-        return redirect('/accounts/oauth_error/?from=oauth_token')
+        return redirect('/accounts/oauth_error?from=oauth_token')
     redirect_url = unquote(state_parts[1])
 
     data = {
@@ -155,7 +155,7 @@ def oauth_token(request):
         login(request, user)
         return redirect(f'{redirect_url}?login=success')
     else:
-        return redirect('/accounts/oauth_error/?from=oauth_token')
+        return redirect('/accounts/oauth_error?from=oauth_token')
 
 """
 The oauth_error view handles the display of an OAuth error message.
