@@ -23,6 +23,10 @@ async function handleFormSubmit(event) {
 
     if (result.success) {
       // Handle redirection
+			if (url.pathname === '/accounts/login/' || url.pathname === '/accounts/register/')
+				localStorage.setItem('isLoggedIn', 'true'); // Save login state
+			else if (url.pathname === '/accounts/logout/')
+				localStorage.setItem('isLoggedIn', 'false');
       navigate(result.redirect);
       if (url.pathname.startsWith("/accounts/")) updateNavBar();
     } else {

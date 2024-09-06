@@ -38,18 +38,24 @@ export async function loadPage(
   try {
     const response = await fetch(`/page${page}/${queryString}`);
 
-    if (!response.ok && response.status !== 404) {
-      if (response.status === 400 || response.status === 401) {
-        if (response.status === 400) return loadPage("/accounts/oauth_error/");
-        // Handle oauth error response by fetching the error page
-        else return navigate("/accounts/login/", redirectUrl); // Redirect to login page if the user is not authenticated
-      } else {
-        throw new Error("Network response was not ok");
-      }
-    }
-    if (fromNavigate === true)
-      // If this function is called by navigate(), update the browser's history to the new path without reloading the page
-      history.pushState(null, null, path);
+			if (!response.ok && response.status !== 404) {
+					if (response.status === 400 || response.status === 401 || response.status === 302) {
+						if (response.status === 302)
+						{
+							const data = await response.json();
+							return navigate(data.redirect);
+						}
+						else if (response.status === 400)
+							return loadPage('/accounts/oauth_error/'); // Handle oauth error response by fetching the error page
+						else
+							return navigate('/accounts/login/', redirectUrl); // Redirect to login page if the user is not authenticated	
+					}
+					else {
+						throw new Error('Network response was not ok');
+					}
+			}
+			if (fromNavigate === true) // If this function is called by navigate(), update the browser's history to the new path without reloading the page
+				history.pushState(null, null, path);
 
     const data = await response.text();
     updatePageContent(data, page, redirectUrl); // Handle content updates
