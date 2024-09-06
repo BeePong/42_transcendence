@@ -21,7 +21,7 @@ def tournament(request):
     player, _ = Player.objects.get_or_create(user=request.user)
 
     if request.method == "POST":
-        return handle_tournament_post(request, player)
+        return handle_tournament_join_request(request, player)
 
     tournaments = Tournament.objects.all().order_by("-tournament_id")
     form = AliasForm(username=request.user.username)
@@ -41,7 +41,10 @@ def tournament(request):
     )
 
 
-def handle_tournament_post(request, player):
+# TODO: the whole logic of this function, which is triggered when user click 'Join' button of a tournamet
+# has to be refactored. Not working atm. It seems to always trigger the /tournament/{tournament_id}/lobby/ page
+# First check if tournament_id is valid, then check that player don't have an active tournament, check if tournament is not full, and state = NEW, only then load the lobby page where webSocket connection will be triggered
+def handle_tournament_join_request(request, player):
     try:
         tournament_id = request.POST.get("tournament_id")
         form = AliasForm(data=request.POST, instance=player)
@@ -56,7 +59,7 @@ def handle_tournament_post(request, player):
         )
 
         if tournament.state == "NEW":
-            handle_new_tournament(tournament, player, form)
+            join_waiting_lobby(tournament, player, form)
         else:
             logger.info(
                 f"Tournament {tournament_id} is not in NEW state. Current state: {tournament.state}"
@@ -119,59 +122,54 @@ def form_countdown_message(player1_alias, player2_alias, countdown):
     }
 
 
-def handle_new_tournament(tournament, player, form):
+def join_waiting_lobby(tournament, player, form):
     logger.info(
         f"Adding player {player.username} with alias {player.alias} to tournament {tournament.tournament_id}"
     )
     form.save()
 
-    if player not in tournament.players.all():
-        if player.has_active_tournament:
-            # TODO: check if correct
-            return JsonResponse(
-                {"success": False, "error": "Player already has an active tournament"},
-                status=400,
-            )
-        tournament.players.add(player)
-        player.has_active_tournament = True
-        player.current_tournament_id = tournament.tournament_id
-        player.save()
-        tournament.save()
-        logger.info(
-            f"Player {player.username} with alias {player.alias} added to tournament {tournament.tournament_id}"
+    if player.has_active_tournament:
+        return JsonResponse(
+            {"success": False, "error": "Player already has an active tournament"},
+            status=400,
         )
+
+    if player not in tournament.players.all():
+        add_player_to_tournament(player, tournament)
         message = form_new_player_message(tournament, player)
         send_message_to_all(tournament.tournament_id, message, "tournament")
-        # TODO: send message to player that they have joined the tournament. Check if it is working.
 
     if tournament.is_full():
-        logger.info(
-            f"Tournament {tournament.tournament_id} has enough players. Starting tournament."
-        )
-        # tournament.state = "COUNTDOWN"
-        # tournament.save()
-        logger.info(
-            "Tournament is full, we could start countdown but fuck it MVP only so PLAYING"
-        )
-        # for countdown in [3, 2, 1]:
-        #     logger.info(f"Countdown: {countdown}")
-        #     countdown_message = form_countdown_message("alias1", "alias2", countdown)
-        #     send_message_to_all(
-        #         tournament.tournament_id, countdown_message, "tournament"
-        #     )
-        #     time.sleep(1)
-        game_started_message = form_game_started_message()
-        send_message_to_all(
-            tournament.tournament_id, game_started_message, "tournament"
-        )
-        tournament.state = "PLAYING"
-        tournament.is_started = False
-        tournament.save()
-
+        start_tournament(tournament)
     else:
         logger.info(
             f"Tournament {tournament.tournament_id} doesn't have enough players yet. Current: {tournament.players.count()}, Required: {tournament.num_players}"
         )
+
+
+def add_player_to_tournament(player, tournament):
+    tournament.players.add(player)
+    player.has_active_tournament = True
+    player.current_tournament_id = tournament.tournament_id
+    player.save()
+    tournament.save()
+    logger.info(
+        f"Player {player.username} with alias {player.alias} added to tournament {tournament.tournament_id}"
+    )
+
+
+def start_tournament(tournament):
+    logger.info(
+        f"Tournament {tournament.tournament_id} has enough players. Starting tournament."
+    )
+    logger.info(
+        "Tournament is full, we could start countdown but fuck it MVP only so PLAYING"
+    )
+    game_started_message = form_game_started_message()
+    send_message_to_all(tournament.tournament_id, game_started_message, "tournament")
+    tournament.state = "PLAYING"
+    tournament.is_started = False
+    tournament.save()
 
 
 def prepare_tournament_data(tournaments):
