@@ -203,8 +203,18 @@ def create_solo_game(request):
             # else:
             # return JsonResponse({"success": False, "errors": form.errors}, status=400)
         else:
-            return JsonResponse({'success': False, 'error': 'User not authenticated'}, status=401)
-    return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=405)
+            return JsonResponse({
+                'success': False,
+                'errors': {
+                    'non_field_errors': ['User not authenticated']
+                }
+            }, status=401)
+    return JsonResponse({
+        'success': False,
+        'errors': {
+            'non_field_errors': ['Invalid request method']
+        }
+    }, status=405)
 
 def solo_game(request, any_number):
     return render(request, "tournament/solo_game.html")

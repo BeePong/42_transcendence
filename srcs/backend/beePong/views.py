@@ -4,6 +4,7 @@ from django.http import Http404
 from django.http import JsonResponse
 from accounts.forms import CustomAuthenticationForm
 from collections import namedtuple
+from django.urls import reverse
 
 # Create your views here.
 
@@ -17,7 +18,14 @@ def navbar(request):
 
 def home(request):
     """The home page for BeePong."""
-    return render(request, 'beePong/home.html')
+    return render(
+        request,
+        'beePong/home.html',
+        {
+            "form_action": reverse("tournament:create_solo_game"),
+        },
+    )
+
 
 def about(request):
     """The about page for BeePong."""

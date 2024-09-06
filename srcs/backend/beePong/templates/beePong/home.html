@@ -12,7 +12,7 @@
 						TOURNAMENT
 						<img src="/img/arrow.svg" alt="arrow" width="21" height="12">
 					</button>
-					<form onsubmit="handleFormSubmit(event)" action="{% url 'tournament:create_solo_game' %}">
+					<form onsubmit="handleFormSubmit(event)" action="{{ form_action }}">
 						{% csrf_token %}
 						<button class="button--secondary button--with-icon">
 							SOLO GAME
@@ -22,6 +22,7 @@
 				</div>
 			</div>
 		</div>
+		<div class="form__error-message"></div>
 		<p class="card__note">*created by 5 ultra talented Hive Helsinki students. Tech stuff <a id="github-link" href="https://github.com/BeePong/42_transcendence">here -></a></p>
 	</div>
 </section>

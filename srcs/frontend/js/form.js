@@ -11,7 +11,8 @@ async function handleFormSubmit(event) {
     const response = await submitForm(form, url);
 
     if (!response.ok) {
-      if (response.status !== 400)
+      // if (response.status !== 400)
+      if (response.status !== 400 && response.status !== 401 && response.status !== 405 )
         throw new Error("Network response was not ok");
     }
 
@@ -22,8 +23,10 @@ async function handleFormSubmit(event) {
       navigate(result.redirect);
       if (url.pathname.startsWith("/accounts/")) updateNavBar();
     } else {
-      // Display error messages
-      displayFormErrors(result.errors);
+      if (response.status === 401)
+        navigate('/accounts/login/'); // Redirect to login page if the user is not authenticated
+      else
+        displayFormErrors(result.errors); // Display error messages
     }
   } catch (error) {
     console.error("There was a problem with the fetch operation:", error);

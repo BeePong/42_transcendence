@@ -56,7 +56,8 @@ function updatePageContent(data, page, redirectUrl) {
   var solo_match = page.match(/^\/tournament\/(\d+)\/solo_game$/);
   if (solo_match) {
 		console.log('here open solo game');
-    openWebSocket(100, 'solo');
+		var tournament_id = solo_match[1];;
+    openWebSocket(tournament_id, 'solo');
   }
 	// if (/^\/tournament\/\d+\/lobby$/.test(page)) { // Perform countdown in tournament lobby if the list is full. Otherwise, wait for other players.
 	// 	if (document.querySelector('.full')) {
