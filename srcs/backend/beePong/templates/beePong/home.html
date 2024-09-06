@@ -12,10 +12,13 @@
 						TOURNAMENT
 						<img src="/img/arrow.svg" alt="arrow" width="21" height="12">
 					</button>
-					<button class="button--secondary button--with-icon" onclick="navigate(`{% url 'tournament:solo_game' %}`)">
-						SOLO GAME
-						<img src="/img/arrow.svg" alt="arrow" width="21" height="12">
-					</button>
+					<form onsubmit="handleFormSubmit(event)" action="{% url 'tournament:create_solo_game' %}">
+						{% csrf_token %}
+						<button class="button--secondary button--with-icon">
+							SOLO GAME
+							<img src="/img/arrow.svg" alt="arrow" width="21" height="12">
+						</button>
+					</form>
 				</div>
 			</div>
 		</div>

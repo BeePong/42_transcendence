@@ -187,10 +187,27 @@ def prepare_tournament_data(tournaments):
         for tournament in tournaments
     ]
 
+def create_solo_game(request):
+    if request.method == 'POST':
+        if request.user.is_authenticated:
+            #TODO: save the user to the tournament form and get the new tournament_id
+            # form = TournamentForm(request.POST)
+            # if form.is_valid():
+            return JsonResponse(
+                {
+                    "success": True,
+                    "redirect": "/tournament/1/solo_game/", #TODO: replace by real tournament id
+                },
+                status=201,
+            )
+            # else:
+            # return JsonResponse({"success": False, "errors": form.errors}, status=400)
+        else:
+            return JsonResponse({'success': False, 'error': 'User not authenticated'}, status=401)
+    return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=405)
 
-def solo_game(request):
+def solo_game(request, any_number):
     return render(request, "tournament/solo_game.html")
-
 
 @login_required_json
 def create_tournament(request):
