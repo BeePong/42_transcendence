@@ -27,6 +27,7 @@ class PongConsumer(AsyncWebsocketConsumer):
         self.tournament_id = None
         self.pong_group_name = None
         self.game_loop = None
+        self.is_bot = False
 
     # HELPER METHODS
 
@@ -206,10 +207,29 @@ class PongConsumer(AsyncWebsocketConsumer):
             self.pong_group_name = f"group_{self.tournament_id}"
             if not self.tournament:
                 self.tournament = await self.get_tournament_by_id(self.tournament_id)
+            
+            query_string = self.scope.get("query_string", b"").decode()
+            query_params = dict(
+                param.split("=") for param in query_string.split("&") if param
+            )
+            self.is_bot = query_params.get("is_bot", "False").lower() == "true"
+
+            # logger.info(f"Is bot: {self.is_bot}")
+
+            logger.info(f"Is bot: {self.is_bot}")
+            logger.info(f"Tournament: {self.tournament}")
 
             # Accept the connection always
             await self.channel_layer.group_add(self.pong_group_name, self.channel_name)
             await self.accept()
+
+            tournament_state = await self.get_tournament_property("state")
+            logger.info(f"Current tournament state: {tournament_state}")
+            tournament_is_started = await self.get_tournament_property("is_started")
+            logger.info(f"Current tournament is_started: {tournament_is_started}")
+            if self.is_bot and tournament_is_started is False and tournament_state == "PLAYING":
+                logger.info("Starting solo tournament")
+                await self.start_tournament()
 
             # And then reject if user is not authenticated or tournament does not exist
             if not self.tournament or not self.scope["user"].is_authenticated:
@@ -217,15 +237,15 @@ class PongConsumer(AsyncWebsocketConsumer):
                 return
 
             # await self.add_player_to_tournament(self.scope["user"])
-            tournament_state = await self.get_tournament_property("state")
-            logger.info(f"Current tournament state: {tournament_state}")
-            tournament_is_started = await self.get_tournament_property("is_started")
-            logger.info(f"Current tournament is_started: {tournament_is_started}")
-            if tournament_is_started is False and tournament_state == "PLAYING":
-                logger.info("Starting tournament")
-                await self.start_tournament()
-            else:
-                logger.info("Tournament is not started")
+            # tournament_state = await self.get_tournament_property("state")
+            # logger.info(f"Current tournament state: {tournament_state}")
+            # tournament_is_started = await self.get_tournament_property("is_started")
+            # logger.info(f"Current tournament is_started: {tournament_is_started}")
+            # if tournament_is_started is False and tournament_state == "PLAYING":
+            #     logger.info("Starting tournament")
+            #     await self.start_tournament()
+            # else:
+            #     logger.info("Tournament is not started")
 
         except Exception as e:
             print(f"Error in connect method: {e}")
