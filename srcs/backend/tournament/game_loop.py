@@ -216,11 +216,11 @@ class GameLoop:
                 < settings.PADDING_THICKNESS
                 + settings.PADDLE_WIDTH
                 + settings.BALL_RADIUS
-                and self.game_state.player2.y
+                and self.game_state.player1.y
                 - settings.PADDLE_HEIGHT / 2
                 - settings.BALL_RADIUS
                 <= self.ball_new_y
-                <= self.game_state.player2.y
+                <= self.game_state.player1.y
                 + settings.PADDLE_HEIGHT / 2
                 + settings.BALL_RADIUS
             ):
@@ -246,11 +246,11 @@ class GameLoop:
                 - settings.PADDING_THICKNESS
                 - settings.PADDLE_WIDTH
                 - settings.BALL_RADIUS
-                and self.game_state.player1.y
+                and self.game_state.player2.y
                 - settings.PADDLE_HEIGHT / 2
                 - settings.BALL_RADIUS
                 <= self.ball_new_y
-                <= self.game_state.player1.y
+                <= self.game_state.player2.y
                 + settings.PADDLE_HEIGHT / 2
                 + settings.BALL_RADIUS
             ):

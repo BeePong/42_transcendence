@@ -76,7 +76,7 @@ const insertAliasesGameInfo = (player1_alias, player2_alias) => {
 const drawPaddle = (context, y, playerType, isControlling) => {
   context.fillStyle = isControlling ? "yellow" : "white";
   const x =
-    playerType === "player1"
+    playerType === "player2"
       ? PADDING_THICKNESS
       : CANVAS_WIDTH - PADDLE_WIDTH - PADDING_THICKNESS;
   context.fillRect(x, y - PADDLE_HEIGHT / 2, PADDLE_WIDTH, PADDLE_HEIGHT);
