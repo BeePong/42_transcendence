@@ -73,6 +73,7 @@ class GameState:
 
     def to_dict(self):
         return {
+            "curr_time": time.time(),
             "round_start_time": self.round_start_time,
             "state": self.state,
             "countdown": self.countdown,
