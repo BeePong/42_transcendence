@@ -52,25 +52,28 @@ class GameLoop:
     @sync_to_async
     def handle_key_press(self, message, player_number):
         try:
-            
+
             logger.info(f"Handling key press from {player_number}")
+            is_pressed = message["keyAction"] == "keydown"
             if message["key"] == "ArrowUp":
                 if player_number == 1:
-                    self.game_state.player1.up_pressed = True
+                    self.game_state.player1.up_pressed = is_pressed
                 elif player_number == 2:
-                    self.game_state.player2.up_pressed = True
+                    self.game_state.player2.up_pressed = is_pressed
             elif message["key"] == "ArrowDown":
                 if player_number == 1:
-                    self.game_state.player1.down_pressed = True
+                    self.game_state.player1.down_pressed = is_pressed
                 elif player_number == 2:
-                    self.game_state.player2.down_pressed = True
+                    self.game_state.player2.down_pressed = is_pressed
         except Exception as e:
             logger.error(f"Error handling key press: {e}")
 
     async def handle_countdown(self):
         try:
             if time.time() - self.game_state.round_start_time <= 3:
-                logger.info(f"Countdown: {3 - int(time.time() - self.game_state.round_start_time)}")
+                logger.info(
+                    f"Countdown: {3 - int(time.time() - self.game_state.round_start_time)}"
+                )
                 self.game_state.countdown = 3 - int(
                     time.time() - self.game_state.round_start_time
                 )
@@ -93,7 +96,9 @@ class GameLoop:
             logger.error(f"Error sending message: {e}") """
 
     async def send_message_to_all(self, message, message_type):
-        logger.info(f"Sending message to group_name from game loop: {self.pong_group_name}")
+        logger.info(
+            f"Sending message to group_name from game loop: {self.pong_group_name}"
+        )
 
         try:
             await self.channel_layer.group_send(
@@ -119,14 +124,18 @@ class GameLoop:
                     self.game_state.player1.y = settings.UPPER_LIMIT
                 else:
                     self.game_state.player1.y = new_y
-                logger.info(f"player1.up_pressed, new y player 1 paddle: {self.game_state.player1.y}")
+                logger.info(
+                    f"player1.up_pressed, new y player 1 paddle: {self.game_state.player1.y}"
+                )
             elif self.game_state.player1.down_pressed:
                 new_y = self.game_state.player1.y + settings.PADDLE_SPEED
                 if new_y > settings.LOWER_LIMIT:
                     self.game_state.player1.y = settings.LOWER_LIMIT
                 else:
                     self.game_state.player1.y = new_y
-                logger.info(f"player1.down_pressed, new y player 1 paddle: {self.game_state.player1.y}")
+                logger.info(
+                    f"player1.down_pressed, new y player 1 paddle: {self.game_state.player1.y}"
+                )
 
             if self.game_state.player2.up_pressed:
                 new_y = self.game_state.player2.y - settings.PADDLE_SPEED
@@ -134,14 +143,18 @@ class GameLoop:
                     self.game_state.player2.y = settings.UPPER_LIMIT
                 else:
                     self.game_state.player2.y = new_y
-                logger.info(f"player2.up_pressed, new y player 2 paddle: {self.game_state.player2.y}")
+                logger.info(
+                    f"player2.up_pressed, new y player 2 paddle: {self.game_state.player2.y}"
+                )
             elif self.game_state.player2.down_pressed:
                 new_y = self.game_state.player2.y + settings.PADDLE_SPEED
                 if new_y > settings.LOWER_LIMIT:
                     self.game_state.player2.y = settings.LOWER_LIMIT
                 else:
                     self.game_state.player2.y = new_y
-                logger.info(f"player2.down_pressed, new y player 2 paddle: {self.game_state.player2.y}")
+                logger.info(
+                    f"player2.down_pressed, new y player 2 paddle: {self.game_state.player2.y}"
+                )
         except Exception as e:
             logger.error(f"Error moving paddles: {e}")
 
@@ -164,7 +177,10 @@ class GameLoop:
         logger.info("Calculating collisions")
         try:
             # top border
-            if self.ball_new_y <= settings.THICK_BORDER_THICKNESS + settings.BALL_RADIUS:
+            if (
+                self.ball_new_y
+                <= settings.THICK_BORDER_THICKNESS + settings.BALL_RADIUS
+            ):
                 remaining_movement = (
                     settings.THICK_BORDER_THICKNESS
                     + settings.BALL_RADIUS
@@ -197,7 +213,9 @@ class GameLoop:
             # left paddle
             if (
                 self.ball_new_x
-                < settings.PADDING_THICKNESS + settings.PADDLE_WIDTH + settings.BALL_RADIUS
+                < settings.PADDING_THICKNESS
+                + settings.PADDLE_WIDTH
+                + settings.BALL_RADIUS
                 and self.game_state.player2.y
                 - settings.PADDLE_HEIGHT / 2
                 - settings.BALL_RADIUS
@@ -217,13 +235,13 @@ class GameLoop:
                 )
                 if self.game_state.ball_vector["x"] < 0:
                     self.game_state.ball_vector["x"] *= -1
-                    ball_new_x = (
+                    self.ball_new_x = (
                         self.game_state.ball.x
                         + remaining_movement * self.game_state.ball_vector["x"]
                     )
             # right paddle
             elif (
-                ball_new_x
+                self.ball_new_x
                 > settings.FIELD_WIDTH
                 - settings.PADDING_THICKNESS
                 - settings.PADDLE_WIDTH
@@ -250,7 +268,7 @@ class GameLoop:
                 )
                 if self.game_state.ball_vector["x"] > 0:
                     self.game_state.ball_vector["x"] *= -1
-                    ball_new_x = (
+                    self.ball_new_x = (
                         self.game_state.ball.x
                         - remaining_movement * self.game_state.ball_vector["x"]
                     )
@@ -288,16 +306,20 @@ class GameLoop:
         logger.info("Game loop started")
         while self.running:
             try:
-            # paddles move always, even on countdown
+                # paddles move always, even on countdown
                 await sync_to_async(self.move_paddles)()
                 if self.game_state.state == "COUNTDOWN":
                     await self.handle_countdown()
                 elif self.game_state.state == "PLAYING":
                     logger.info("Game loop state PLAYING")
                     await sync_to_async(self.calculate_new_ball_position)()
-                    logger.info(f"Ball new x: {self.ball_new_x}, ball new y: {self.ball_new_y}")
+                    logger.info(
+                        f"Ball new x: {self.ball_new_x}, ball new y: {self.ball_new_y}"
+                    )
                     await sync_to_async(self.calculate_collisions)()
-                    logger.info(f"After collision: Ball new x: {self.ball_new_x}, ball new y: {self.ball_new_y}")
+                    logger.info(
+                        f"After collision: Ball new x: {self.ball_new_x}, ball new y: {self.ball_new_y}"
+                    )
                     self.game_state.ball.x = self.ball_new_x
                     self.game_state.ball.y = self.ball_new_y
                     await self.check_win()
