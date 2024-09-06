@@ -65,12 +65,12 @@ const drawCountdown = (context, countdown, x, y) => {
   context.fillText(countdown, x, y);
 };
 
-// const insertScores = (player1_score, player2_score) => {
-//   const score1 = document.getElementById("score-player1");
-//   if (score1) score1.textContent = player1_score;
-//   const score2 = document.getElementById("score-player2");
-//   if (score2) score2.textContent = player2_score;
-// };
+const insertAliasesGameInfo = (player1_alias, player2_alias) => {
+  const alias1 = document.getElementById("alias-player1");
+  if (alias1) alias1.textContent = player1_alias;
+  const alias2 = document.getElementById("alias-player2");
+  if (alias2) alias2.textContent = player2_alias;
+};
 
 const drawPaddle = (context, y, playerType, isControlling) => {
   context.fillStyle = isControlling ? "yellow" : "white";
@@ -124,7 +124,10 @@ function updateCanvas(context, game_data) {
   if (old_ball_speed !== new_ball_speed) {
     console.log("ball speed changed", old_ball_speed, new_ball_speed);
   }
-  //insertScores(game_data.player1.score, game_data.player2.score);
+  insertAliasesGameInfo(
+    game_data.player1.player_name,
+    game_data.player2.player_name
+  );
   if (game_data.state === "finished") {
     console.log("winner is", game_data.winner.username);
     socket.close();
@@ -320,7 +323,6 @@ function openWebSocket(tournament_id) {
         message: {
           key: key,
           keyAction: keyAction,
-          //playerNumber: playerNumber,
         },
         type: "game",
       })
