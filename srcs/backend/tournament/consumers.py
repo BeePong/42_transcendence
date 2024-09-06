@@ -57,17 +57,21 @@ class PongConsumer(AsyncWebsocketConsumer):
 
     # GAME LOGIC HANDLERS
 
+    def set_game_loop(self):
+        self.game_loop = games[self.tournament.tournament_id]
+        
     @database_sync_to_async
     def create_1st_match(self):
         logger.info("Creating 1st match")
         if not self.tournament.current_match:
+            logger.info("Setting current_match")
             self.tournament.current_match, created = Match.objects.get_or_create(
                 player1=self.tournament.players.all()[0],
                 player2=self.tournament.players.all()[1],
                 tournament=self.tournament,
             )
+            self.tournament.save()
             if created:
-                self.tournament.save()
                 logger.info("1st match created")
             else:
                 logger.info("1st match already exists")
@@ -76,45 +80,59 @@ class PongConsumer(AsyncWebsocketConsumer):
                 self.tournament.current_match, self.tournament.tournament_id
             )
             logger.info("Game loop created")
-        self.game_loop = games[self.tournament.tournament_id]
+        self.set_game_loop()
 
     @database_sync_to_async
     def determine_tournament_winner(self):
         logger.info("Determining tournament winner")
         winner = self.tournament.current_match.winner
         self.tournament.winner = winner
-        self.tournament.current_match = None
-        self.tournament.state = "FINISHED"
-        self.tournament.is_final = True
+        #self.tournament.current_match = None
+        #self.tournament.state = "FINISHED"
+        #self.tournament.is_final = True
         self.tournament.save()
 
     @database_sync_to_async
     def destroy_game(self):
-        logger.info("Destroying game")
-        del games[self.tournament.tournament_id]
-        self.game_loop = None
-        self.tournament.current_match = None
-        self.tournament.save()
+        logger.info("Destroying game (commented out)")
+        #del games[self.tournament.tournament_id]
+        #self.game_loop = None
+       # self.tournament.current_match = None
+        #self.tournament.save()
         # TODO handle tournamernt state. needs to be set to FINISHED at some point
 
+    @database_sync_to_async
     def form_tournament_finished_message(self):
-        return {"event": "tournament_finished", "winner": self.tournament.winner.alias}
+        winner_info = self.tournament.winner.alias if self.tournament.winner else "unknown"
+        return {"event": "tournament_finished", "winner": winner_info}
+    
+    @database_sync_to_async
+    def is_loop_running(self):
+        return self.game_loop.running
 
     async def start_tournament(self):
+        if await self.get_tournament_property("is_started"):
+            logger.info("Tournament is already started")
+            return
         self.set_tournament(is_started=True)
         logger.info("Starting tournament")
         try:
+            num_players_expected = await self.get_tournament_property("num_players")
+            logger.info(f"Number of players expected: {num_players_expected}")
             if await self.get_tournament_property("num_players") == 2:
-
                 await self.create_1st_match()
                 # TODO this condition is wrong, check for it to work. We only want loop to run once
-                if self.game_loop.running:
+                is_loop_running = await self.is_loop_running()
+                logger.info(f"Game loop running bool: {is_loop_running}")
+                if is_loop_running:
+                    logger.info("Game loop is already running")
                     return
+                logger.info("Game loop is not running, starting it")
                 # if not games.get(self.tournament.tournament_id):
                 await self.game_loop.loop()
                 await self.determine_tournament_winner()
                 await self.send_message_to_all(
-                    self.form_tournament_finished_message(), "tournament"
+                    await self.form_tournament_finished_message(), "tournament"
                 )
                 await self.destroy_game()
                 await self.set_tournament(state="FINISHED", is_started=False)
@@ -144,15 +162,20 @@ class PongConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def get_player_in_current_match(self, user):
+        if not self.tournament:
+            logger.info("get_player_in_current_match no tournament")
+            return None
         if not self.tournament.current_match:
+            logger.info("get_player_in_current_match no current match")
             return None
         if not games.get(self.tournament.tournament_id):
-            logger.info("this should never happen")
+            logger.info("get_player_in_current_match no game in dictionary, this should never happen")
             return None
         if self.tournament.current_match.player1.user == user:
             return 1
         if self.tournament.current_match.player2.user == user:
             return 2
+        logger.info("get_player_in_current_match end of function")
         return None
 
     # CONNECTION HANDLERS
@@ -227,7 +250,7 @@ class PongConsumer(AsyncWebsocketConsumer):
     # SENDING AND RECEIVING MESSAGES
 
     async def send_message_to_all(self, message, message_type):
-        print("send_message_to_all() in ", self.pong_group_name)
+        logger.info(f"Sending message of type {message_type} to all in group {self.pong_group_name}")
 
         try:
             await self.channel_layer.group_send(
@@ -286,6 +309,7 @@ class PongConsumer(AsyncWebsocketConsumer):
                 return
             player_number = await self.get_player_in_current_match(user)
             if not player_number:
+                logger.info("player_number is null, so ignoring received message")
                 return
             # Parse the message and pass it to key press handler
             text_data_json = json.loads(text_data)

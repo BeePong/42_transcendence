@@ -20,6 +20,7 @@ const CANVAS_ID = "game_canvas";
 let old_ball_speed, new_ball_speed; // for debugging purposes
 
 let socket = null;
+let socket_tournament_id = null;
 
 const getContext = () => {
   const canvas = document.getElementById(CANVAS_ID);
@@ -156,7 +157,7 @@ function updateCanvas(context, game_data) {
 }
 
 function openWebSocket(tournament_id) {
-  if (socket) {
+  if (socket && socket_tournament_id === tournament_id) {
     console.log("Socket already open, returning from openWebSocket");
     return;
   }
@@ -238,8 +239,11 @@ function openWebSocket(tournament_id) {
             break;
           // maybe not needed? just send game message instead
           case "game_started":
-            console.log("game_started");
+            console.log("game_started case");
+            loadPage(window.location.pathname);
+            console.log("game_started case after loadPage");
             const canvasContext = getContext();
+            console.log("canvasContext", canvasContext);
             if (canvasContext) drawEmptyCanvas(canvasContext);
             break;
           case "game_finished":
