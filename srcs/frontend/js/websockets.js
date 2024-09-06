@@ -268,9 +268,12 @@ function openWebSocket(tournament_id) {
             break;
           case "game_finished":
             console.log("game_finished");
-            // TODO: render winner page
+            console.log("game winner is", tournamentMessage.winner);
+            // TODO: maybe handle differently instead of just reloading
+            loadPage(window.location.pathname);
             break;
           case "tournament_finished":
+            // TODO: render winner page instead of reloading
             console.log("tournament_finished");
             console.log("winner is", tournamentMessage.winner);
             break;

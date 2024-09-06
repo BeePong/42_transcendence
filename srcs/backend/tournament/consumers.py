@@ -59,7 +59,7 @@ class PongConsumer(AsyncWebsocketConsumer):
 
     def set_game_loop(self):
         self.game_loop = games[self.tournament.tournament_id]
-        
+
     @database_sync_to_async
     def create_1st_match(self):
         logger.info("Creating 1st match")
@@ -87,25 +87,28 @@ class PongConsumer(AsyncWebsocketConsumer):
         logger.info("Determining tournament winner")
         winner = self.tournament.current_match.winner
         self.tournament.winner = winner
-        #self.tournament.current_match = None
-        #self.tournament.state = "FINISHED"
-        #self.tournament.is_final = True
+        # self.tournament.current_match = None
+        # self.tournament.state = "FINISHED"
+        # self.tournament.is_final = True
         self.tournament.save()
 
     @database_sync_to_async
     def destroy_game(self):
         logger.info("Destroying game (commented out)")
-        #del games[self.tournament.tournament_id]
-        #self.game_loop = None
-       # self.tournament.current_match = None
-        #self.tournament.save()
-        # TODO handle tournamernt state. needs to be set to FINISHED at some point
+        # del games[self.tournament.tournament_id]
+        # self.game_loop = None
+
+    # self.tournament.current_match = None
+    # self.tournament.save()
+    # TODO handle tournamernt state. needs to be set to FINISHED at some point
 
     @database_sync_to_async
     def form_tournament_finished_message(self):
-        winner_info = self.tournament.winner.alias if self.tournament.winner else "unknown"
+        winner_info = (
+            self.tournament.winner.alias if self.tournament.winner else "unknown"
+        )
         return {"event": "tournament_finished", "winner": winner_info}
-    
+
     @database_sync_to_async
     def is_loop_running(self):
         return self.game_loop.running
@@ -169,7 +172,9 @@ class PongConsumer(AsyncWebsocketConsumer):
             logger.info("get_player_in_current_match no current match")
             return None
         if not games.get(self.tournament.tournament_id):
-            logger.info("get_player_in_current_match no game in dictionary, this should never happen")
+            logger.info(
+                "get_player_in_current_match no game in dictionary, this should never happen"
+            )
             return None
         if self.tournament.current_match.player1.user == user:
             return 1
@@ -211,12 +216,6 @@ class PongConsumer(AsyncWebsocketConsumer):
                 await self.disconnect()
                 return
 
-            # Send a message to all users that a new player has joined the tournament ? or should it be handled in views.py?
-            message = {
-                "event": "someone connected - test",
-            }
-            await self.send_message_to_all(message, "tournament")
-
             # await self.add_player_to_tournament(self.scope["user"])
             tournament_state = await self.get_tournament_property("state")
             logger.info(f"Current tournament state: {tournament_state}")
@@ -250,7 +249,9 @@ class PongConsumer(AsyncWebsocketConsumer):
     # SENDING AND RECEIVING MESSAGES
 
     async def send_message_to_all(self, message, message_type):
-        logger.info(f"Sending message of type {message_type} to all in group {self.pong_group_name}")
+        logger.info(
+            f"Sending message of type {message_type} to all in group {self.pong_group_name}"
+        )
 
         try:
             await self.channel_layer.group_send(

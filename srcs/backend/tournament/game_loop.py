@@ -289,6 +289,7 @@ class GameLoop:
                 self.match.winner = winner
                 self.match.state = "FINISHED"
                 self.game_state.state = "FINISHED"
+                self.match.winner = winner
                 self.running = False
                 self.match.save()
         except Exception as e:
@@ -319,6 +320,12 @@ class GameLoop:
             except Exception as e:
                 logger.error(f"Error in game loop: {e}")
         logger.info("Game loop finished")
+        if self.game_state.state == "FINISHED":
+            game_over_message = {
+                "event": "game_finished",
+                "winner": self.match.winner.alias,
+            }
+            await self.send_message_to_all(game_over_message, "tournament")
 
     def stop(self):
         logger.info("Game loop stopped")
