@@ -120,19 +120,13 @@ class PongConsumer(AsyncWebsocketConsumer):
     def destroy_game(self):
         try:
             logger.info(f"{self.consumer_info} Destroying game (commented out)")
-            # loop = games[self.tournament_id]
-            # loop.running = False
-            # loop.stop()
-            # logger.info(
-            #     f"{self.consumer_info} Game loop stopped"
-            # )
-            # del games[self.tournament_id]
-            # logger.info(
-            #     f"{self.consumer_info} Game loop deleted"
-            # )
-            # self.game_loop = None
-            # self.tournament.current_match = None
-            # self.tournament.save()
+            games[self.tournament_id].running = False
+            games[self.tournament_id].stop()
+            logger.info(f"{self.consumer_info} Game loop stopped")
+            del games[self.tournament_id]
+            logger.info(f"{self.consumer_info} Game loop deleted")
+            self.tournament.current_match = None
+            self.tournament.save()
         except Exception as e:
             logger.error(f"{self.consumer_info} Error destroying game: {e}")
 
