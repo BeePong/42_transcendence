@@ -1,3 +1,5 @@
+# settings.py
+
 from pathlib import Path
 import os
 from dotenv import load_dotenv
@@ -21,7 +23,14 @@ SECRET_KEY = os.getenv(
 # DEBUG = True
 DEBUG = False
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1", "nginx", "172.50.70.189"]
+ALLOWED_HOSTS = [
+    "localhost",
+    "127.0.0.1",
+    "beepong-backendDummy",
+    "nginx",
+    "c1r3p3.hive.fi",
+    "172.50.70.189",
+]
 
 # Application definition
 
@@ -30,8 +39,10 @@ INSTALLED_APPS = [
     "beePong",
     "accounts",
     "tournament",
-    # Third-party apps
+    # Third-party appsx
     "django_bootstrap5",
+    # 'channels',
+    "daphne",
     # Django apps
     "django.contrib.admin",
     "django.contrib.auth",
@@ -71,6 +82,17 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "bpong_project.wsgi.application"
+
+ASGI_APPLICATION = "bpong_project.asgi.application"
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("redis", 6379)],
+        },
+    },
+}
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
@@ -139,4 +161,36 @@ CSRF_TRUSTED_ORIGINS = [
     "https://127.0.0.1",
     "https://nginx",
     "https://172.50.70.189",
+    "https://localhost:8443",
+    "https://c1r3p3.hive.fi:8443",
 ]
+
+# Game settings TODO: use them in front-end and back-end
+FIELD_WIDTH = 800
+FIELD_HEIGHT = 500
+PADDLE_HEIGHT = 100
+PADDLE_WIDTH = 26
+PADDLE_SPEED = 20
+BALL_RADIUS = 15
+BALL_STARTING_SPEED = 5
+BALL_SPEED_INCREMENT = 1
+FPS = 30
+MAX_SCORE = 3
+PADDING_THICKNESS = 7
+THICK_BORDER_THICKNESS = 5
+UPPER_LIMIT = PADDING_THICKNESS + PADDLE_HEIGHT / 2
+LOWER_LIMIT = FIELD_HEIGHT - PADDING_THICKNESS - PADDLE_HEIGHT / 2
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
+    },
+}

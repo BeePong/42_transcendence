@@ -3,7 +3,7 @@ FROM python:3.11-slim-buster
 WORKDIR /beePong
 
 # Install necessary utilities
-RUN apt-get update && apt-get install -y curl procps
+RUN apt-get update && apt-get install -y curl procps vim
 
 # Copy the requirements.txt file and install the Python dependencies
 COPY requirements.txt /beePong/

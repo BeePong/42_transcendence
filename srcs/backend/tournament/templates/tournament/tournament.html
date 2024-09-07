@@ -57,7 +57,15 @@
 						</form>
 						<div class="form__error-message"></div>
 					</div>
-					{% endif %}
+					{% elif tournament.state == 'PLAYING' %}
+          <a
+            href="/tournament/{{ tournament.tournament_id }}/lobby/"
+            class="button--secondary button--with-icon"
+          >
+            <span class="button__text">WATCH</span>
+            <!-- <img src="/img/eye.svg" alt="eye" class="eye-icon"> -->
+          </a>
+          {% endif %}
 				</div>
 			</div>
 		</div>
@@ -72,3 +80,4 @@
 		{% endfor %}
 	</div>
 </section>
+  

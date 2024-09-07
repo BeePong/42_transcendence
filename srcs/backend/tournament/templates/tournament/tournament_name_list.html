@@ -1,8 +1,10 @@
 <div class="tournament_lobby__name-list-container">
-	{% for player in players_in_lobby %}
-	<div class="tournament_lobby__name-container {% if player in lose_players %}lose-player{% endif %}">
-		<div class="tournament_lobby__name">{{ player }}</div>
-		<span class="tournament_lobby__match-num"></span>
-	</div>
-	{% endfor %}
+  {% for player in players_in_lobby %}
+  <div
+    class="tournament_lobby__name-container {% if player in lose_players %}lose-player{% endif %}"
+  >
+    <div class="tournament_lobby__name">{{ player }}</div>
+    <span class="tournament_lobby__match-num"></span>
+  </div>
+  {% endfor %}
 </div>

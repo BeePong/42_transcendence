@@ -17,6 +17,8 @@ volumes:
     driver: local
   app_logs: 
     driver: local
+  redis_data:
+    driver: local
 
 networks:
   default:
@@ -77,6 +79,13 @@ services:
       retries: 5
     restart: on-failure
 
+  redis:
+    container_name: redis
+    image: redis:7.4.0
+    restart: on-failure
+    volumes:
+      - redis_data:/data
+
   nginx:
     container_name: beepong-nginx
     build:
@@ -85,7 +94,7 @@ services:
       - ./srcs/frontend:/var/www/html
       - nginx_logs:/var/log/nginx 
     ports:
-      - 443:443
+      - ${NGINX_PORT}:${NGINX_PORT}
     logging:
       driver: gelf
       options:
@@ -384,3 +393,4 @@ services:
       - ELASTIC_USER=elastic
       - ELASTIC_PASSWORD=${ELASTIC_PASSWORD}
       - ELASTIC_HOSTS=https://elasticsearch:9200
+

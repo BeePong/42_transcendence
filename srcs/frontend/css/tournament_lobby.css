@@ -132,6 +132,13 @@ section.full .tournament_lobby__name-container:nth-child(3)::before {
   top: -10px;
 }
 
+section .tournament_game__game-info-container {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 @media (max-width: 700px) {
 	section.full .tournament_lobby__name-list-container {
     transform: translateX(50px);

@@ -1,4 +1,4 @@
-import { mockWebSocket } from "./tournament.js";
+import { openWebSocket } from "./websockets.js";
 import { tournamentLobbyCountdown } from "./tournament.js";
 
 // Handle navigation based on path or event 
@@ -30,9 +30,6 @@ export async function loadPage(path, redirectUrl = '/', fromNavigate = false, qu
 						throw new Error('Network response was not ok');
 					}
 			}
-
-
-
 			if (fromNavigate === true) // If this function is called by navigate(), update the browser's history to the new path without reloading the page
 				history.pushState(null, null, path);
 
@@ -49,31 +46,45 @@ function updatePageContent(data, page, redirectUrl) {
 
 	// Add the redirect URL for login and register pages
 	if ((page === '/accounts/login' || page === '/accounts/register') && redirectUrl !== '/')
-		changeRedirectUrlandOauthState(redirectUrl); 
-	else if (/^\/tournament\/\d+\/lobby$/.test(page)) { // Perform countdown in tournament lobby if the list is full. Otherwise, wait for other players.
-		if (document.querySelector('.full')) {
-			if (!document.querySelector('.winner')) {
-				tournamentLobbyCountdown();
-			}
-		} else {
-			mockWebSocket(); // TODO: open websocket
-		}
-	}
+		changeRedirectUrlandOauthState(redirectUrl);
+  var match = page.match(/^\/tournament\/(\d+)\/lobby$/);
+  if (match) {
+    console.log("URL matched websocket");
+    var tournament_id = match[1];
+    openWebSocket(tournament_id);
+  }
+  var solo_match = page.match(/^\/tournament\/solo_game$/);
+  if (solo_match) {
+    openWebSocket("solo");
+  }
+	// if (/^\/tournament\/\d+\/lobby$/.test(page)) { // Perform countdown in tournament lobby if the list is full. Otherwise, wait for other players.
+	// 	if (document.querySelector('.full')) {
+	// 		if (!document.querySelector('.winner')) {
+	// 			tournamentLobbyCountdown();
+	// 		}
+	// 	}
+	// }
 }
+
 
 // Change the redirect url in the form and the state of the oauth
 function changeRedirectUrlandOauthState(redirectUrl) {
-	// Change the redirect url in the form
-	document.getElementById('redirectUrl').value = redirectUrl;
+  // Change the redirect url in the form
+  document.getElementById("redirectUrl").value = redirectUrl;
 
-	// Change the state of the oauth according to the redirect url
-	const login42UrlElement = document.getElementById('login-42-url');
-	const updatedLogin42Url = new URL(login42UrlElement.href);
-	const newStateParam = `qwerty|${encodeURIComponent(`https://localhost${redirectUrl}`)}`;
-	updatedLogin42Url.searchParams.set('state', newStateParam);
+  // Change the state of the oauth according to the redirect url
+  const login42UrlElement = document.getElementById("login-42-url");
 
-	login42UrlElement.href = updatedLogin42Url.toString();
+  const updatedLogin42Url = new URL(login42UrlElement.href);
+   // Extract the current port number from the window.location object
+  const currentPort = window.location.port;
+
+  // Construct the new state parameter with the current port
+  const newStateParam = `qwerty|${encodeURIComponent(`https://localhost:${currentPort}${redirectUrl}`)}`;
+  updatedLogin42Url.searchParams.set("state", newStateParam);
+
+  login42UrlElement.href = updatedLogin42Url.toString();
 }
 
-// Attach navigate to the global window object for use in inline event handlers
 window.navigate = navigate;
+// export { loadPage };

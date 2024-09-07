@@ -47,3 +47,4 @@ cypress/videos
 
 # --- node_modules ignore ---
 **/node_modules/
+
