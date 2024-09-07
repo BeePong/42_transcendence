@@ -69,7 +69,7 @@ class PongConsumer(AsyncWebsocketConsumer):
     # GAME LOGIC HANDLERS
 
     def create_game_loop_if_not_exists(self):
-        if not games.get(self.tournament.tournament_id):
+        if not games.get(self.tournament_id):
             games[self.tournament_id] = GameLoop(
                 self.tournament.current_match, self.tournament_id
             )
@@ -237,7 +237,7 @@ class PongConsumer(AsyncWebsocketConsumer):
                     f"{self.consumer_info} get_player_in_current_match no current match"
                 )
                 return None
-            if not games.get(self.tournament.tournament_id):
+            if not games.get(self.tournament_id):
                 logger.info(
                     f"{self.consumer_info} get_player_in_current_match no game in dictionary, this should never happen"
                 )
