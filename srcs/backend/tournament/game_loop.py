@@ -42,7 +42,7 @@ class GameLoop:
         self.match.save()
 
     async def loop(self, channel_info):
-        self.channel_id = channel_info
+        self.channel_info = channel_info
         logger.info(f"{channel_info} Game loop started")
         self.running = True
         await self.set_state("COUNTDOWN")
@@ -226,7 +226,7 @@ class GameLoop:
                 + settings.PADDLE_HEIGHT / 2
                 + settings.BALL_RADIUS
             ):
-                logger.info("HIT LEFT PADDLE")
+                logger.info(f"{self.channel_info} HIT LEFT PADDLE")
                 self.game_state.hit_count += 1
                 self.game_state.ball_speed += settings.BALL_SPEED_INCREMENT
                 remaining_movement = (
@@ -256,7 +256,7 @@ class GameLoop:
                 + settings.PADDLE_HEIGHT / 2
                 + settings.BALL_RADIUS
             ):
-                logger.info("HIT RIGHT PADDLE")
+                logger.info(f"{self.channel_info} HIT RIGHT PADDLE")
                 self.game_state.hit_count += 1
                 self.game_state.ball_speed += settings.BALL_SPEED_INCREMENT
                 remaining_movement = (
