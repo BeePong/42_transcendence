@@ -280,9 +280,13 @@ def solo_game(request, tournament_id):
             user=request.user, current_tournament_id=tournament.tournament_id
         ).first()
         if player:
-            return render(
-                request, "tournament/solo_game.html", {"tournament": tournament}
-            )
+            if tournament.winner:
+                context = prepare_tournament_context(tournament)
+                return render_winner_page(request, context)
+            else:
+                return render(
+                    request, "tournament/solo_game.html", {"tournament": tournament}
+                )
         else:
             return custom_404(request, None)
 
