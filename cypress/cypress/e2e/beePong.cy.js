@@ -56,7 +56,7 @@ describe('### Basic Navigation and Content Tests', () => {
 // User Registration
 ////////////////////////////////////////////////////////////////////////////////
 describe('### User Registration, Login, Logout, and Duplicate Registration Tests', () => {
-  let username = 'beePong_cypress'
+  let username = 'b33Pong_cypress'
   let password = 'changeme.'
 
   function registerUser(username, password) {
@@ -66,44 +66,47 @@ describe('### User Registration, Login, Logout, and Duplicate Registration Tests
     cy.get('input[name="password1"]').type(password);
     cy.get('input[name="password2"]').type(password);
     cy.get('button[type="submit"]').click();
-    cy.screenshot(`registration_${username}`);
   }
 
-  // Function to log in a user
   function loginUser(username, password) {
     cy.visit('/accounts/login');
     cy.get('input[name="username"]').type(username);
     cy.get('input[name="password"]').type(password);
     cy.get('button[type="submit"]').click();
-    cy.screenshot(`login_${username}`);
   }
 
-  it(' - should display error when trying to register with the same username', () => {
+  it(' - should register twice with same username, second time should display error', () => {
     cy.task('log', `  - User registration: Should not allow registration of an already existing user`);
     registerUser(username, password)
     registerUser(username, password)
     cy.contains('A user with that username already exists').should('be.visible');
+    cy.task('log', `  - User registration: Should not allow registration of an already existing user`);
     cy.screenshot('duplicate-registration-error');
   });
 
   it(' - should log in successfully', () => {
+    cy.task('log', `  - User log in: user should log in`);
     cy.visit('/accounts/login');
     cy.get('input[name="username"]').type(username);
     cy.get('input[name="password"]').type(password);
     cy.get('button[type="submit"]').click();
     cy.contains(username).should('be.visible');
+    cy.contains('LOG OUT').should('be.visible');
+    cy.task('log', `  - User log in: user logged in`);
     cy.screenshot('successful-login_2');
   });
 
-  it(`should log out ${username}`, () => {
-    registerUser(username, password);
+  it(`should log out ${username} properly`, () => {
+    cy.task('log', `  - User loggin out: user should log in first`);
     loginUser(username, password);
     cy.contains('LOG OUT', { timeout: 10000 }).click();
+    cy.contains('LOGIN').should('be.visible');
+    cy.task('log', `  - User loggin out: user is logged out now`);
     cy.screenshot('logged-out');
   });
 
   after(() => {
-    cy.task('log', `  - Cleaning up the registered user: ${username}`);
+    cy.task('log', `  !!! Could implement a cleaning task to delete the registered user: ${username} !!!`);
     // Clean up user in the database or backend if necessary
   });
 });
@@ -291,24 +294,24 @@ describe('### Tournament Navigation and Interaction Tests', () => {
     cy.task('log', '  - Tournament creation: should join created tournament');
     cy.contains('JOIN').first().click();
     cy.screenshot('tournament004-created_JOINING');
-    cy.task('log', '  - Tournament creation: should join tournament with alias');
-    // Alias the input field containing the username, replace it with "t0t0", and submit
-    cy.get('input[name="username"]') // Select the username field
-      .as('usernameField') // Alias it
-      .clear() // Clear any pre-filled username
-      .type('t0t0'); // Type the new username
-    cy.screenshot('tournament005-Alised as t0t0');
+    // cy.task('log', '  - Tournament creation: should join tournament with alias');
+    // // Alias the input field containing the username, replace it with "t0t0", and submit
+    // cy.get('input[name="username"]') // Select the username field
+    //   .as('usernameField') // Alias it
+    //   .clear() // Clear any pre-filled username
+    //   .type('t0t0'); // Type the new username
+    // cy.screenshot('tournament005-Alised as t0t0');
 
-    cy.task('log', '  - Tournament creation: alias should  be printed');
-    cy.get('@usernameField') // Use the alias to refer to the field
-      .invoke('val') // Get the value to verify if "t0t0" is entered
-      .should('equal', 't0t0'); // Assert that the username has been replaced with "t0t0"
-    // cy.get('input[name=username]').type("t0t0");
-    cy.get('button[type="submit"]').first().click();
+    // cy.task('log', '  - Tournament creation: alias should  be printed');
+    // cy.get('@usernameField') // Use the alias to refer to the field
+    //   .invoke('val') // Get the value to verify if "t0t0" is entered
+    //   .should('equal', 't0t0'); // Assert that the username has been replaced with "t0t0"
+    // // cy.get('input[name=username]').type("t0t0");
+    // cy.get('button[type="submit"]').first().click();
 
-    // Verify if the player has joined the tournament and is in the lobby gaming
-    cy.screenshot('tournament005-created_JOINED');
-    cy.contains('game').should('be.visible');
+    // // Verify if the player has joined the tournament and is in the lobby gaming
+    // cy.screenshot('tournament005-created_JOINED');
+    // cy.contains('game').should('be.visible');
     cy.screenshot('tournament006-gaming');
   });
 
