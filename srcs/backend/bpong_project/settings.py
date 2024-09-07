@@ -161,8 +161,8 @@ CSRF_TRUSTED_ORIGINS = [
     "https://127.0.0.1",
     "https://nginx",
     "https://172.50.70.189",
-    "https://localhost:8443",
-    "https://c1r3p3.hive.fi:8443",
+    "https://localhost:443",
+    "https://c1r3p3.hive.fi:443",
 ]
 
 # Game settings TODO: use them in front-end and back-end

@@ -12,7 +12,7 @@ def login():
     session = requests.Session()
 
     # Step 1a: Get the CSRF token by visiting the login page
-    login_page_url = "https://nginx:8443/page/accounts/login/"
+    login_page_url = "https://nginx:443/page/accounts/login/"
     response = session.get(login_page_url, verify=False)
     if response.status_code != 200:
         print("Failed to load login page.")
@@ -23,7 +23,7 @@ def login():
     csrf_token = soup.find("input", {"name": "csrfmiddlewaretoken"}).get("value")
 
     # Step 1b: Submit the login form with the CSRF token
-    login_url = "https://nginx:8443/page/accounts/login/"
+    login_url = "https://nginx:443/page/accounts/login/"
     payload = {
         "username": "dummy",  # Replace with your actual username
         "password": "test123!",  # Replace with your actual password
@@ -47,7 +47,7 @@ def login():
 # Step 2: Use the session to establish a WebSocket connection
 async def ai_bot(session):
     # Define the WebSocket URL
-    url = "wss://nginx:8443/ws/pong/1/?is_bot=True"
+    url = "wss://nginx:443/ws/pong/1/?is_bot=True"
 
     # Extract the session cookie
     cookies = session.cookies.get_dict()
