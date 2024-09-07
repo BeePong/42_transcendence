@@ -28,6 +28,16 @@ const getContext = () => {
   return canvas.getContext("2d");
 };
 
+// Listen for the custom event to close the WebSocket connection
+window.addEventListener("navigateAwayFromTournamentLobby", () => {
+  if (socket && socket.readyState === WebSocket.OPEN) {
+    socket.close();
+    console.log(
+      "WebSocket connection closed due to navigation away from tournament lobby."
+    );
+  }
+});
+
 const drawBorders = (context) => {
   context.strokeStyle = getComputedStyle(
     document.documentElement
@@ -125,7 +135,7 @@ const drawEmptyCanvas = (context) => {
 // }
 
 function updateCanvas(context, game_data) {
-  console.log("updateCanvas game_data", game_data);
+  //console.log("updateCanvas game_data", game_data);
   if (!context) return;
   if (new_ball_speed === undefined) new_ball_speed = game_data.ball_speed;
   old_ball_speed = new_ball_speed;
@@ -142,16 +152,14 @@ function updateCanvas(context, game_data) {
     socket.close();
     return;
   }
-  console.log("updateCanvas game_data", game_data);
   const backgroundColor = getComputedStyle(
     document.documentElement
   ).getPropertyValue("--background-color");
-
   context.fillStyle = backgroundColor;
   context.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
   drawBorders(context);
   drawBall(context, game_data.ball.x, game_data.ball.y);
-  if (game_data.state === "countdown") {
+  if (game_data.countdown > 0) {
     drawCountdown(
       context,
       game_data.countdown,
@@ -263,7 +271,6 @@ function openWebSocket(tournament_id) {
             loadPage(window.location.pathname);
             console.log("game_started case after loadPage");
             const canvasContext = getContext();
-            console.log("canvasContext", canvasContext);
             if (canvasContext) drawEmptyCanvas(canvasContext);
             break;
           case "game_finished":
@@ -276,6 +283,7 @@ function openWebSocket(tournament_id) {
             // TODO: render winner page instead of reloading
             console.log("tournament_finished");
             console.log("winner is", tournamentMessage.winner);
+            socket.close();
             break;
           case "test":
             console.log("test");
