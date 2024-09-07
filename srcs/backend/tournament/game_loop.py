@@ -31,6 +31,7 @@ class GameLoop:
         self.running = False
         self.loop_task = None
         self.channel_layer = get_channel_layer()
+        self.channel_info = None
         self.ball_new_x = 100
         self.ball_new_y = 100
 
@@ -40,8 +41,9 @@ class GameLoop:
         self.match.state = state
         self.match.save()
 
-    async def loop(self):
-        logger.info("Game loop started")
+    async def loop(self, channel_info):
+        self.channel_id = channel_info
+        logger.info(f"{channel_info} Game loop started")
         self.running = True
         await self.set_state("COUNTDOWN")
         if not self.loop_task or self.loop_task.done():
@@ -53,7 +55,7 @@ class GameLoop:
     def handle_key_press(self, message, player_number):
         try:
 
-            logger.info(f"Handling key press from {player_number}")
+            logger.info(f"{self.channel_info} Handling key press from {player_number}")
             is_pressed = message["keyAction"] == "keydown"
             if message["key"] == "ArrowUp":
                 if player_number == 1:
@@ -66,20 +68,25 @@ class GameLoop:
                 elif player_number == 2:
                     self.game_state.player2.down_pressed = is_pressed
         except Exception as e:
-            logger.error(f"Error handling key press: {e}")
+            logger.error(f"{self.channel_info} Error handling key press: {e}")
 
     async def handle_countdown(self):
         try:
-            if time.time() - self.game_state.round_start_time <= 3:
-                self.game_state.countdown = 3 - int(
+            if (
+                time.time() - self.game_state.round_start_time
+                <= settings.COUNTDOWN_TIME
+            ):
+                self.game_state.countdown = settings.COUNTDOWN_TIME - int(
                     time.time() - self.game_state.round_start_time
                 )
             else:
-                logger.info("Countdown finished, setting state to PLAYING")
+                logger.info(
+                    f"{self.channel_info} Countdown finished, setting state to PLAYING"
+                )
                 self.game_state.countdown = 0
                 await self.set_state("PLAYING")
         except Exception as e:
-            logger.error(f"Error handling countdown: {e}")
+            logger.error(f"{self.channel_info} Error handling countdown: {e}")
 
     """ async def send_message(self, event):
         message = event["message"]
@@ -107,7 +114,7 @@ class GameLoop:
                 },
             )
         except Exception as e:
-            logger.error(f"Error sending message to all: {e}")
+            logger.error(f"{self.channel_info} Error sending message to all: {e}")
 
     async def send_game_state_to_all(self):
         await self.send_message_to_all(self.game_state.to_dict(), "game")
@@ -121,18 +128,18 @@ class GameLoop:
                     self.game_state.player1.y = settings.UPPER_LIMIT
                 else:
                     self.game_state.player1.y = new_y
-                logger.info(
-                    f"player1.up_pressed, new y player 1 paddle: {self.game_state.player1.y}"
-                )
+                # logger.info(
+                #     f"player1.up_pressed, new y player 1 paddle: {self.game_state.player1.y}"
+                # )
             elif self.game_state.player1.down_pressed:
                 new_y = self.game_state.player1.y + settings.PADDLE_SPEED
                 if new_y > settings.LOWER_LIMIT:
                     self.game_state.player1.y = settings.LOWER_LIMIT
                 else:
                     self.game_state.player1.y = new_y
-                logger.info(
-                    f"player1.down_pressed, new y player 1 paddle: {self.game_state.player1.y}"
-                )
+                # logger.info(
+                #     f"player1.down_pressed, new y player 1 paddle: {self.game_state.player1.y}"
+                # )
 
             if self.game_state.player2.up_pressed:
                 new_y = self.game_state.player2.y - settings.PADDLE_SPEED
@@ -140,20 +147,20 @@ class GameLoop:
                     self.game_state.player2.y = settings.UPPER_LIMIT
                 else:
                     self.game_state.player2.y = new_y
-                logger.info(
-                    f"player2.up_pressed, new y player 2 paddle: {self.game_state.player2.y}"
-                )
+                # logger.info(
+                #     f"player2.up_pressed, new y player 2 paddle: {self.game_state.player2.y}"
+                # )
             elif self.game_state.player2.down_pressed:
                 new_y = self.game_state.player2.y + settings.PADDLE_SPEED
                 if new_y > settings.LOWER_LIMIT:
                     self.game_state.player2.y = settings.LOWER_LIMIT
                 else:
                     self.game_state.player2.y = new_y
-                logger.info(
-                    f"player2.down_pressed, new y player 2 paddle: {self.game_state.player2.y}"
-                )
+                # logger.info(
+                #     f"player2.down_pressed, new y player 2 paddle: {self.game_state.player2.y}"
+                # )
         except Exception as e:
-            logger.error(f"Error moving paddles: {e}")
+            logger.error(f"{self.channel_info} Error moving paddles: {e}")
 
     def calculate_new_ball_position(self):
         try:
@@ -166,7 +173,9 @@ class GameLoop:
                 + self.game_state.ball_speed * self.game_state.ball_vector["y"]
             )
         except Exception as e:
-            logger.error(f"Error calculating new ball position: {e}")
+            logger.error(
+                f"{self.channel_info} Error calculating new ball position: {e}"
+            )
 
     def calculate_collisions(self):
         try:
@@ -266,7 +275,7 @@ class GameLoop:
                         - remaining_movement * self.game_state.ball_vector["x"]
                     )
         except Exception as e:
-            logger.error(f"Error calculating collisions: {e}")
+            logger.error(f"{self.channel_info} Error calculating collisions: {e}")
 
     def get_winner_if_someone_scored(self):
         try:
@@ -276,7 +285,9 @@ class GameLoop:
                 return self.match.player2
             return None
         except Exception as e:
-            logger.error(f"Error getting winner if someone scored: {e}")
+            logger.error(
+                f"{self.channel_info} Error getting winner if someone scored: {e}"
+            )
 
     @database_sync_to_async
     def check_win(self):
@@ -284,8 +295,8 @@ class GameLoop:
             # logger.info("Checking for winner")
             winner = self.get_winner_if_someone_scored()
             if winner:
-                logger.info("we have a winner")
-                logger.info(f"Winner: {winner}")
+                logger.info(f"{self.channel_info} we have a winner")
+                logger.info(f"{self.channel_info} Winner: {winner}")
                 self.match.winner = winner
                 self.match.state = "FINISHED"
                 self.game_state.state = "FINISHED"
@@ -293,11 +304,11 @@ class GameLoop:
                 self.running = False
                 self.match.save()
         except Exception as e:
-            logger.error(f"Error checking for winner: {e}")
+            logger.error(f"{self.channel_info} Error checking for winner: {e}")
 
     async def game_loop(self):
 
-        logger.info("Game loop started")
+        logger.info(f"{self.channel_info} Game loop started")
         while self.running:
             try:
                 # paddles move always, even on countdown
@@ -319,7 +330,7 @@ class GameLoop:
                 await asyncio.sleep(1 / settings.FPS)
             except Exception as e:
                 logger.error(f"Error in game loop: {e}")
-        logger.info("Game loop finished")
+        logger.info(f"{self.channel_info} Game loop finished")
         if self.game_state.state == "FINISHED":
             game_over_message = {
                 "event": "game_finished",
@@ -328,7 +339,7 @@ class GameLoop:
             await self.send_message_to_all(game_over_message, "tournament")
 
     def stop(self):
-        logger.info("Game loop stopped")
+        logger.info(f"{self.channel_info} Game loop stopped")
         self.running = False
         if self.loop_task:
             self.loop_task.cancel()
