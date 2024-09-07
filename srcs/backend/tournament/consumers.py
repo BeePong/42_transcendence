@@ -417,7 +417,7 @@ class PongConsumer(AsyncWebsocketConsumer):
             # Parse the message and pass it to key press handler
             text_data_json = json.loads(text_data)
             message = text_data_json["message"]
-            await sync_to_async(self.set_game_loop)()
+            # await sync_to_async(self.set_game_loop)()
             await self.game_loop.handle_key_press(message, player_number)
         except Exception as e:
             logger.error(

@@ -42,7 +42,7 @@ class GameLoop:
         self.match.save()
 
     async def loop(self, channel_info):
-        self.channel_id = channel_info
+        self.channel_info = channel_info
         logger.info(f"{channel_info} Game loop started")
         self.running = True
         await self.set_state("COUNTDOWN")
