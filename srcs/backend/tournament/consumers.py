@@ -322,6 +322,11 @@ class PongConsumer(AsyncWebsocketConsumer):
             ):
                 logger.info("Starting solo tournament")
                 await self.start_tournament()
+            elif tournament_is_started is False and tournament_state == "PLAYING":
+                logger.info("Starting regular tournament")
+                await self.start_tournament()
+            else:
+                logger.info("Tournament is not started")
 
             # And then reject if user is not authenticated or tournament does not exist
             if not self.tournament or not self.scope["user"].is_authenticated:
@@ -332,24 +337,7 @@ class PongConsumer(AsyncWebsocketConsumer):
             # Check what's going on with the games dictionary
             logger.info(f"{self.consumer_info} Games dictionary: {games}")
 
-            # Get tournament status and start it if needed
-            # await self.add_player_to_tournament(self.scope["user"])
-            tournament_state = await self.get_tournament_property("state")
-            logger.info(
-                f"{self.consumer_info} Current tournament state: {tournament_state}"
-            )
-            tournament_is_started = await self.get_tournament_property("is_started")
-            logger.info(
-                f"{self.consumer_info} Current tournament is_started: {tournament_is_started}"
-            )
-            if tournament_is_started is False and tournament_state == "PLAYING":
-                logger.info("Starting tournament")
-                await self.start_tournament()
-            else:
-                logger.info("Tournament is not started")
-
         except Exception as e:
-
             logger.info(f"{self.consumer_info} Error in connect method: {e}")
 
     def get_tournament_data(self, tournament):
