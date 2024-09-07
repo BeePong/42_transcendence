@@ -103,6 +103,8 @@ class Tournament(models.Model):
         null=True,
         blank=True,
     )
+    is_countdown = models.BooleanField(default=False)
+    countdown = models.IntegerField(default=0)
 
     def __str__(self):
         return json.dumps(self.__dict__, default=str)

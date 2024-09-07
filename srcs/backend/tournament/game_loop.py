@@ -17,15 +17,21 @@ from .game_state import GameState
 from asgiref.sync import sync_to_async
 import logging
 
+from .models import Tournament
+
 logger = logging.getLogger(__name__)
 
 
 class GameLoop:
 
-    def __init__(self, match, tournament_id):
+    def __init__(self, match, tournament_id, tournament):
         logger.info("Game loop initializing")
         self.match = match
         self.tournament_id = tournament_id
+        self.tournament = tournament
+        self.tournament_countdown = settings.COUNTDOWN_TIME + 1
+        self.prev_tournament_countdown = settings.COUNTDOWN_TIME + 2
+        self.is_tournament_countdown = False
         self.game_state = GameState(match, tournament_id)
         self.pong_group_name = f"group_{self.tournament_id}"
         self.running = False
@@ -34,6 +40,12 @@ class GameLoop:
         self.channel_info = None
         self.ball_new_x = 100
         self.ball_new_y = 100
+
+    @database_sync_to_async
+    def set_tournament_countdown(self, countdown):
+        self.tournament.is_countdown = True
+        self.tournament.countdown = countdown
+        self.tournament.save()
 
     @database_sync_to_async
     def set_state(self, state):
@@ -72,10 +84,34 @@ class GameLoop:
 
     async def handle_countdown(self):
         try:
+            # tournament countdown
             if (
+                time.time() - self.game_state.round_start_time
+                <= settings.COUNTDOWN_TIME / 2
+            ):
+                if not self.is_tournament_countdown:
+                    self.is_tournament_countdown = True
+                self.prev_tournament_countdown = self.tournament_countdown
+                self.tournament_countdown = (
+                    settings.COUNTDOWN_TIME
+                    - int(time.time() - self.game_state.round_start_time)
+                    - settings.COUNTDOWN_TIME / 2
+                )
+                if self.tournament_countdown != self.prev_tournament_countdown:
+                    logger.info(
+                        f"{self.channel_info} Setting tournament countdown to {self.tournament_countdown}"
+                    )
+                    await self.set_tournament_countdown(self.tournament_countdown)
+                    await self.send_message_to_all(
+                        {"event": "countdown", "countdown": self.tournament_countdown},
+                        "tournament",
+                    )
+            elif (
                 time.time() - self.game_state.round_start_time
                 <= settings.COUNTDOWN_TIME
             ):
+                if self.is_tournament_countdown:
+                    self.is_tournament_countdown = False
                 self.game_state.countdown = settings.COUNTDOWN_TIME - int(
                     time.time() - self.game_state.round_start_time
                 )
@@ -322,7 +358,8 @@ class GameLoop:
                     self.game_state.ball.x = self.ball_new_x
                     self.game_state.ball.y = self.ball_new_y
                     await self.check_win()
-                await self.send_game_state_to_all()
+                if not self.is_tournament_countdown:
+                    await self.send_game_state_to_all()
                 if self.game_state.state == "FINISHED":
                     logger.info("Game finished")
                     # should we send tournament message instead? or nothing?
