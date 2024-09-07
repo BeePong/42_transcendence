@@ -88,7 +88,7 @@ const updateNumPlayersInLobby = (numPlayersInLobby) => {
 function handleFullTournamentLobby() {
   console.log("handleFullTournamentLobby2");
   // setTimeout(() => {
-  if (/^\/tournament\/\d+\/lobby$/.test(window.location.pathname)) {
+  // if (/^\/tournament\/\d+\/lobby$/.test(window.location.pathname)) {
     document.getElementById("tournament-lobby-section").classList.add("full");
     document.querySelector(".tournament_lobby__header").innerHTML =
       'BEEPONG CUP IS STARTING IN <span id="countdown">3</span>...';
@@ -104,7 +104,7 @@ function handleFullTournamentLobby() {
     if (leaveButton) {
       leaveButton.remove();
     }
-  }
+  // }
   // }, 1000);
 }
 

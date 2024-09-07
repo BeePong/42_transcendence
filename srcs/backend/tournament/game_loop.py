@@ -43,7 +43,7 @@ class GameLoop:
 
     @database_sync_to_async
     def set_tournament_countdown(self, countdown):
-        self.tournament.is_countdown = True
+        # self.tournament.is_countdown = True
         self.tournament.countdown = countdown
         self.tournament.save()
 
@@ -89,6 +89,12 @@ class GameLoop:
                 time.time() - self.game_state.round_start_time
                 <= settings.COUNTDOWN_TIME / 2
             ):
+                self.tournament.is_countdown = False
+
+                # await self.send_message_to_all(
+                #     {"event": "game_started", "countdown": self.tournament_countdown},
+                #     "tournament",
+                # )
                 if not self.is_tournament_countdown:
                     self.is_tournament_countdown = True
                 self.prev_tournament_countdown = self.tournament_countdown
@@ -112,6 +118,7 @@ class GameLoop:
             ):
                 if self.is_tournament_countdown:
                     self.is_tournament_countdown = False
+                    # tournament.is_countdown = False
                 self.game_state.countdown = settings.COUNTDOWN_TIME - int(
                     time.time() - self.game_state.round_start_time
                 )
