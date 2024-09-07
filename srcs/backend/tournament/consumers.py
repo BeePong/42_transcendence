@@ -71,7 +71,7 @@ class PongConsumer(AsyncWebsocketConsumer):
     def create_game_loop_if_not_exists(self):
         if not games.get(self.tournament_id):
             games[self.tournament_id] = GameLoop(
-                self.tournament.current_match, self.tournament_id
+                self.tournament.current_match, self.tournament_id, self.tournament
             )
             logger.info(
                 f"{self.consumer_info} Game loop for match {self.tournament.current_match.game_id} created, games dictionary: {games}"
@@ -107,9 +107,6 @@ class PongConsumer(AsyncWebsocketConsumer):
             logger.info("Determining tournament winner")
             winner = self.tournament.current_match.winner
             self.tournament.winner = winner
-            # self.tournament.current_match = None
-            # self.tournament.state = "FINISHED"
-            # self.tournament.is_final = True
             self.tournament.save()
         except Exception as e:
             logger.error(
@@ -176,7 +173,7 @@ class PongConsumer(AsyncWebsocketConsumer):
             logger.info(
                 f"{self.consumer_info} Number of players expected: {num_players_expected}"
             )
-            if await self.get_tournament_property("num_players") == 2:
+            if num_players_expected == 2:
                 await self.create_1st_match()
                 # TODO this condition is wrong, check for it to work. We only want loop to run once
                 is_loop_running = await self.is_loop_running()

@@ -16,6 +16,7 @@ const BALL_RADIUS = 15;
 const PADDING_THICKNESS = 7;
 const THICK_BORDER_THICKNESS = 5;
 const CANVAS_ID = "game_canvas";
+const COUNTDOWN_TIME = 6; // half of this is tournament countdown time, half is game countdown time
 
 let old_ball_speed, new_ball_speed; // for debugging purposes
 
@@ -254,16 +255,16 @@ function openWebSocket(tournament_id) {
             }
             break;
           case "countdown":
-            console.log("countdown");
-            if (tournamentMessage.countdown === 3) {
-              console.log("countdown is 3");
-              insertPlayersInMatch(
-                tournamentMessage.player1_alias,
-                tournamentMessage.player2_alias
-              );
-            }
-            // loadPage(window.location.pathname);
-            insertCountdown(tournamentMessage.countdown);
+            const countdown = tournamentMessage.countdown;
+            console.log("tournament countdown: ", countdown);
+            // if (tournamentMessage.countdown === COUNTDOWN_TIME / 2) {
+            //   console.log("countdown is ", COUNTDOWN_TIME / 2);
+            //   insertPlayersInMatch(
+            //     tournamentMessage.player1_alias,
+            //     tournamentMessage.player2_alias
+            //   );
+            // }
+            // insertCountdown(tournamentMessage.countdown);
             break;
           // maybe not needed? just send game message instead
           case "game_started":
