@@ -117,33 +117,33 @@ describe('### User Registration, Login, Logout, and Duplicate Registration Tests
 describe('### Form Validation Tests', () => {
   it(' - should display error for empty login fields', () => {
     cy.visit('/accounts/login');
-    cy.task('log', '  - Visited login page');
     cy.get('input[name="username"]').focus().blur();
     cy.get('input[name="username"]').then(($input) => {
       expect($input[0].validationMessage).to.eq('Please fill out this field.');
     });
+    cy.task('log', '  - Form validation: empty login fields detected');
   });
 
   it(' - should display error for invalid username format', () => {
     cy.visit('/accounts/login');
-    cy.task('log', '  - Visited login page');
     cy.get('input[name="username"]').type('invalidusername');
     cy.get('input[name="password"]').type('short');
     cy.get('button[type="submit"]').click();
     cy.screenshot('after-click-invalid-username-login');
     cy.contains('Please enter a').should('be.visible');
+    cy.task('log', '  - Form validation: invalid username detected');
     cy.screenshot('validation-error-invalid-username');
   });
 
   it(' - should display error for password mismatch on registration', () => {
     cy.visit('/accounts/register');
-    cy.task('log', '  - Visited registration page');
     cy.get('input[name="username"]').type('b33P0ng');
     cy.get('input[name="password1"]').type('Password123');
     cy.get('input[name="password2"]').type('Password321');
     cy.get('button[type="submit"]').click();
     cy.screenshot('after-click-password-mismatch');
     cy.contains("The two password fields").should('be.visible');
+    cy.task('log', '  - Form validation: password mismatch detected');
     cy.screenshot('validation-error-password-mismatch');
   });
 });
@@ -156,6 +156,7 @@ describe('### Accounts Navigation and Form Tests', () => {
     cy.visit('/accounts/register');
     cy.task('log', '  - Visited register page');
     cy.contains('REGISTER').should('be.visible');
+    cy.task('log', '  - Account navigation and validation: accessed register page successfully');
     cy.screenshot('register-page');
   });
 
@@ -163,6 +164,7 @@ describe('### Accounts Navigation and Form Tests', () => {
     cy.visit('/accounts/login');
     cy.task('log', '  - Visited login page');
     cy.contains('LOGIN TO PLAY TOURNAMENTS').should('be.visible');
+    cy.task('log', '  - Account navigation and validation: accessed login page successfully');
     cy.screenshot('login-page');
   });
 
@@ -170,6 +172,7 @@ describe('### Accounts Navigation and Form Tests', () => {
     cy.visit('/accounts/logout');
     cy.task('log', '  - Visited logout page');
     cy.contains('LOGIN').should('be.visible');
+    cy.task('log', '  - Account navigation and validation: accessed logout page successfully');
     cy.screenshot('logout-page');
   });
 
