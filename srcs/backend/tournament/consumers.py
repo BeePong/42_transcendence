@@ -27,10 +27,14 @@ class PongConsumer(AsyncWebsocketConsumer):
         self.tournament = None
         self.tournament_id = None
         self.pong_group_name = None
-        self.game_loop = None
         self.username = None  # for debug
+        self.consumer_info = None  # for debug
 
     # HELPER METHODS
+
+    @sync_to_async
+    def form_consumer_info(self):
+        return f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}]"
 
     @database_sync_to_async
     def get_tournament_by_id(self, tournament_id):
@@ -38,7 +42,7 @@ class PongConsumer(AsyncWebsocketConsumer):
             return get_object_or_404(Tournament, tournament_id=tournament_id)
         except (Tournament.DoesNotExist, Http404):
             logger.error(
-                f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}] Tournament with id {tournament_id} does not exist"
+                f"{self.consumer_info} Tournament with id {tournament_id} does not exist"
             )
             return None
 
@@ -58,7 +62,7 @@ class PongConsumer(AsyncWebsocketConsumer):
             return self.tournament.players.count() == self.tournament.num_players
         except Exception as e:
             logger.error(
-                f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}] Error checking if tournament is full: {e}"
+                f"{self.consumer_info} Error checking if tournament is full: {e}"
             )
             return False
 
@@ -70,27 +74,19 @@ class PongConsumer(AsyncWebsocketConsumer):
                 self.tournament.current_match, self.tournament_id
             )
             logger.info(
-                f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}] Game loop for match {self.tournament.current_match.game_id} created, games dictionary: {games}"
+                f"{self.consumer_info} Game loop for match {self.tournament.current_match.game_id} created, games dictionary: {games}"
             )
         else:
             logger.info(
-                f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}] Game loop for match {self.tournament.current_match.game_id} already exists, games dictionary: {games}"
+                f"{self.consumer_info} Game loop for match {self.tournament.current_match.game_id} already exists, games dictionary: {games}"
             )
-
-    def set_game_loop(self):
-        if not self.game_loop:
-            self.game_loop = games[self.tournament_id]
 
     @database_sync_to_async
     def create_1st_match(self):
         try:
-            logger.info(
-                f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}] Creating 1st match"
-            )
+            logger.info(f"{self.consumer_info} Creating 1st match")
             if not self.tournament.current_match:
-                logger.info(
-                    f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}] Setting current_match"
-                )
+                logger.info(f"{self.consumer_info} Setting current_match")
                 self.tournament.current_match, created = Match.objects.get_or_create(
                     player1=self.tournament.players.all()[0],
                     player2=self.tournament.players.all()[1],
@@ -98,19 +94,12 @@ class PongConsumer(AsyncWebsocketConsumer):
                 )
                 self.tournament.save()
                 if created:
-                    logger.info(
-                        f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}] 1st match created"
-                    )
+                    logger.info(f"{self.consumer_info} 1st match created")
                 else:
-                    logger.info(
-                        f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}] 1st match already exists"
-                    )
+                    logger.info(f"{self.consumer_info} 1st match already exists")
             self.create_game_loop_if_not_exists()
-            self.set_game_loop()
         except Exception as e:
-            logger.error(
-                f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}] Error creating 1st match: {e}"
-            )
+            logger.error(f"{self.consumer_info} Error creating 1st match: {e}")
 
     @database_sync_to_async
     def determine_tournament_winner(self):
@@ -124,32 +113,28 @@ class PongConsumer(AsyncWebsocketConsumer):
             self.tournament.save()
         except Exception as e:
             logger.error(
-                f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}] Error determining tournament winner: {e}"
+                f"{self.consumer_info} Error determining tournament winner: {e}"
             )
 
     @database_sync_to_async
     def destroy_game(self):
         try:
-            logger.info(
-                f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}] Destroying game (commented out)"
-            )
+            logger.info(f"{self.consumer_info} Destroying game (commented out)")
             # loop = games[self.tournament_id]
             # loop.running = False
             # loop.stop()
             # logger.info(
-            #     f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}] Game loop stopped"
+            #     f"{self.consumer_info} Game loop stopped"
             # )
             # del games[self.tournament_id]
             # logger.info(
-            #     f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}] Game loop deleted"
+            #     f"{self.consumer_info} Game loop deleted"
             # )
             # self.game_loop = None
             # self.tournament.current_match = None
             # self.tournament.save()
         except Exception as e:
-            logger.error(
-                f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}] Error destroying game: {e}"
-            )
+            logger.error(f"{self.consumer_info} Error destroying game: {e}")
 
     # TODO handle tournamernt state. needs to be set to FINISHED at some point
 
@@ -162,61 +147,63 @@ class PongConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def is_loop_running(self):
-        return self.game_loop.running
+        return games[self.tournament_id].running
+
+    def end_game_callback(self, future):
+        asyncio.ensure_future(self.end_game(future))
+
+    async def end_game(self, future):
+        try:
+            logger.info(f"{self.consumer_info} CALLBACK: Game loop over")
+            await self.send_message_to_all(
+                {"event": "game_over", "winner": "Player1_alias"}, "tournament"
+            )
+            logger.info(f"{self.consumer_info} Game loop over")
+            await self.determine_tournament_winner()
+            logger.info(f"{self.consumer_info} Determining tournament winner")
+            await self.send_message_to_all(
+                await self.form_tournament_finished_message(), "tournament"
+            )
+            await self.destroy_game()
+            await self.set_tournament(state="FINISHED", is_started=False)
+            logger.info(f"{self.consumer_info} Tournament finished")
+        except Exception as e:
+            logger.error(f"{self.consumer_info} Error ending game: {e}")
 
     async def start_tournament(self):
         try:
             if await self.get_tournament_property("is_started"):
-                logger.info(
-                    f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}] Tournament is already started"
-                )
+                logger.info(f"{self.consumer_info} Tournament is already started")
                 return
             self.set_tournament(is_started=True)
-            logger.info(
-                f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}] Starting tournament"
-            )
+            logger.info(f"{self.consumer_info} Starting tournament")
 
             num_players_expected = await self.get_tournament_property("num_players")
             logger.info(
-                f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}] Number of players expected: {num_players_expected}"
+                f"{self.consumer_info} Number of players expected: {num_players_expected}"
             )
             if await self.get_tournament_property("num_players") == 2:
                 await self.create_1st_match()
                 # TODO this condition is wrong, check for it to work. We only want loop to run once
                 is_loop_running = await self.is_loop_running()
                 logger.info(
-                    f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}] Game loop running bool: {is_loop_running}"
+                    f"{self.consumer_info} Game loop running bool: {is_loop_running}"
                 )
                 if is_loop_running:
                     logger.info("Game loop is already running")
                     return
                 logger.info(
-                    f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}] Game loop is not running, starting it"
+                    f"{self.consumer_info} Game loop is not running, starting it"
                 )
-                await self.game_loop.loop(
-                    f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}]"
+                await games[self.tournament_id].loop(self.consumer_info)
+                games[self.tournament_id].loop_task.add_done_callback(
+                    self.end_game_callback
                 )
-                logger.info(
-                    f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}] Game loop over"
-                )
-                await self.determine_tournament_winner()
-                logger.info(
-                    f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}] Determining tournament winner"
-                )
-                await self.send_message_to_all(
-                    await self.form_tournament_finished_message(), "tournament"
-                )
-                await self.destroy_game()
-                await self.set_tournament(state="FINISHED", is_started=False)
-                logger.info(
-                    f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}] Tournament finished"
-                )
+
             else:
                 logger.info("Not 2 players in tournament")
         except Exception as e:
-            logger.error(
-                f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}] Error starting tournament: {e}"
-            )
+            logger.error(f"{self.consumer_info} Error starting tournament: {e}")
             pass
 
     @database_sync_to_async
@@ -242,17 +229,17 @@ class PongConsumer(AsyncWebsocketConsumer):
         try:
             if not self.tournament:
                 logger.info(
-                    f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}] get_player_in_current_match no tournament"
+                    f"{self.consumer_info} get_player_in_current_match no tournament"
                 )
                 return None
             if not self.tournament.current_match:
                 logger.info(
-                    f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}] get_player_in_current_match no current match"
+                    f"{self.consumer_info} get_player_in_current_match no current match"
                 )
                 return None
             if not games.get(self.tournament.tournament_id):
                 logger.info(
-                    f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}] get_player_in_current_match no game in dictionary, this should never happen"
+                    f"{self.consumer_info} get_player_in_current_match no game in dictionary, this should never happen"
                 )
                 return None
             if self.tournament.current_match.player1.user == user:
@@ -260,12 +247,12 @@ class PongConsumer(AsyncWebsocketConsumer):
             if self.tournament.current_match.player2.user == user:
                 return 2
             logger.info(
-                f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}] get_player_in_current_match end of function"
+                f"{self.consumer_info} get_player_in_current_match end of function"
             )
             return None
         except Exception as e:
             logger.error(
-                f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}] Error in get_player_in_current_match: {e}"
+                f"{self.consumer_info} Error in get_player_in_current_match: {e}"
             )
 
     # CONNECTION HANDLERS
@@ -301,20 +288,19 @@ class PongConsumer(AsyncWebsocketConsumer):
                 await self.disconnect()
                 return
             self.username = self.scope["user"].username
+            self.consumer_info = await self.form_consumer_info()
             # Check what's going on with the games dictionary
-            logger.info(
-                f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}] Games dictionary: {games}"
-            )
+            logger.info(f"{self.consumer_info} Games dictionary: {games}")
 
             # Get tournament status and start it if needed
             # await self.add_player_to_tournament(self.scope["user"])
             tournament_state = await self.get_tournament_property("state")
             logger.info(
-                f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}] Current tournament state: {tournament_state}"
+                f"{self.consumer_info} Current tournament state: {tournament_state}"
             )
             tournament_is_started = await self.get_tournament_property("is_started")
             logger.info(
-                f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}] Current tournament is_started: {tournament_is_started}"
+                f"{self.consumer_info} Current tournament is_started: {tournament_is_started}"
             )
             if tournament_is_started is False and tournament_state == "PLAYING":
                 logger.info("Starting tournament")
@@ -324,9 +310,7 @@ class PongConsumer(AsyncWebsocketConsumer):
 
         except Exception as e:
 
-            logger.info(
-                f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}] Error in connect method: {e}"
-            )
+            logger.info(f"{self.consumer_info} Error in connect method: {e}")
 
     def get_tournament_data(self, tournament):
         return {
@@ -349,7 +333,7 @@ class PongConsumer(AsyncWebsocketConsumer):
     async def send_message_to_all(self, message, message_type):
         try:
             logger.info(
-                f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}] Sending message of type {message_type} to all in group {self.pong_group_name}"
+                f"{self.consumer_info} Sending message of type {message_type} to all in group {self.pong_group_name}"
             )
             await self.channel_layer.group_send(
                 self.pong_group_name,
@@ -360,9 +344,7 @@ class PongConsumer(AsyncWebsocketConsumer):
                 },
             )
         except Exception as e:
-            logger.info(
-                f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}] Error sending message to all: {e}"
-            )
+            logger.info(f"{self.consumer_info} Error sending message to all: {e}")
 
     # TODO: remove if not needed
     # @database_sync_to_async
@@ -390,9 +372,7 @@ class PongConsumer(AsyncWebsocketConsumer):
             )
             await self.send(text_data=text_data)
         except Exception as e:
-            logger.error(
-                f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}] Error sending message: {e}"
-            )
+            logger.error(f"{self.consumer_info} Error sending message: {e}")
 
     # async def send_tournament_state(self, event):
     #     await self.send(
@@ -410,7 +390,7 @@ class PongConsumer(AsyncWebsocketConsumer):
                 return
             player_number = await self.get_player_in_current_match(user)
             logger.info(
-                f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}] Player number of user {user}: {player_number}"
+                f"{self.consumer_info} Player number of user {user}: {player_number}"
             )
             if not player_number:
                 return
@@ -418,8 +398,6 @@ class PongConsumer(AsyncWebsocketConsumer):
             text_data_json = json.loads(text_data)
             message = text_data_json["message"]
             # await sync_to_async(self.set_game_loop)()
-            await self.game_loop.handle_key_press(message, player_number)
+            await games[self.tournament_id].handle_key_press(message, player_number)
         except Exception as e:
-            logger.error(
-                f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}] Error receiving message: {e}"
-            )
+            logger.error(f"{self.consumer_info} Error receiving message: {e}")
