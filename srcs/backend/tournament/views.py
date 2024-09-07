@@ -84,7 +84,9 @@ def handle_tournament_join_request(request, player):
 
 def send_message_to_all(tournament_id, message, message_type):
     pong_group_name = f"group_{tournament_id}"
-    logger.info(f"Sending {message_type} message to all from views.py in group {pong_group_name}")
+    logger.info(
+        f"Sending {message_type} message to all from views.py in group {pong_group_name}"
+    )
     channel_layer = get_channel_layer()
     try:
         async_to_sync(channel_layer.group_send)(
@@ -129,12 +131,12 @@ def join_waiting_lobby(tournament, player, form):
     )
     form.save()
 
-# Commented out for debugging purposes
-    #if player.has_active_tournament:
-     #   return JsonResponse(
-      #      {"success": False, "error": "Player already has an active tournament"},
-       #     status=400,
-        #)
+    # Commented out for debugging purposes
+    # if player.has_active_tournament:
+    #   return JsonResponse(
+    #      {"success": False, "error": "Player already has an active tournament"},
+    #     status=400,
+    # )
 
     if player not in tournament.players.all():
         add_player_to_tournament(player, tournament)
@@ -306,6 +308,9 @@ def tournament_lobby(request, tournament_id):
 
         if tournament.state == "NEW" and not tournament.is_full():
             return render_waiting_lobby(request, context)
+
+        # if tournament.current_match.state == "COUNTDOWN":
+        #     return render_game_canvas(request, context)
 
         if tournament.state == "PLAYING":
             return render_game_canvas(request, context)
