@@ -3,8 +3,8 @@ import json
 import os
 import random
 import ssl
-import time
 import sys
+import time
 
 # import aiohttp
 import requests
@@ -104,7 +104,7 @@ def login(tournament_id):
 
 async def calculate_ai_move(game_state_data):
     ball_position = game_state_data["ball"]
-    ai_paddle_position = game_state_data["player2"]["y"]  # Assuming AI is player2
+    ai_paddle_center = game_state_data["player2"]["y"]  # Assuming AI is player2
     ball_vector = game_state_data["ball_vector"]
     ball_speed = game_state_data["ball_speed"]
 
@@ -112,7 +112,7 @@ async def calculate_ai_move(game_state_data):
     print(f"Ball position: x={ball_position['x']:.2f}, y={ball_position['y']:.2f}")
     print(f"Ball vector: x={ball_vector['x']:.2f}, y={ball_vector['y']:.2f}")
     print(f"Ball speed: {ball_speed:.2f}")
-    print(f"AI paddle position: y={ai_paddle_position:.2f}")
+    print(f"AI paddle position: y={ai_paddle_center:.2f}")
 
     # Check if the ball is moving towards the AI paddle (left side)
 
@@ -136,10 +136,9 @@ async def calculate_ai_move(game_state_data):
     print(f"Ball will hit right edge at y = {predicted_y:.2f}")
 
     # Move paddle towards the predicted position
-    paddle_center = ai_paddle_position + PADDLE_HEIGHT / 2
-    if predicted_y < paddle_center - PADDLE_HEIGHT / 4:
+    if predicted_y < ai_paddle_center - PADDLE_HEIGHT / 4:
         return "ArrowUp"
-    elif predicted_y > paddle_center + PADDLE_HEIGHT / 4:
+    elif predicted_y > ai_paddle_center + PADDLE_HEIGHT / 4:
         return "ArrowDown"
     else:
         return None  # Stay in position
@@ -150,32 +149,31 @@ async def ai_movement_logic(websocket, game_state_event, game_state_data):
         await game_state_event.wait()  # Wait for a new game state
         game_state_event.clear()  # After the event is set and the wait is over, reset the event.
 
-        print("AI movement logic triggered")
+        # print("AI movement logic triggered")
         print("Game state data:")
         print(json.dumps(game_state_data, indent=2))
         # Check if the necessary keys are present in the game state data
         message = game_state_data.get("message", {})
-        if "ball" in message and "player2" in message and "ball_vector" in message:
+
+        if "ball" in message and "ball_vector" in message:
             ball_position = message["ball"]
             ball_vector = message["ball_vector"]
             print("Ball vector:", json.dumps(ball_vector, indent=2))
 
-            # Check if it's the AI's turn to defend
-            if ball_vector["x"] > 0:  # Ball is moving towards the AI paddle
-                print("Ball is moving towards AI paddle (right side)")
-                # Calculate AI move
-                move = await calculate_ai_move(message)
+            # Calculate AI move
+            move = await calculate_ai_move(message)
 
-                # Execute the move
-                if move:
-                    await send_game_data(websocket, move, "keydown")
-                    await asyncio.sleep(random.uniform(0.1, 0.5))
-                    await send_game_data(websocket, move, "keyup")
+            # Execute the move
+            if move:
+                await send_game_data(websocket, move, "keydown")
+                await asyncio.sleep(random.uniform(0.1, 0.2))
+                # await asyncio.sleep(0.1)
+                await send_game_data(websocket, move, "keyup")
                 # await asyncio.sleep(1)  # Wait for 1 second before the next move
             # else:
             #     print("Ball is moving away from AI paddle (right side)")
 
-        # await asyncio.sleep(1)  # Wait for 1 second before the next move
+        await asyncio.sleep(1)  # Wait for 1 second before the next move
 
 
 async def send_game_data(websocket, key, key_action):
