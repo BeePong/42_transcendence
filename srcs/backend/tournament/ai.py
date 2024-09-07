@@ -115,11 +115,15 @@ async def calculate_ai_move(game_state_data):
 
     # Check if the ball is moving towards the AI paddle (left side)
 
-    # Calculate time for the ball to reach the left edge
-    time_to_left_edge = ball_position["x"] / abs(ball_vector["x"] * ball_speed)
+    # Calculate time for the ball to reach the right edge
+    time_to_right_edge = (FIELD_WIDTH - ball_position["x"]) / abs(
+        ball_vector["x"] * ball_speed
+    )
 
-    # Predict the y-position where the ball will hit the left edge
-    predicted_y = ball_position["y"] + ball_vector["y"] * ball_speed * time_to_left_edge
+    # Predict the y-position where the ball will hit the right edge
+    predicted_y = (
+        ball_position["y"] + ball_vector["y"] * ball_speed * time_to_right_edge
+    )
 
     # Handle bounces off top and bottom edges
     while predicted_y < 0 or predicted_y > FIELD_HEIGHT:
@@ -128,7 +132,7 @@ async def calculate_ai_move(game_state_data):
         elif predicted_y > FIELD_HEIGHT:
             predicted_y = 2 * FIELD_HEIGHT - predicted_y
 
-    print(f"Ball will hit left edge at y = {predicted_y:.2f}")
+    print(f"Ball will hit right edge at y = {predicted_y:.2f}")
 
     # Move paddle towards the predicted position
     paddle_center = ai_paddle_position + PADDLE_HEIGHT / 2
@@ -156,8 +160,8 @@ async def ai_movement_logic(websocket, game_state_event, game_state_data):
             print("Ball vector:", json.dumps(ball_vector, indent=2))
 
             # Check if it's the AI's turn to defend
-            if ball_vector["x"] < 0:  # Ball is moving towards the AI paddle
-                print("Ball is moving towards AI paddle (left side)")
+            if ball_vector["x"] > 0:  # Ball is moving towards the AI paddle
+                print("Ball is moving towards AI paddle (right side)")
                 # Calculate AI move
                 move = await calculate_ai_move(message)
 
@@ -231,7 +235,7 @@ async def ai_bot(session):
         return
 
     # Step 3: Establish WebSocket connection (existing code)
-    url = f"wss://nginx:8443/ws/pong/{tournament_id}/?is_bot=True"
+    url = f"wss://nginx:8443/ws/pong/{tournament_id}/"
 
     # Extract the session cookie
     cookies = session.cookies.get_dict()

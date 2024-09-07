@@ -16,6 +16,8 @@ import logging
 
 from .models import Match, Player, Tournament
 
+import subprocess
+
 logger = logging.getLogger(__name__)
 
 games = {}
@@ -284,6 +286,19 @@ class PongConsumer(AsyncWebsocketConsumer):
             return getattr(self.tournament, propertyKey)
         return None
 
+    def spawn_ai_bot(self):
+        try:
+            subprocess.Popen(
+                ["python", "/beePong/tournament/ai.py", str(self.tournament_id)]
+            )
+            logger.info(
+                f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}] AI bot process spawned for tournament {self.tournament_id}"
+            )
+        except Exception as e:
+            logger.error(
+                f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}] Error spawning AI bot: {e}"
+            )
+
     async def connect(self):
         try:
 
@@ -292,7 +307,7 @@ class PongConsumer(AsyncWebsocketConsumer):
             self.pong_group_name = f"group_{self.tournament_id}"
             if not self.tournament:
                 self.tournament = await self.get_tournament_by_id(self.tournament_id)
-            
+
             query_string = self.scope.get("query_string", b"").decode()
             query_params = dict(
                 param.split("=") for param in query_string.split("&") if param
@@ -312,7 +327,11 @@ class PongConsumer(AsyncWebsocketConsumer):
             logger.info(f"Current tournament state: {tournament_state}")
             tournament_is_started = await self.get_tournament_property("is_started")
             logger.info(f"Current tournament is_started: {tournament_is_started}")
-            if self.is_bot and tournament_is_started is False and tournament_state == "PLAYING":
+            if (
+                self.is_bot
+                and tournament_is_started is False
+                and tournament_state == "PLAYING"
+            ):
                 logger.info("Starting solo tournament")
                 await self.start_tournament()
 
@@ -328,19 +347,19 @@ class PongConsumer(AsyncWebsocketConsumer):
 
             # Get tournament status and start it if needed
             # await self.add_player_to_tournament(self.scope["user"])
-            tournament_state = await self.get_tournament_property("state")
-            logger.info(
-                f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}] Current tournament state: {tournament_state}"
-            )
-            tournament_is_started = await self.get_tournament_property("is_started")
-            logger.info(
-                f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}] Current tournament is_started: {tournament_is_started}"
-            )
-            if tournament_is_started is False and tournament_state == "PLAYING":
-                logger.info("Starting tournament")
-                await self.start_tournament()
-            else:
-                logger.info("Tournament is not started")
+            # tournament_state = await self.get_tournament_property("state")
+            # logger.info(
+            #     f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}] Current tournament state: {tournament_state}"
+            # )
+            # tournament_is_started = await self.get_tournament_property("is_started")
+            # logger.info(
+            #     f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}] Current tournament is_started: {tournament_is_started}"
+            # )
+            # if tournament_is_started is False and tournament_state == "PLAYING":
+            #     logger.info("Starting tournament")
+            #     await self.start_tournament()
+            # else:
+            #     logger.info("Tournament is not started")
 
         except Exception as e:
 
