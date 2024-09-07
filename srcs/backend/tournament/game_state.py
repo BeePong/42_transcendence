@@ -48,12 +48,16 @@ class GamePlayer:
 class GameState:
     def __init__(self, match, tournament):
         print("INIT GAME STATE")
+        if tournament is None:
+            raise ValueError("tournament cannot be None")
         self.tournament = tournament
         self.state = "NEW"
+        if match is None:
+            raise ValueError("match cannot be None")
         self.match = match
         # init game state
         self.round_start_time = time.time()
-        self.countdown = 3
+        self.countdown = settings.COUNTDOWN_TIME
         self.ball = Ball()
         self.ball_speed = settings.BALL_STARTING_SPEED
         self.hit_count = 0
