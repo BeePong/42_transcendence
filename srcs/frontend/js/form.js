@@ -73,5 +73,12 @@ function displayFormErrors(errors) {
   }
 }
 
+export {
+  handleFormSubmit,
+  submitForm,
+  getFormDataAsUrlEncoded,
+  displayFormErrors,
+};
+
 // Attach handleFormSubmit to the global window object for use in inline event handlers
 window.handleFormSubmit = handleFormSubmit;

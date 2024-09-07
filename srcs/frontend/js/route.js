@@ -12,7 +12,7 @@ function navigate(eventOrPath, redirectUrl = '/') {
 }
 
 // Load content based on the path
-export async function loadPage(path, redirectUrl = '/', fromNavigate = false, queryString = '') {
+async function loadPage(path, redirectUrl = '/', fromNavigate = false, queryString = '') {
 	// If the path is '/', set page to '/home'.
 	// Otherwise, remove the trailing slash from the path and set page to the resulting string.
 	const page = path === '/' ? '/home' : path.replace(/\/$/, '');
@@ -87,4 +87,9 @@ function changeRedirectUrlandOauthState(redirectUrl) {
 }
 
 window.navigate = navigate;
-// export { loadPage };
+export {
+  navigate,
+  loadPage,
+  updatePageContent,
+  changeRedirectUrlandOauthState,
+};
