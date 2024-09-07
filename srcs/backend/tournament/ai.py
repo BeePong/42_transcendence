@@ -4,6 +4,7 @@ import os
 import random
 import ssl
 import time
+import sys
 
 # import aiohttp
 import requests
@@ -28,7 +29,7 @@ LOWER_LIMIT = FIELD_HEIGHT - PADDING_THICKNESS - PADDLE_HEIGHT / 2
 
 
 # Step 1: Log in to the website
-def login():
+def login(tournament_id):
     session = requests.Session()
 
     # Step 1a: Get the CSRF token by visiting the login page
@@ -45,7 +46,7 @@ def login():
     # Step 1b: Submit the login form with the CSRF token
     login_url = "https://nginx:8443/page/accounts/login/"
     payload = {
-        "username": "AI_Bot",  # Replace with your actual username
+        "username": "AI_Bot" + str(tournament_id),  # Replace with your actual username
         "password": "test123!",  # Replace with your actual password
         "csrfmiddlewaretoken": csrf_token,  # Include the CSRF token
     }
@@ -65,7 +66,7 @@ def login():
         # Step 2: Register the user
         register_url = "https://nginx:8443/page/accounts/register/"
         register_payload = {
-            "username": "AI_Bot",  # Same username as above
+            "username": "AI_Bot" + str(tournament_id),  # Same username as above
             "password1": "test123!",  # Same password as above
             "password2": "test123!",  # Password confirmation
             "csrfmiddlewaretoken": csrf_token,  # CSRF token
@@ -190,7 +191,7 @@ async def send_game_data(websocket, key, key_action):
 
 
 # Step 2: Use the session to establish a WebSocket connection
-async def ai_bot(session):
+async def ai_bot(session, tournament_id):
     # Step 1: Get CSRF token
     tournament_page_url = "https://nginx:8443/page/tournament/"
     try:
@@ -214,10 +215,10 @@ async def ai_bot(session):
 
     # Step 2: Join the tournament
     join_tournament_url = "https://nginx:8443/page/tournament/"
-    tournament_id = 8  # Replace with the actual tournament ID
+    # tournament_id = tournament_id  # Replace with the actual tournament ID
     join_data = {
         "tournament_id": tournament_id,
-        "alias": "AI_Bot",  # You can set a custom alias for the AI bot
+        "alias": f"AI_Bot{tournament_id}",  # Set alias to be the same as username
         "csrfmiddlewaretoken": csrf_token,
     }
 
@@ -268,35 +269,53 @@ async def ai_bot(session):
         )
 
         # Example loop to simulate key press and release
-        while True:
-            try:
-                # Receive and print the game state
-                async with asyncio.timeout(30):
-                    game_state = await websocket.recv()
-                    game_state_data.update(json.loads(game_state))
-                    current_time = time.time()
-                    # print(f"Received game state at {current_time}:")
-                    # print(json.dumps(game_state_data, indent=2))
+        try:
+            while True:
+                try:
+                    # Receive and print the game state
+                    async with asyncio.timeout(30):
+                        game_state = await websocket.recv()
+                        game_state_data.update(json.loads(game_state))
+                        current_time = time.time()
 
-                    # Check if the game has finished
-                    if (
-                        game_state_data.get("type") == "tournament"
-                        and game_state_data.get("message", {}).get("event")
-                        == "game_finished"
-                    ):
-                        print("Game finished. Stopping AI bot.")
-                        break
+                        # Check if the game has finished
+                        if (
+                            game_state_data.get("type") == "tournament"
+                            and game_state_data.get("message", {}).get("event")
+                            == "game_finished"
+                        ):
+                            print("Game finished. Stopping AI bot.")
+                            break
 
-                    # Signal that a new game state has been received
-                    game_state_event.set()
+                        # Signal that a new game state has been received
+                        game_state_event.set()
 
-            except websockets.ConnectionClosedError as e:
-                print(f"WebSocket connection closed: {e}")
-            except Exception as e:
-                print(f"Unexpected error: {e}")
+                except asyncio.TimeoutError:
+                    print("Timeout waiting for game state. Reconnecting...")
+                    break  # Break the loop to attempt reconnection
+                except websockets.ConnectionClosedError as e:
+                    print(f"WebSocket connection closed: {e}")
+                    break  # Break the loop to attempt reconnection
+                except Exception as e:
+                    print(f"Unexpected error: {e}")
+                    break  # Break the loop for any other unexpected errors
+        finally:
+            print("Cleaning up and closing connection...")
+            await websocket.close()
+            # Perform any other necessary cleanup here
 
 
 # Main execution
-session = login()
-if session:
-    asyncio.get_event_loop().run_until_complete(ai_bot(session))
+def run_ai_bot(tournament_id):
+    session = login(tournament_id)
+    if session:
+        asyncio.get_event_loop().run_until_complete(ai_bot(session, tournament_id))
+
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("Usage: python ai.py <tournament_id>")
+        sys.exit(1)
+
+    tournament_id = int(sys.argv[1])
+    run_ai_bot(tournament_id)
