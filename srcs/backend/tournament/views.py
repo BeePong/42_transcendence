@@ -192,7 +192,14 @@ def create_solo_game(request):
         if request.user.is_authenticated:
             #TODO: save the user to the tournament form and get the new tournament_id
             # form = TournamentForm(request.POST)
-            # if form.is_valid():
+            tournament,_ = Tournament.objects.create_or_get(num_players=1)
+            tournament.num_players = 2
+            tournament.title = "Solo Tournament"
+            tournament.description = "A tournament with only one player"
+            player, _ = Player.objects.get_or_create(user=request.user)
+            tournament.players.add(player)
+            tournament.save()
+            
             return JsonResponse(
                 {
                     "success": True,
