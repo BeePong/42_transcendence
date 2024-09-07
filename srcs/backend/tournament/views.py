@@ -343,8 +343,8 @@ def tournament_lobby(request, tournament_id):
         if tournament.state == "NEW" and not tournament.is_full():
             return render_waiting_lobby(request, context)
 
-        # if tournament.current_match.state == "COUNTDOWN":
-        #     return render_game_canvas(request, context)
+        if tournament.is_countdown:
+            return render_waiting_lobby(request, context)
 
         if tournament.state == "PLAYING":
             return render_game_canvas(request, context)
