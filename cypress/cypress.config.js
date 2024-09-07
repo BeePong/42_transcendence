@@ -1,6 +1,6 @@
 module.exports = {
   e2e: {
-    baseUrl: 'https://nginx',
+    baseUrl: 'https://nginx:8443',
     setupNodeEvents(on, config) {
       // Implement the logging task
       on('task', {
