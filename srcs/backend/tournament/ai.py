@@ -19,7 +19,7 @@ PADDLE_SPEED = 20
 BALL_RADIUS = 15
 BALL_STARTING_SPEED = 5
 BALL_SPEED_INCREMENT = 0
-FPS = 15
+FPS = 30
 MAX_SCORE = 500
 PADDING_THICKNESS = 7
 THICK_BORDER_THICKNESS = 5
@@ -45,7 +45,7 @@ def login():
     # Step 1b: Submit the login form with the CSRF token
     login_url = "https://nginx:8443/page/accounts/login/"
     payload = {
-        "username": "dummy",  # Replace with your actual username
+        "username": "AI_Bot",  # Replace with your actual username
         "password": "test123!",  # Replace with your actual password
         "csrfmiddlewaretoken": csrf_token,  # Include the CSRF token
     }
@@ -65,7 +65,7 @@ def login():
         # Step 2: Register the user
         register_url = "https://nginx:8443/page/accounts/register/"
         register_payload = {
-            "username": "dummy",  # Same username as above
+            "username": "AI_Bot",  # Same username as above
             "password1": "test123!",  # Same password as above
             "password2": "test123!",  # Password confirmation
             "csrfmiddlewaretoken": csrf_token,  # CSRF token
@@ -143,25 +143,23 @@ async def calculate_ai_move(game_state_data):
 async def ai_movement_logic(websocket, game_state_event, game_state_data):
     while True:
         await game_state_event.wait()  # Wait for a new game state
-        game_state_event.clear()  # Clear the event
+        game_state_event.clear()  # After the event is set and the wait is over, reset the event.
 
-        # print("AI movement logic triggered")
-        # print(json.dumps(game_state_data, indent=2))
+        print("AI movement logic triggered")
+        print("Game state data:")
+        print(json.dumps(game_state_data, indent=2))
         # Check if the necessary keys are present in the game state data
-        if (
-            "ball" in game_state_data
-            and "player2" in game_state_data
-            and "ball_vector" in game_state_data
-        ):
-            ball_position = game_state_data["ball"]
-            ball_vector = game_state_data["ball_vector"]
-            # print("Ball vector:", json.dumps(ball_vector, indent=2))
+        message = game_state_data.get("message", {})
+        if "ball" in message and "player2" in message and "ball_vector" in message:
+            ball_position = message["ball"]
+            ball_vector = message["ball_vector"]
+            print("Ball vector:", json.dumps(ball_vector, indent=2))
 
             # Check if it's the AI's turn to defend
             if ball_vector["x"] < 0:  # Ball is moving towards the AI paddle
                 print("Ball is moving towards AI paddle (left side)")
                 # Calculate AI move
-                move = await calculate_ai_move(game_state_data)
+                move = await calculate_ai_move(message)
 
                 # Execute the move
                 if move:
@@ -189,8 +187,51 @@ async def send_game_data(websocket, key, key_action):
 
 # Step 2: Use the session to establish a WebSocket connection
 async def ai_bot(session):
-    # Define the WebSocket URL
-    url = "wss://nginx:8443/ws/pong/1/?is_bot=True"
+    # Step 1: Get CSRF token
+    tournament_page_url = "https://nginx:8443/page/tournament/"
+    try:
+        response = session.get(tournament_page_url, verify=False)
+        response.raise_for_status()
+        soup = BeautifulSoup(response.text, "html.parser")
+        csrf_input = soup.find("input", {"name": "csrfmiddlewaretoken"})
+        if csrf_input is None:
+            print(
+                "CSRF token input not found in the HTML. Trying to find it in cookies."
+            )
+            csrf_token = session.cookies.get("csrftoken")
+            if csrf_token is None:
+                raise ValueError("CSRF token not found in HTML or cookies")
+        else:
+            csrf_token = csrf_input.get("value")
+        print("Successfully retrieved CSRF token.")
+    except requests.RequestException as e:
+        print(f"Failed to retrieve CSRF token: {e}")
+        return
+
+    # Step 2: Join the tournament
+    join_tournament_url = "https://nginx:8443/page/tournament/"
+    tournament_id = 8  # Replace with the actual tournament ID
+    join_data = {
+        "tournament_id": tournament_id,
+        "alias": "AI_Bot",  # You can set a custom alias for the AI bot
+        "csrfmiddlewaretoken": csrf_token,
+    }
+
+    try:
+        response = session.post(
+            join_tournament_url,
+            data=join_data,
+            headers={"Referer": tournament_page_url},
+            verify=False,
+        )
+        response.raise_for_status()
+        print("Successfully joined the tournament.")
+    except requests.RequestException as e:
+        print(f"Failed to join the tournament: {e}")
+        return
+
+    # Step 3: Establish WebSocket connection (existing code)
+    url = f"wss://nginx:8443/ws/pong/{tournament_id}/?is_bot=True"
 
     # Extract the session cookie
     cookies = session.cookies.get_dict()
@@ -230,13 +271,17 @@ async def ai_bot(session):
                     game_state = await websocket.recv()
                     game_state_data.update(json.loads(game_state))
                     current_time = time.time()
-                    print(f"Received game state at {current_time}:")
+                    # print(f"Received game state at {current_time}:")
                     # print(json.dumps(game_state_data, indent=2))
 
-                    # Calculate and print the delay
-                    server_timestamp = game_state_data["timestamp"]
-                    delay = current_time - server_timestamp
-                    # print(f"Delay: {delay:.4f} seconds")
+                    # Check if the game has finished
+                    if (
+                        game_state_data.get("type") == "tournament"
+                        and game_state_data.get("message", {}).get("event")
+                        == "game_finished"
+                    ):
+                        print("Game finished. Stopping AI bot.")
+                        break
 
                     # Signal that a new game state has been received
                     game_state_event.set()
