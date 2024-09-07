@@ -7,6 +7,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
+from django.contrib.auth import get_user_model
 
 from .decorators import login_required_json
 from .forms import AliasForm, TournamentForm
@@ -187,35 +188,56 @@ def prepare_tournament_data(tournaments):
         for tournament in tournaments
     ]
 
+@login_required_json
 def create_solo_game(request):
     if request.method == 'POST':
-        if request.user.is_authenticated:
-            #TODO: save the user to the tournament form and get the new tournament_id
-            # form = TournamentForm(request.POST)
-            tournament,_ = Tournament.objects.create_or_get(num_players=1)
-            tournament.num_players = 2
-            tournament.title = "Solo Tournament"
-            tournament.description = "A tournament with only one player"
-            player, _ = Player.objects.get_or_create(user=request.user)
-            tournament.players.add(player)
-            tournament.save()
-            
-            return JsonResponse(
-                {
-                    "success": True,
-                    "redirect": "/tournament/1/solo_game/", #TODO: replace by real tournament id
-                },
-                status=201,
-            )
-            # else:
-            # return JsonResponse({"success": False, "errors": form.errors}, status=400)
-        else:
-            return JsonResponse({
-                'success': False,
-                'errors': {
-                    'non_field_errors': ['User not authenticated']
-                }
-            }, status=401)
+        # if request.user.is_authenticated:
+        tournament = Tournament.objects.create(
+            title="Solo Tournament",
+            num_players=2,
+            description="A tournament with only one player and a dummy player.",
+            state="PLAYING"
+        )
+        player, _ = Player.objects.get_or_create(user=request.user)
+        tournament.players.add(player)
+        tournament.save()
+
+        # Create or get a dummy user for the dummy player
+        User = get_user_model()
+        dummy_user, _ = User.objects.get_or_create(
+            username=f"dummy_user_{tournament.tournament_id}"
+        )
+
+        # Create or get the dummy player and associate it with the dummy user
+        dummy_player, _ = Player.objects.get_or_create(user=dummy_user)
+        dummy_player.alias = f"dummy-{tournament.tournament_id}"
+        dummy_player.has_active_tournament = True
+        dummy_player.is_online = True
+        dummy_player.current_tournament_id = tournament.tournament_id
+        dummy_player.save()
+
+        # Add the dummy player to the tournament
+        tournament.players.add(dummy_player)
+        tournament.save()
+
+        # Set the current tournament ID for the real player and save
+        player.current_tournament_id = tournament.tournament_id
+        player.save()
+
+        return JsonResponse(
+            {
+                "success": True,
+                "redirect": f"/tournament/{tournament.tournament_id}/solo_game/",
+            },
+            status=201,
+        )
+        # else:
+        #     return JsonResponse({
+        #         'success': False,
+        #         'errors': {
+        #             'non_field_errors': ['User not authenticated']
+        #         }
+        #     }, status=401)
     return JsonResponse({
         'success': False,
         'errors': {
@@ -223,8 +245,19 @@ def create_solo_game(request):
         }
     }, status=405)
 
-def solo_game(request, any_number):
-    return render(request, "tournament/solo_game.html")
+@login_required_json
+def solo_game(request, tournament_id):
+    try:
+        tournament = get_object_or_404(Tournament, tournament_id=tournament_id)
+        player = Player.objects.filter(user=request.user, current_tournament_id=tournament.tournament_id).first()
+        if player:
+            return render(request, "tournament/solo_game.html", {"tournament": tournament})
+        else:
+            return custom_404(request, None)
+
+    except Exception as error:
+        logger.error(f"Error in solo game: {error}", exc_info=True)
+        return custom_404(request, None)
 
 @login_required_json
 def create_tournament(request):

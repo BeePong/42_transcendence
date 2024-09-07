@@ -18,15 +18,15 @@ async function handleFormSubmit(event) {
 
     const result = await response.json();
 
+    if (response.status === 401)
+      navigate('/accounts/login/');
+
     if (result.success) {
       // Handle redirection
       navigate(result.redirect);
       if (url.pathname.startsWith("/accounts/")) updateNavBar();
     } else {
-      if (response.status === 401)
-        navigate('/accounts/login/'); // Redirect to login page if the user is not authenticated
-      else
-        displayFormErrors(result.errors); // Display error messages
+      displayFormErrors(result.errors); // Display error messages
     }
   } catch (error) {
     console.error("There was a problem with the fetch operation:", error);
