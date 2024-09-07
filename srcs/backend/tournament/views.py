@@ -24,7 +24,8 @@ def tournament(request):
     if request.method == "POST":
         return handle_tournament_join_request(request, player)
 
-    tournaments = Tournament.objects.all().order_by("-tournament_id")
+    # Filter out tournaments with the title "Solo Tournament"
+    tournaments = Tournament.objects.exclude(title="Solo Tournament").order_by("-tournament_id")
     form = AliasForm(username=request.user.username)
     tournament_data = prepare_tournament_data(tournaments)
 
@@ -202,6 +203,10 @@ def create_solo_game(request):
         )
         player, _ = Player.objects.get_or_create(user=request.user)
         tournament.players.add(player)
+        player.alias = player.username
+        player.has_active_tournament = True
+        player.current_tournament_id = tournament.tournament_id
+        player.save()
         tournament.save()
 
         # Create or get a dummy user for the dummy player
@@ -214,17 +219,12 @@ def create_solo_game(request):
         dummy_player, _ = Player.objects.get_or_create(user=dummy_user)
         dummy_player.alias = f"dummy-{tournament.tournament_id}"
         dummy_player.has_active_tournament = True
-        dummy_player.is_online = True
         dummy_player.current_tournament_id = tournament.tournament_id
         dummy_player.save()
 
         # Add the dummy player to the tournament
         tournament.players.add(dummy_player)
         tournament.save()
-
-        # Set the current tournament ID for the real player and save
-        player.current_tournament_id = tournament.tournament_id
-        player.save()
 
         return JsonResponse(
             {
