@@ -36,6 +36,14 @@ Icon
 # --- Lionel's ignore ---
 cat_project_to_clipboard_and_file.sh
 combined_output.txt
+# Cypress debug screenshots and videos
+cypress/screenshots
+cypress/videos
+*.png 
+*.mp4
+
+# --- node_modules ignore ---
+**/node_modules/
 
 # --- node_modules ignore ---
 **/node_modules/

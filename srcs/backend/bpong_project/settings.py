@@ -20,8 +20,8 @@ SECRET_KEY = os.getenv(
 )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-# DEBUG = False
+# DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = [
     "localhost",
@@ -29,6 +29,7 @@ ALLOWED_HOSTS = [
     "beepong-backendDummy",
     "nginx",
     "c1r3p3.hive.fi",
+    "172.50.70.189",
 ]
 
 # Application definition
@@ -49,7 +50,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    #'tournament.apps.TournamentConfig',
+    # 'tournament.apps.TournamentConfig',
 ]
 
 MIDDLEWARE = [
@@ -159,8 +160,9 @@ CSRF_TRUSTED_ORIGINS = [
     "https://localhost",
     "https://127.0.0.1",
     "https://nginx",
-    "https://localhost:8443",
-    "https://c1r3p3.hive.fi:8443",
+    "https://172.50.70.189",
+    "https://localhost:443",
+    "https://c1r3p3.hive.fi:443",
 ]
 
 # Game settings TODO: use them in front-end and back-end
