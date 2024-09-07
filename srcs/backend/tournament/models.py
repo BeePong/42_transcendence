@@ -103,7 +103,7 @@ class Tournament(models.Model):
         null=True,
         blank=True,
     )
-    is_countdown = models.BooleanField(default=False)
+    is_countdown = models.BooleanField(default=True)
     countdown = models.IntegerField(default=0)
 
     def __str__(self):

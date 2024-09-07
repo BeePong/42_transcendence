@@ -175,8 +175,8 @@ def start_tournament(tournament):
     logger.info(
         "Tournament is full, we could start countdown but fuck it MVP only so PLAYING"
     )
-    game_started_message = form_game_started_message()
-    send_message_to_all(tournament.tournament_id, game_started_message, "tournament")
+    # game_started_message = form_game_started_message()
+    # send_message_to_all(tournament.tournament_id, game_started_message, "tournament")
     tournament.state = "PLAYING"
     tournament.is_started = False
     tournament.save()
@@ -344,6 +344,7 @@ def tournament_lobby(request, tournament_id):
         tournament = get_object_or_404(Tournament, tournament_id=tournament_id)
         context = prepare_tournament_context(tournament)
         logger.info(f"Context: {context}")
+        logger.info(f"tournament.is_countdown: {tournament.is_countdown}")
 
         if tournament.state == "NEW" and not tournament.is_full():
             return render_waiting_lobby(request, context)
@@ -351,8 +352,8 @@ def tournament_lobby(request, tournament_id):
         if tournament.winner:
             return render_winner_page(request, context)
 
-        # if tournament.is_countdown:
-        #     return render_waiting_lobby(request, context)
+        if tournament.is_countdown:
+            return render_full_lobby(request, context)
 
         if tournament.state == "PLAYING":
             return render_game_canvas(request, context)
