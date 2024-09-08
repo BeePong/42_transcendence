@@ -27,7 +27,7 @@ class AliasForm(forms.ModelForm):
         fields = ["alias"]
         widgets = {
             "alias": forms.TextInput(
-                attrs={"placeholder": "ALIAS", "class": "forminput"}
+                attrs={"placeholder": "ALIAS", "class": "form__input"}
             ),
         }
 
