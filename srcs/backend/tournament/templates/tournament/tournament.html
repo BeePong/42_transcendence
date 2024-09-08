@@ -42,7 +42,7 @@
             </p>
             {% endfor %}
           </div>
-          {% if tournament.state == 'NEW' %}
+          {% if tournament.state == 'NEW' and not tournament.has_joined %}
           <div class="form__actions--bottom">
             <form onsubmit="handleFormSubmit(event)" action="{{ form_action }}">
               {% csrf_token %}

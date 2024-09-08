@@ -32,7 +32,7 @@ def tournament(request):
         "-tournament_id"
     )
     form = AliasForm(username=request.user.username)
-    tournament_data = prepare_tournament_data(tournaments)
+    tournament_data = prepare_tournament_data(tournaments, player)
 
     logger.debug(f"Number of tournaments: {len(tournament_data)}")
     logger.debug(f"Tournament data: {tournament_data}")
@@ -144,8 +144,6 @@ def join_waiting_lobby(tournament, player, form):
     #     status=400,
     # )
 
-    # TODO: Check state of tournament before adding player!!!!
-
     if player not in tournament.players.all():
         add_player_to_tournament(player, tournament)
         message = form_new_player_message(tournament, player)
@@ -184,19 +182,24 @@ def start_tournament(tournament):
     tournament.save()
 
 
-def prepare_tournament_data(tournaments):
-    return [
-        {
+def prepare_tournament_data(tournaments, player):
+    tournament_data = []
+
+    for tournament in tournaments:
+        players = list(tournament.players.values_list("username", flat=True))
+        
+        tournament_data.append({
             "tournament_id": tournament.tournament_id,
             "name": tournament.title,
             "description": tournament.description,
             "state": tournament.state,
             "num_players": tournament.num_players,
-            "players": [player.username for player in tournament.players.all()],
+            "players": players,
             "winner": tournament.winner.username if tournament.winner else "",
-        }
-        for tournament in tournaments
-    ]
+            "has_joined": player.username in players,
+        })
+
+    return tournament_data
 
 
 @login_required_json
@@ -345,14 +348,14 @@ def tournament_lobby(request, tournament_id):
         if tournament.state == "NEW" and not tournament.is_full():
             return render_waiting_lobby(request, context)
 
-        if tournament.winner:
-            return render_winner_page(request, context)
-
-        # if tournament.is_countdown:
-        #     return render_waiting_lobby(request, context)
+        if tournament.is_countdown:
+            return render_waiting_lobby(request, context)
 
         if tournament.state == "PLAYING":
             return render_game_canvas(request, context)
+
+        if tournament.winner:
+            return render_winner_page(request, context)
 
         return render_full_lobby(request, context)
 
