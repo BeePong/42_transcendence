@@ -89,13 +89,13 @@ CHANNEL_LAYERS = {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
             "hosts": [("redis", 6379)],
+            # "capacity": 10,
         },
     },
 }
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
-
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
@@ -170,10 +170,10 @@ PADDLE_HEIGHT = 100
 PADDLE_WIDTH = 26
 PADDLE_SPEED = 20
 BALL_RADIUS = 15
-BALL_STARTING_SPEED = 5
-BALL_SPEED_INCREMENT = 1
+BALL_STARTING_SPEED = 10
+BALL_SPEED_INCREMENT = 0
 FPS = 30
-MAX_SCORE = 3
+MAX_SCORE = 50000
 PADDING_THICKNESS = 7
 THICK_BORDER_THICKNESS = 5
 UPPER_LIMIT = PADDING_THICKNESS + PADDLE_HEIGHT / 2

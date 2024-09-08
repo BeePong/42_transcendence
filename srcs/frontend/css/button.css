@@ -13,6 +13,7 @@ button {
 	background-color: var(--color-secondary);
 	color: var(--text-color-alt);
 	box-shadow: 5px 5px var(--color-primary);
+	width: 100%;
 }
 
 .button--tertiary {
