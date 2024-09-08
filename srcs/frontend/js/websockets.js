@@ -317,12 +317,9 @@ function openWebSocket(tournament_id, type = 'tournament') {
         break;
 
       case "game":
-        if (data.message.countdown <= 3)
-        {
-          const gameState = data.message;
-          const canvasContext = getContext();
-          if (canvasContext) updateCanvas(canvasContext, gameState);
-        }
+        const gameState = data.message;
+        const canvasContext = getContext();
+        if (canvasContext) updateCanvas(canvasContext, gameState);
         break;
     }
 
