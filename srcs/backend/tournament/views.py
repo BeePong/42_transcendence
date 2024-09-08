@@ -192,8 +192,8 @@ def prepare_tournament_data(tournaments):
             "description": tournament.description,
             "state": tournament.state,
             "num_players": tournament.num_players,
-            "players": [player.username for player in tournament.players.all()],
-            "winner": tournament.winner.username if tournament.winner else "",
+            "players": [player.alias for player in tournament.players.all()],
+            "winner": tournament.winner.alias if tournament.winner else "",
         }
         for tournament in tournaments
     ]
@@ -332,8 +332,6 @@ def tournament_lobby(request, tournament_id):
         if tournament.state == "PLAYING":
             return render_game_canvas(request, context)
 
-
-
         return render_full_lobby(request, context)
 
     except Exception as error:
@@ -342,7 +340,7 @@ def tournament_lobby(request, tournament_id):
 
 
 def prepare_tournament_context(tournament):
-    players = list(tournament.players.values_list("username", flat=True))
+    players = list(tournament.players.values_list("alias", flat=True))
     num_players_in_tournament = len(players)
 
     context = {
