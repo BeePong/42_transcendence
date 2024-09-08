@@ -1,83 +1,93 @@
 <section>
-	<div id="tournament-header" class="tournament__container">
-		<h1>TOURNAMENTS</h1>
-		<button class="button--primary button--with-icon" onclick="navigate(`{% url 'tournament:create_tournament' %}`)">
-			<div class="plus-icon"></div>
-			<span>NEW</span>
-		</button>
-	</div>
+  <div id="tournament-header" class="tournament__container">
+    <h1>TOURNAMENTS</h1>
+    <button
+      class="button--primary button--with-icon"
+      onclick="navigate(`{% url 'tournament:create_tournament' %}`)"
+    >
+      <div class="plus-icon"></div>
+      <span>NEW</span>
+    </button>
+  </div>
 
-	<div class="tournament__grid">
-		{% for tournament in tournaments %}
-		<div class="card__container">
-			<div class="card
-				{% if tournament.state == 'NEW' %}
-					card--active
-				{% else %}
-					card--inactive
-				{% endif %}">
-				<div class="card__content">
-					<div class="card__title tournament__container">
-						<div class="tournament__name">
-							{{ tournament.name }}
-						</div>
-						<div class="tournament__state tournament__state--{{ tournament.state|lower }}">
-							{{ tournament.state }}
-						</div>
-					</div>
-					<div class="card__text font--alt">
-						<p>{{ tournament.description }}</p>
-						<p class="tournament__num_players {% if tournament.players|length < tournament.num_players %} tournament__num_players--not_full{% endif %}">
-							{{ tournament.players|length }}/{{ tournament.num_players }}
-						</p>
-						{% for player in tournament.players %}
-							<p class="{% if player == tournament.winner %}tournament__winner{% endif %}">
-								{{ player }}
-								{% if player == tournament.winner %}
-									<span> 👑</span>
-									{% endif %}
-							</p>
-						{% endfor %}
-					</div>
-					{% if tournament.state == 'NEW' %}
-					<div class="form__actions">
-						<form onsubmit="handleFormSubmit(event)" action="{{ form_action }}">
-							{% csrf_token %}
-							<input type="hidden" name="tournament_id" value="{{ tournament.tournament_id }}">
-							<div class="form__input-button-container">
-								<div>
-									<label for="id_alias">Alias</label>
-									{{ form.alias }}
-								</div>
-								<button type="submit" class="button--primary button--with-icon">
-									<span class="button__text">JOIN</span>
-									<img src="/img/arrow.svg" alt="arrow" width="21" height="12">
-								</button>
-							</div>
-						</form>
-						<div class="form__error-message"></div>
-					</div>
-					{% elif tournament.state == 'PLAYING' %}
-          <a
-            href="/tournament/{{ tournament.tournament_id }}/lobby/"
-            class="button--secondary button--with-icon"
-          >
-            <span class="button__text">WATCH</span>
-            <!-- <img src="/img/eye.svg" alt="eye" class="eye-icon"> -->
-          </a>
+  <div class="tournament__grid">
+    {% for tournament in tournaments %}
+    <div class="card__container">
+      <div
+        class="card {% if tournament.state == 'NEW' %} card--active {% else %} card--inactive {% endif %}"
+      >
+        <div class="card__content">
+          <div class="card__title tournament__container">
+            <div class="tournament__name">{{ tournament.name }}</div>
+            <div
+              class="tournament__state tournament__state--{{ tournament.state|lower }}"
+            >
+              {{ tournament.state }}
+            </div>
+          </div>
+          <div class="card__text font--alt">
+            <p>{{ tournament.description }}</p>
+            <p
+              class="tournament__num_players {% if tournament.players|length < tournament.num_players %} tournament__num_players--not_full{% endif %}"
+            >
+              {{ tournament.players|length }}/{{ tournament.num_players }}
+            </p>
+            {% for player in tournament.players %}
+            <p
+              class="{% if player == tournament.winner %}tournament__winner{% endif %}"
+            >
+              {{ player }} {% if player == tournament.winner %}
+              <span> 👑</span>
+              {% endif %}
+            </p>
+            {% endfor %}
+          </div>
+          {% if tournament.state == 'NEW' %}
+          <div class="form__actions--bottom">
+            <form onsubmit="handleFormSubmit(event)" action="{{ form_action }}">
+              {% csrf_token %}
+              <input
+                type="hidden"
+                name="tournament_id"
+                value="{{ tournament.tournament_id }}"
+              />
+              <div class="form__input-button-container">
+                <div>
+                  <label for="id_alias">Alias</label>
+                  {{ form.alias }}
+                </div>
+                <button type="submit" class="button--primary button--with-icon">
+                  <span class="button__text">JOIN</span>
+                  <img
+                    src="/img/arrow.svg"
+                    alt="arrow"
+                    width="21"
+                    height="12"
+                  />
+                </button>
+              </div>
+            </form>
+            <div class="form__error-message"></div>
+          </div>
+          {% elif tournament.state == 'PLAYING' %}
+          <div class="button--left-bottom-corner">
+            <button
+              class="button--tertiary"
+              onclick="navigate(`{% url 'tournament:tournament_lobby' tournament.tournament_id %}`)"
+            >
+              WATCH
+            </button>
+          </div>
           {% endif %}
-				</div>
-			</div>
-		</div>
-		{% empty %}
-		<div class="card__container">
-			<div class="card card--empty">
-				<div class="card__content">
-					YOUR AWESOME TOURNAMENT WILL BE HERE
-				</div>
-			</div>
-		</div>
-		{% endfor %}
-	</div>
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="card__container">
+      <div class="card card--empty">
+        <div class="card__content">YOUR AWESOME TOURNAMENT WILL BE HERE</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
 </section>
-  

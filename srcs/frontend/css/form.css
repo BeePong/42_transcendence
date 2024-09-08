@@ -3,78 +3,84 @@ form label {
 }
 
 .form__input {
-	font-size: var(--font-size-xs);
-	padding: 1em;
-	margin-bottom: 1.5em;
-	width: 100%;
+  font-size: var(--font-size-xs);
+  padding: 1em;
+  margin-bottom: 1.5em;
+  width: 100%;
 }
 
 .form__actions {
-	display: flex;
-	align-items: flex-end;
-	flex-direction: column;
-	gap: 0.8em;
-	margin-top: 1em;
+  display: flex;
+  align-items: flex-end;
+  flex-direction: column;
+  gap: 0.8em;
+  margin-top: 1em;
+}
+
+.form__actions--bottom {
+  position: absolute;
+  bottom: 40px;
+  margin-right: 3em;
 }
 
 .form__alt-action {
-	font-size: var(--font-size-sm);
+  font-size: var(--font-size-sm);
 }
 
 .form__error-message {
-	display: none;
-	background-color: var(--color-secondary);
-	color: var(--text-color-alt);
-	padding: 2em 3em;
-	font-family: var(--font-family-alt);
-	font-variation-settings: "YOPQ" 300;
-	font-size: var(--font-size-sm);
-	flex-direction: column;
-	gap: 1em;
-	overflow-wrap: break-word;
-	width: 100%
+  display: none;
+  background-color: var(--color-secondary);
+  color: var(--text-color-alt);
+  padding: 2em 3em;
+  font-family: var(--font-family-alt);
+  font-variation-settings: "YOPQ" 300;
+  font-size: var(--font-size-sm);
+  flex-direction: column;
+  gap: 1em;
+  overflow-wrap: break-word;
+  width: 100%;
 }
 
 .legend--hidden {
-	display: none;
+  display: none;
 }
 
 .radio-group {
-	display: flex;
-	gap: 1em;
-	margin-bottom: 2em;
+  display: flex;
+  gap: 1em;
+  margin-bottom: 2em;
 }
 
 .radio-input {
-	display: none;
+  display: none;
 }
 
 .radio-label {
-	display: block;
-	height: 40px;
-	width: 40px;
-	border: 1px solid var(--color-tertiary);
-	position: relative;
-	transition: 0.1s;
-	cursor: pointer;
+  display: block;
+  height: 40px;
+  width: 40px;
+  border: 1px solid var(--color-tertiary);
+  position: relative;
+  transition: 0.1s;
+  cursor: pointer;
 }
 
 .radio-label > span {
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .radio-input:checked + label {
-	background-color: var(--color-tertiary);
-	color: var(--text-color-alt);
+  background-color: var(--color-tertiary);
+  color: var(--text-color-alt);
 }
 
 .form__input-button-container {
-	display: flex;
-	align-items: center;
-	gap: 0.5em;
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
 }
 
 .form__input-button-container input {

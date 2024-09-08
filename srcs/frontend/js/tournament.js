@@ -100,10 +100,6 @@ function handleFullTournamentLobby() {
     if (playerCount) {
       playerCount.remove();
     }
-    const leaveButton = document.getElementById("leave-button");
-    if (leaveButton) {
-      leaveButton.remove();
-    }
   }
   // }, 1000);
 }
