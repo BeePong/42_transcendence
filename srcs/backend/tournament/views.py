@@ -31,7 +31,7 @@ def tournament(request):
     tournaments = Tournament.objects.exclude(title="Solo Tournament").order_by(
         "-tournament_id"
     )
-    form = AliasForm(username=request.user.username)
+    form = AliasForm(user=request.user)
     tournament_data = prepare_tournament_data(tournaments)
 
     logger.debug(f"Number of tournaments: {len(tournament_data)}")
@@ -51,7 +51,7 @@ def tournament(request):
 def handle_tournament_join_request(request, player):
     try:
         tournament_id = request.POST.get("tournament_id")
-        form = AliasForm(data=request.POST, instance=player)
+        form = AliasForm(data=request.POST, instance=player, user=request.user)
 
         if not form.is_valid():
             logger.warning(f"Form is invalid: {form.errors}")
