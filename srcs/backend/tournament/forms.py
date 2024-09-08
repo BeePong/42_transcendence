@@ -27,19 +27,19 @@ class AliasForm(forms.ModelForm):
         fields = ["alias"]
         widgets = {
             "alias": forms.TextInput(
-                attrs={"placeholder": "ALIAS", "class": "form__input"}
+                attrs={"placeholder": "ALIAS", "class": "forminput"}
             ),
         }
 
-    def __init__(self, *args, **kwargs):
-        username = kwargs.pop("username", None)
-        super(AliasForm, self).__init__(*args, **kwargs)
-        if username:
-            self.fields["alias"].initial = username
+    def init(self, *args, **kwargs):
+        self.user = kwargs.pop("user", None)
+        super(AliasForm, self).init__(*args, **kwargs)
+        if self.user.username:
+            self.fields["alias"].initial = self.user.username
 
     def clean_alias(self):
         alias = self.cleaned_data["alias"]
-        if Player.objects.filter(alias=alias).exists():
+        if Player.objects.filter(alias=alias).exclude(user=self.user).exists():
             raise forms.ValidationError(
                 "This alias is already taken, please choose another one."
             )

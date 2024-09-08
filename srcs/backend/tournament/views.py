@@ -54,7 +54,7 @@ def tournament(request):
 def handle_tournament_join_request(request, player):
     try:
         tournament_id = request.POST.get("tournament_id")
-        form = AliasForm(data=request.POST, instance=player)
+        form = AliasForm(data=request.POST, instance=player, user=request.user)
 
         if not form.is_valid():
             logger.warning(f"Form is invalid: {form.errors}")
