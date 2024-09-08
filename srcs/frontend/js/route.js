@@ -2,13 +2,13 @@ import { openWebSocket } from "./websockets.js";
 import { tournamentLobbyCountdown } from "./tournament.js";
 
 const allowedRoutes = [
-  '/home', 
-  '/about', 
-  '/accounts/login', 
-  '/accounts/register', 
-  '/tournament', 
-  '/tournament/create',
-	'/accounts/oauth_error',
+  "/home",
+  "/about",
+  "/accounts/login",
+  "/accounts/register",
+  "/tournament",
+  "/tournament/create",
+  "/accounts/oauth_error",
 ];
 
 const tournamentLobbyPattern = /^\/tournament\/\d+\/lobby$/;
@@ -48,13 +48,14 @@ export async function loadPage(
   // If the path is '/', set page to '/home'.
   // Otherwise, remove the trailing slash from the path and set page to the resulting string.
   const page = path === "/" ? "/home" : path.replace(/\/$/, "");
-  const isAllowed = allowedRoutes.includes(page) || tournamentLobbyPattern.test(page) || soloGamePattern.test(page);
+  const isAllowed =
+    allowedRoutes.includes(page) ||
+    tournamentLobbyPattern.test(page) ||
+    soloGamePattern.test(page);
   try {
     let response;
-    if (isAllowed)
-      response = await fetch(`/page${page}/${queryString}`);
-    else
-      response = await fetch('/page/custom_404_frontend/');
+    if (isAllowed) response = await fetch(`/page${page}/${queryString}`);
+    else response = await fetch("/page/custom_404/");
 
     if (!response.ok && response.status !== 404) {
       if (
