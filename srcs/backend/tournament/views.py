@@ -275,29 +275,6 @@ def spawn_ai_bot(tournament_id):
 
 
 @login_required_json
-def solo_game(request, tournament_id):
-    try:
-        tournament = get_object_or_404(Tournament, tournament_id=tournament_id)
-        player = Player.objects.filter(
-            user=request.user, current_tournament_id=tournament.tournament_id
-        ).first()
-        if player:
-            if tournament.winner:
-                context = prepare_tournament_context(tournament)
-                return render_winner_page(request, context)
-            else:
-                return render(
-                    request, "tournament/solo_game.html", {"tournament": tournament}
-                )
-        else:
-            return custom_404(request, None)
-
-    except Exception as error:
-        logger.error(f"Error in solo game: {error}", exc_info=True)
-        return custom_404(request, None)
-
-
-@login_required_json
 def create_tournament(request):
     """The create tournament page for BeePong."""
     if request.method != "POST":
