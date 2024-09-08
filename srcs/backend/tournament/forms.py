@@ -31,9 +31,9 @@ class AliasForm(forms.ModelForm):
             ),
         }
 
-    def init(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         self.user = kwargs.pop("user", None)
-        super(AliasForm, self).init__(*args, **kwargs)
+        super(AliasForm, self).__init__(*args, **kwargs)
         if self.user.username:
             self.fields["alias"].initial = self.user.username
 
