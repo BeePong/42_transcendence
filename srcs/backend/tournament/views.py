@@ -345,7 +345,7 @@ def tournament_lobby(request, tournament_id):
 
 
 def prepare_tournament_context(tournament):
-    players = list(tournament.players.values_list("username", flat=True))
+    players = list(tournament.players.values_list("alias", flat=True))
     num_players_in_tournament = len(players)
 
     context = {
