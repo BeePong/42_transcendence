@@ -9,10 +9,10 @@ const allowedRoutes = [
   '/tournament', 
   '/tournament/create',
 	'/accounts/oauth_error',
-  '/game' //TODO: replace by sole_game
 ];
 
 const tournamentLobbyPattern = /^\/tournament\/\d+\/lobby$/;
+const soloGamePattern = /^\/tournament\/\d+\/solo_game$/;
 
 // Handle navigation based on path or event
 function navigate(eventOrPath, redirectUrl = "/") {
@@ -48,7 +48,7 @@ export async function loadPage(
   // If the path is '/', set page to '/home'.
   // Otherwise, remove the trailing slash from the path and set page to the resulting string.
   const page = path === "/" ? "/home" : path.replace(/\/$/, "");
-  const isAllowed = allowedRoutes.includes(page) || tournamentLobbyPattern.test(page);
+  const isAllowed = allowedRoutes.includes(page) || tournamentLobbyPattern.test(page) || soloGamePattern.test(page);
   try {
     let response;
     if (isAllowed)
