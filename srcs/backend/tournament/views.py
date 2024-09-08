@@ -113,6 +113,8 @@ def form_new_player_message(tournament, player):
         "player_alias": player.alias,
         "num_players_in_tournament": tournament.players.count(),
         "num_players": tournament.num_players,
+        "player1_alias": "Player1_alias",
+        "player2_alias": "Player2_alias",
     }
 
 
@@ -126,8 +128,8 @@ def form_countdown_message(player1_alias, player2_alias, countdown):
     return {
         "event": "countdown",
         "countdown": countdown,
-        "player1_alias": player1_alias,
-        "player2_alias": player2_alias,
+        # "player1_alias": player1_alias,
+        # "player2_alias": player2_alias,
     }
 
 

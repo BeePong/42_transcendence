@@ -269,7 +269,9 @@ function openWebSocket(tournament_id, type = 'tournament') {
               tournamentMessage.num_players
             ) {
               console.log("here handleFullTournamentLobby");
-              handleFullTournamentLobby();
+              console.log("player1_alias", tournamentMessage.player1_alias);
+              console.log("player2_alias", tournamentMessage.player2_alias);
+              handleFullTournamentLobby(tournamentMessage.player1_alias, tournamentMessage.player2_alias);
             }
             break;
           case "countdown":
@@ -277,10 +279,6 @@ function openWebSocket(tournament_id, type = 'tournament') {
             console.log("tournament countdown: ", countdown);
             if (tournamentMessage.countdown === COUNTDOWN_TIME / 2) {
               console.log("countdown is ", COUNTDOWN_TIME / 2);
-              insertPlayersInMatch(
-                tournamentMessage.player1_alias,
-                tournamentMessage.player2_alias
-              );
             }
             insertCountdown(tournamentMessage.countdown);
             if (tournamentMessage.countdown === 1) {
