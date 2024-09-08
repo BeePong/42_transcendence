@@ -290,7 +290,7 @@ function openWebSocket(tournament_id, type = 'tournament') {
           // maybe not needed? just send game message instead
           // case "game_started":
           //   console.log("game_started case");
-          //   // loadPage(window.location.pathname);
+          //   loadPage(window.location.pathname);
           //   console.log("game_started case after loadPage");
           //   const canvasContext = getContext();
           //   if (canvasContext) drawEmptyCanvas(canvasContext);
@@ -317,19 +317,12 @@ function openWebSocket(tournament_id, type = 'tournament') {
         break;
 
       case "game":
-        // console.log("game");
-        // if (data.message.countdown === 3)
-        // {
-          // loadPage(window.location.pathname)
-          // if (canvasContext) drawEmptyCanvas(canvasContext);
-        // }
         if (data.message.countdown <= 3)
         {
           const gameState = data.message;
           const canvasContext = getContext();
           if (canvasContext) updateCanvas(canvasContext, gameState);
         }
-
         break;
     }
 
