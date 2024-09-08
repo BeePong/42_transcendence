@@ -19,6 +19,8 @@ volumes:
     driver: local
   redis_data:
     driver: local
+  nginx_ssl_certs:
+    driver: local
 
 networks:
   default:
@@ -58,6 +60,7 @@ services:
       context: ./srcs/backend
     volumes:
       - ./srcs/backend/beePong:/usr/src/backend/beePong
+      - nginx_ssl_certs:/etc/nginx/ssl  # <-- Access certs inside the backend
       - app_logs:/beePong/logs  # Mount application logs volume
     env_file:
       - .env
@@ -92,6 +95,7 @@ services:
       context: ./srcs/nginx
     volumes:
       - ./srcs/frontend:/var/www/html
+      - nginx_ssl_certs:/etc/nginx/ssl  # <-- Share the cert directory with host
       - nginx_logs:/var/log/nginx 
     ports:
       - ${NGINX_PORT}:${NGINX_PORT}

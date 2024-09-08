@@ -7,10 +7,14 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
+from django.contrib.auth import get_user_model
 
 from .decorators import login_required_json
 from .forms import AliasForm, TournamentForm
 from .models import Match, Player, Tournament
+import subprocess
+import os
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +27,10 @@ def tournament(request):
     if request.method == "POST":
         return handle_tournament_join_request(request, player)
 
-    tournaments = Tournament.objects.all().order_by("-tournament_id")
+    # Filter out tournaments with the title "Solo Tournament"
+    tournaments = Tournament.objects.exclude(title="Solo Tournament").order_by(
+        "-tournament_id"
+    )
     form = AliasForm(username=request.user.username)
     tournament_data = prepare_tournament_data(tournaments)
 
@@ -192,8 +199,102 @@ def prepare_tournament_data(tournaments):
     ]
 
 
-def solo_game(request):
-    return render(request, "tournament/solo_game.html")
+@login_required_json
+def create_solo_game(request):
+    if request.method == "POST":
+        # if request.user.is_authenticated:
+        tournament = Tournament.objects.create(
+            title="Solo Tournament",
+            num_players=2,
+            description="A tournament with only one player and a dummy player.",
+            state="NEW",
+        )
+        player, _ = Player.objects.get_or_create(user=request.user)
+        tournament.players.add(player)
+        player.alias = player.username
+        player.has_active_tournament = True
+        player.current_tournament_id = tournament.tournament_id
+        player.save()
+        tournament.save()
+
+        try:
+            logger.info(f"Starting AI bot for tournament {tournament.tournament_id}")
+            spawn_ai_bot(tournament.tournament_id)
+        except Exception as e:
+            logger.error(
+                f"Error starting AI bot for tournament {tournament.tournament_id}: {e}"
+            )
+        if tournament.state == "NEW" and tournament.is_full():
+            tournament.state = "PLAYING"
+            tournament.save()
+        logger.info(
+            f"create solo game {tournament.tournament_id} final state: {tournament.state}"
+        )
+
+        # Create or get a dummy user for the dummy player
+        # User = get_user_model()
+        # dummy_user, _ = User.objects.get_or_create(
+        #     username=f"dummy_user_{tournament.tournament_id}"
+        # )
+
+        # # Create or get the dummy player and associate it with the dummy user
+        # dummy_player, _ = Player.objects.get_or_create(user=dummy_user)
+        # dummy_player.alias = f"dummy-{tournament.tournament_id}"
+        # dummy_player.has_active_tournament = True
+        # dummy_player.current_tournament_id = tournament.tournament_id
+        # dummy_player.save()
+
+        # # Add the dummy player to the tournament
+        # tournament.players.add(dummy_player)
+        # tournament.save()
+
+        return JsonResponse(
+            {
+                "success": True,
+                "redirect": f"/tournament/{tournament.tournament_id}/solo_game/",
+            },
+            status=201,
+        )
+        # else:
+        #     return JsonResponse({
+        #         'success': False,
+        #         'errors': {
+        #             'non_field_errors': ['User not authenticated']
+        #         }
+        #     }, status=401)
+    return JsonResponse(
+        {"success": False, "errors": {"non_field_errors": ["Invalid request method"]}},
+        status=405,
+    )
+
+
+def spawn_ai_bot(tournament_id):
+    ai_script_path = os.path.join(settings.BASE_DIR, "tournament", "ai.py")
+    logger.info(f"AI script path: {ai_script_path}")
+    subprocess.Popen(["python", ai_script_path, str(tournament_id)])
+
+
+@login_required_json
+def solo_game(request, tournament_id):
+    try:
+        tournament = get_object_or_404(Tournament, tournament_id=tournament_id)
+        player = Player.objects.filter(
+            user=request.user, current_tournament_id=tournament.tournament_id
+        ).first()
+        if player:
+            if tournament.winner:
+                context = prepare_tournament_context(tournament)
+                return render_winner_page(request, context)
+            else:
+                return render(
+                    request, "tournament/solo_game.html", {"tournament": tournament}
+                )
+        else:
+            return custom_404(request, None)
+
+    except Exception as error:
+        logger.error(f"Error in solo game: {error}", exc_info=True)
+        return custom_404(request, None)
 
 
 @login_required_json

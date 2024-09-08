@@ -39,8 +39,16 @@ export async function loadPage(
     const response = await fetch(`/page${page}/${queryString}`);
 
     if (!response.ok && response.status !== 404) {
-      if (response.status === 400 || response.status === 401) {
-        if (response.status === 400) return loadPage("/accounts/oauth_error/");
+      if (
+        response.status === 400 ||
+        response.status === 401 ||
+        response.status === 302
+      ) {
+        if (response.status === 302) {
+          const data = await response.json();
+          return navigate(data.redirect);
+        } else if (response.status === 400)
+          return loadPage("/accounts/oauth_error/");
         // Handle oauth error response by fetching the error page
         else return navigate("/accounts/login/", redirectUrl); // Redirect to login page if the user is not authenticated
       } else {
@@ -74,9 +82,11 @@ function updatePageContent(data, page, redirectUrl) {
     var tournament_id = match[1];
     openWebSocket(tournament_id);
   }
-  var solo_match = page.match(/^\/tournament\/solo_game$/);
+  var solo_match = page.match(/^\/tournament\/(\d+)\/solo_game$/);
   if (solo_match) {
-    openWebSocket("solo");
+    console.log("here open solo game");
+    var tournament_id = solo_match[1];
+    openWebSocket(tournament_id, "solo");
   }
   // if (/^\/tournament\/\d+\/lobby$/.test(page)) { // Perform countdown in tournament lobby if the list is full. Otherwise, wait for other players.
   // 	if (document.querySelector('.full')) {

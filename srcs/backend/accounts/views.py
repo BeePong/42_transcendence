@@ -21,6 +21,10 @@ login_42_url = f"https://api.intra.42.fr/oauth/authorize?{urlencode(login_42_par
 
 def register(request):
     """Register a new user."""
+    # If the user is authenticated, return a JSON response with a redirect to the tournament page
+    # No need to process the registration form since the user is already logged in.
+    if request.user.is_authenticated:
+        return JsonResponse({'success': False, 'redirect': reverse('tournament:tournament')}, status=302)
     if request.method != 'POST':
         # Display blank registration form.
         # If we’re not responding to a POST request, we make an instance of
@@ -58,6 +62,10 @@ def register(request):
     return render(request, 'registration/form.html', context)
 
 def custom_login(request):
+    # If the user is authenticated, return a JSON response with a redirect to the tournament page
+    # No need to process the login form since the user is already logged in.
+    if request.user.is_authenticated:
+        return JsonResponse({'success': False, 'redirect': reverse('tournament:tournament')}, status=302)
     if request.method != 'POST':
         form = CustomAuthenticationForm()
     else:
@@ -145,7 +153,7 @@ def oauth_token(request):
 
         # Log the user in
         login(request, user)
-        return redirect(redirect_url)
+        return redirect(f'{redirect_url}?login=success')
     else:
         return redirect('/accounts/oauth_error/?from=oauth_token')
 
