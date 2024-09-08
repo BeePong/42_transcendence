@@ -348,14 +348,14 @@ def tournament_lobby(request, tournament_id):
         if tournament.state == "NEW" and not tournament.is_full():
             return render_waiting_lobby(request, context)
 
-        if tournament.is_countdown:
-            return render_waiting_lobby(request, context)
+        if tournament.winner:
+            return render_winner_page(request, context)
+
+        # if tournament.is_countdown:
+        #     return render_waiting_lobby(request, context)
 
         if tournament.state == "PLAYING":
             return render_game_canvas(request, context)
-
-        if tournament.winner:
-            return render_winner_page(request, context)
 
         return render_full_lobby(request, context)
 
