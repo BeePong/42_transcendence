@@ -82,6 +82,26 @@ class PongConsumer(AsyncWebsocketConsumer):
             )
 
     @database_sync_to_async
+    def create_2nd_match(self):
+        try:
+            logger.info(f"{self.consumer_info} Creating 2nd match")
+            if not self.tournament.current_match:
+                logger.info(f"{self.consumer_info} Setting current_match")
+                self.tournament.current_match, created = Match.objects.get_or_create(
+                    player1=self.tournament.players.all()[2],
+                    player2=self.tournament.players.all()[3],
+                    tournament=self.tournament,
+                )
+                self.tournament.save()
+                if created:
+                    logger.info(f"{self.consumer_info} 1st match created")
+                else:
+                    logger.info(f"{self.consumer_info} 1st match already exists")
+            self.create_game_loop_if_not_exists()
+        except Exception as e:
+            logger.error(f"{self.consumer_info} Error creating 1st match: {e}")
+
+    @database_sync_to_async
     def create_1st_match(self):
         try:
             logger.info(f"{self.consumer_info} Creating 1st match")
@@ -100,6 +120,16 @@ class PongConsumer(AsyncWebsocketConsumer):
             self.create_game_loop_if_not_exists()
         except Exception as e:
             logger.error(f"{self.consumer_info} Error creating 1st match: {e}")
+
+    @database_sync_to_async
+    def get_current_match_winner(self):
+        try:
+            logger.info("Determining current match winner")
+            return self.tournament.current_match.winner
+        except Exception as e:
+            logger.error(
+                f"{self.consumer_info} Error determining current match winner: {e}"
+            )
 
     @database_sync_to_async
     def determine_tournament_winner(self):
@@ -140,24 +170,70 @@ class PongConsumer(AsyncWebsocketConsumer):
     def is_loop_running(self):
         return games[self.tournament_id].running
 
+    def second_game_callback(self, future):
+        asyncio.ensure_future(self.end_second_game(future))
+
+    async def end_second_game(self, future):
+        try:
+            logger.info(f"{self.consumer_info} CALLBACK: 2nd game over")
+            second_winner = await self.get_current_match_winner()
+            logger.info(f"{self.consumer_info} 2nd game winner: {second_winner.alias}")
+
+            logger.info(f"{self.consumer_info} Game loop over")
+            await self.determine_tournament_winner()
+            logger.info(f"{self.consumer_info} Determining 2nd game winner")
+            await self.destroy_game()
+            # below is future end of tournament function
+            await self.send_message_to_all(
+                await self.form_tournament_finished_message(), "tournament"
+            )
+            await self.set_tournament(state="FINISHED", is_started=False)
+            logger.info(f"{self.consumer_info} Tournament finished")
+        except Exception as e:
+            logger.error(f"{self.consumer_info} Error ending 2nd game: {e}")
+
     def end_game_callback(self, future):
         asyncio.ensure_future(self.end_game(future))
 
     async def end_game(self, future):
         try:
+
             logger.info(f"{self.consumer_info} CALLBACK: Game loop over")
-            await self.send_message_to_all(
-                {"event": "game_over", "winner": "Player1_alias"}, "tournament"
-            )
-            logger.info(f"{self.consumer_info} Game loop over")
-            await self.determine_tournament_winner()
-            logger.info(f"{self.consumer_info} Determining tournament winner")
-            await self.send_message_to_all(
-                await self.form_tournament_finished_message(), "tournament"
-            )
-            await self.destroy_game()
-            await self.set_tournament(state="FINISHED", is_started=False)
-            logger.info(f"{self.consumer_info} Tournament finished")
+            num_players_expected = await self.get_tournament_property("num_players")
+            if num_players_expected == 4:
+                first_winner = await self.get_current_match_winner()
+                logger.info(
+                    f"{self.consumer_info} First game winner: {first_winner.alias}"
+                )
+                await self.destroy_game()
+                await self.create_2nd_match()  # create_match()
+                is_loop_running = await self.is_loop_running()
+                logger.info(
+                    f"{self.consumer_info} Game loop running bool: {is_loop_running}"
+                )
+                if is_loop_running:
+                    logger.info("Game loop is already running")
+                    return
+                logger.info(
+                    f"{self.consumer_info} Game loop is not running, starting it"
+                )
+                await games[self.tournament_id].loop(self.consumer_info)
+                games[self.tournament_id].loop_task.add_done_callback(
+                    self.second_game_callback
+                )
+            elif num_players_expected == 2:
+                await self.determine_tournament_winner()
+
+                logger.info(f"{self.consumer_info} Determining tournament winner")
+                await self.destroy_game()
+                # the real determine_tournament_winner() will be here (or rather in the final game callback)
+                # below is future end of tournament function
+                await self.send_message_to_all(
+                    await self.form_tournament_finished_message(), "tournament"
+                )
+                await self.set_tournament(state="FINISHED", is_started=False)
+                logger.info(f"{self.consumer_info} Tournament finished")
+
         except Exception as e:
             logger.error(f"{self.consumer_info} Error ending game: {e}")
 
@@ -190,7 +266,22 @@ class PongConsumer(AsyncWebsocketConsumer):
                 games[self.tournament_id].loop_task.add_done_callback(
                     self.end_game_callback
                 )
-
+            elif num_players_expected == 4:
+                await self.create_1st_match()
+                is_loop_running = await self.is_loop_running()
+                logger.info(
+                    f"{self.consumer_info} 4 players Game loop running bool: {is_loop_running}"
+                )
+                if is_loop_running:
+                    logger.info("Game loop is already running")
+                    return
+                logger.info(
+                    f"{self.consumer_info} Game loop is not running, starting it"
+                )
+                await games[self.tournament_id].loop(self.consumer_info)
+                games[self.tournament_id].loop_task.add_done_callback(
+                    self.end_game_callback
+                )
             else:
                 logger.info("Not 2 players in tournament")
         except Exception as e:
