@@ -1,5 +1,4 @@
 import { openWebSocket } from "./websockets.js";
-import { tournamentLobbyCountdown } from "./tournament.js";
 
 const allowedRoutes = [
   "/home",
@@ -115,14 +114,6 @@ function updatePageContent(data, page, redirectUrl, fromWebsocket) {
       openWebSocket(tournament_id, "solo");
     }
   }
-
-  // if (/^\/tournament\/\d+\/lobby$/.test(page)) { // Perform countdown in tournament lobby if the list is full. Otherwise, wait for other players.
-  // 	if (document.querySelector('.full')) {
-  // 		if (!document.querySelector('.winner')) {
-  // 			tournamentLobbyCountdown();
-  // 		}
-  // 	}
-  // }
 }
 
 // Change the redirect url in the form and the state of the oauth
@@ -147,4 +138,3 @@ function changeRedirectUrlandOauthState(redirectUrl) {
 }
 
 window.navigate = navigate;
-// export { loadPage };

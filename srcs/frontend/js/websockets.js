@@ -4,7 +4,6 @@ import {
   updateNumPlayersInLobby,
   insertCountdown,
   handleFullTournamentLobby,
-  insertPlayersInMatch,
 } from "./tournament.js";
 
 // Constants
