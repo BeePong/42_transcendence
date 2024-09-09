@@ -304,6 +304,7 @@ def tournament_lobby(request, tournament_id):
             return render_waiting_lobby(request, context)
 
         if tournament.winner:
+            context['redirect_text'], context['redirect_url'] = get_winner_page_redirect_info(tournament)
             return render_winner_page(request, context)
 
         if tournament.is_countdown:
@@ -334,6 +335,13 @@ def prepare_tournament_context(tournament):
     context["lose_players"] = lose_players
 
     return context
+
+
+def get_winner_page_redirect_info(tournament):
+    if tournament.title == "Solo Tournament":
+        return "BACK TO HOMEPAGE", "/"
+    else:
+        return "BACK TO TOURNAMENTS", reverse("tournament:tournament")
 
 
 def render_waiting_lobby(request, context):

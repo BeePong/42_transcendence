@@ -8,10 +8,7 @@
 
   {% include 'tournament/tournament_name_list.html' %}
 
-  <button
-    class="button--primary"
-    onclick="navigate(`{% url 'tournament:tournament' %}`, `{% url 'tournament:tournament' %}`)"
-  >
-    BACK TO TOURNAMENTS
+  <button class="button--primary" onclick="navigate('{{ redirect_url }}')">
+    {{ redirect_text }}
   </button>
 </section>
