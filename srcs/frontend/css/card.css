@@ -12,19 +12,20 @@
   min-height: 330px;
   height: 100%;
   width: 100%;
+  position: relative;
 }
 
 .card--active {
-	outline: 1px solid var(--text-color-main);
-	box-shadow: -10px -10px var(--color-primary);
+  outline: 1px solid var(--text-color-main);
+  box-shadow: -10px -10px var(--color-primary);
 }
 
 .card--inactive {
-	outline: 1px solid var(--text-color-main);
+  outline: 1px solid var(--text-color-main);
 }
 
 .card--empty {
-	outline: 1px dashed var(--text-color-main);
+  outline: 1px dashed var(--text-color-main);
   color: var(--text-color-grey);
 }
 
@@ -39,7 +40,7 @@
 
 .card__text {
   margin-bottom: 2em;
-	font-size: var(--font-size-sm);
+  font-size: var(--font-size-sm);
   font-family: var(--font-family-alt);
   font-variation-settings: "YOPQ" 300;
   overflow-wrap: break-word;
