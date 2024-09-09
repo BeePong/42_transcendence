@@ -289,7 +289,7 @@ def create_tournament(request):
     )
 
 
-@login_required
+@login_required_json
 def tournament_lobby(request, tournament_id):
     logger.info("Tournament lobby view called")
     try:

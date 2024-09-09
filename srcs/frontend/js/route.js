@@ -15,14 +15,11 @@ const soloGamePattern = /^\/tournament\/\d+\/solo_game$/;
 
 // Handle navigation based on path or event
 function navigate(eventOrPath, redirectUrl = "/") {
-  console.log("navigate");
-  console.log("navigate window.location.pathname: ", window.location.pathname);
   const path =
     typeof eventOrPath === "string"
       ? eventOrPath
       : (eventOrPath.preventDefault(),
         eventOrPath.currentTarget.getAttribute("href"));
-  console.log("navigate path: ", path);
   if (window.location.pathname !== path) {
     const match = window.location.pathname.match(
       /^\/tournament\/(\d+)\/lobby\/?$/
@@ -30,10 +27,7 @@ function navigate(eventOrPath, redirectUrl = "/") {
     const solo_match = window.location.pathname.match(
       /^\/tournament\/(\d+)\/solo_game\/?$/
     );
-    console.log("navigate match: ", match);
-    console.log("navigate solo_match: ", solo_match);
     if (match || solo_match) {
-      console.log("URL matched websocket");
       const event = new CustomEvent("navigateAwayFromTournamentLobby");
       window.dispatchEvent(event);
     }
@@ -100,16 +94,13 @@ function updatePageContent(data, page, redirectUrl, fromWebsocket) {
   )
     changeRedirectUrlandOauthState(redirectUrl);
   if (!fromWebsocket) {
-    console.log("open websocket function");
     var match = page.match(/^\/tournament\/(\d+)\/lobby$/);
     if (match) {
-      console.log("URL matched websocket");
       var tournament_id = match[1];
       openWebSocket(tournament_id);
     }
     var solo_match = page.match(/^\/tournament\/(\d+)\/solo_game$/);
     if (solo_match) {
-      console.log("here open solo game");
       var tournament_id = solo_match[1];
       openWebSocket(tournament_id, "solo");
     }

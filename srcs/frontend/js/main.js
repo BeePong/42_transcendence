@@ -22,7 +22,6 @@ window.addEventListener("popstate", () => {
     const event = new CustomEvent("navigateAwayFromTournamentLobby");
     window.dispatchEvent(event);
   }
-  // TODO: add custom navigation event here, which will be listened to in websocket as well
   loadPage(window.location.pathname);
 });
 

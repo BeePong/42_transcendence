@@ -11,7 +11,6 @@ async function handleFormSubmit(event) {
     const response = await submitForm(form, url);
 
     if (!response.ok) {
-      // if (response.status !== 400)
       if (
         response.status !== 400 &&
         response.status !== 401 &&

@@ -1,5 +1,4 @@
 const appendNewPlayerDiv = (playerAlias) => {
-  console.log("appendNewPlayerDiv");
   const playerDiv = document.createElement("div");
   playerDiv.classList.add("tournament_lobby__name-container");
   playerDiv.innerHTML = `
@@ -15,7 +14,6 @@ const appendNewPlayerDiv = (playerAlias) => {
 };
 
 const updateNumPlayersInLobby = (numPlayersInLobby) => {
-  console.log("updateNumPlayersInLobby");
   const numPlayersInLobbyElement = document.getElementById(
     "num-players-in-lobby"
   );
@@ -36,7 +34,6 @@ function handleFullTournamentLobby(player1_alias, player2_alias) {
 }
 
 function insertCountdown(countdownValue) {
-  console.log("insertCountdown");
   const countdownElement = document.getElementById("countdown");
   if (countdownElement) countdownElement.textContent = `${countdownValue}`;
 }
