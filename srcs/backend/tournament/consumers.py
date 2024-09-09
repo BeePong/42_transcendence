@@ -448,8 +448,8 @@ class PongConsumer(AsyncWebsocketConsumer):
         return {
             "event": "countdown",
             "countdown": countdown,
-            "player1_alias": "Player1_alias",
-            "player2_alias": "Player2_alias",
+            # "player1_alias": "Player1_alias",
+            # "player2_alias": "Player2_alias",
         }
 
     @database_sync_to_async

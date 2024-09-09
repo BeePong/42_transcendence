@@ -169,8 +169,8 @@ def tournament_lobby(request, tournament_id):
         # Safely retrieve the tournament object
         tournament = get_object_or_404(Tournament, tournament_id=tournament_id)
 
-        players = list(tournament.players.values("username"))
-        usernames = [player["username"] for player in players]
+        players = list(tournament.players.values("alias"))
+        aliases = [player["alias"] for player in players]
         num_players_in_tournament = tournament.players.count()
         print("num_players_in_tournament:", num_players_in_tournament)
         # if tournament.state == "NEW":
@@ -217,7 +217,7 @@ def tournament_lobby(request, tournament_id):
                 request,
                 "tournament/tournament_waiting_lobby.html",
                 {
-                    "players_in_lobby": usernames,
+                    "players_in_lobby": aliases,
                     "num_players": tournament.num_players,
                 },
             )
@@ -227,7 +227,7 @@ def tournament_lobby(request, tournament_id):
                 request,
                 "tournament/tournament_game.html",
                 {
-                    "players_in_lobby": usernames,
+                    "players_in_lobby": aliases,
                     "num_players_in_tournament": num_players_in_tournament,
                     "num_players": tournament.num_players,
                 },
@@ -246,7 +246,7 @@ def tournament_lobby(request, tournament_id):
                 request,
                 "tournament/tournament_winner.html",
                 {
-                    "players_in_lobby": usernames,
+                    "players_in_lobby": aliases,
                     "num_players": tournament.num_players,
                     "lose_players": lose_players,
                 },
@@ -257,8 +257,8 @@ def tournament_lobby(request, tournament_id):
                 request,
                 "tournament/tournament_full_lobby.html",
                 {
-                    "match_players": usernames,
-                    "players_in_lobby": usernames,
+                    "match_players": aliases,
+                    "players_in_lobby": aliases,
                     "num_players": tournament.num_players,
                     "lose_players": lose_players,
                     "is_final": tournament.is_final,
