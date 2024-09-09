@@ -31,7 +31,7 @@ def tournament(request):
     tournaments = Tournament.objects.exclude(title="Solo Tournament").order_by(
         "-tournament_id"
     )
-    form = AliasForm(username=request.user.username)
+    form = AliasForm(user=request.user)
     tournament_data = prepare_tournament_data(tournaments, player)
 
     logger.debug(f"Number of tournaments: {len(tournament_data)}")
@@ -48,9 +48,6 @@ def tournament(request):
     )
 
 
-# TODO: the whole logic of this function, which is triggered when user click 'Join' button of a tournamet
-# has to be refactored. Not working atm. It seems to always trigger the /tournament/{tournament_id}/lobby/ page
-# First check if tournament_id is valid, then check that player don't have an active tournament, check if tournament is not full, and state = NEW, only then load the lobby page where webSocket connection will be triggered
 def handle_tournament_join_request(request, player):
     try:
         tournament_id = request.POST.get("tournament_id")
@@ -146,6 +143,8 @@ def join_waiting_lobby(tournament, player, form):
     #     status=400,
     # )
 
+     # TODO: Check state of tournament before adding player!!!!
+
     if player not in tournament.players.all():
         add_player_to_tournament(player, tournament)
         message = form_new_player_message(tournament, player)
@@ -188,7 +187,7 @@ def prepare_tournament_data(tournaments, player):
     tournament_data = []
 
     for tournament in tournaments:
-        players = list(tournament.players.values_list("username", flat=True))
+        players = list(tournament.players.values_list("alias", flat=True))
         
         tournament_data.append({
             "tournament_id": tournament.tournament_id,
@@ -197,8 +196,8 @@ def prepare_tournament_data(tournaments, player):
             "state": tournament.state,
             "num_players": tournament.num_players,
             "players": players,
-            "winner": tournament.winner.username if tournament.winner else "",
-            "has_joined": player.username in players,
+            "winner": tournament.winner.alias if tournament.winner else "",
+            "has_joined": player.alias in players,
         })
 
     return tournament_data
@@ -236,23 +235,6 @@ def create_solo_game(request):
             f"create solo game {tournament.tournament_id} final state: {tournament.state}"
         )
 
-        # Create or get a dummy user for the dummy player
-        # User = get_user_model()
-        # dummy_user, _ = User.objects.get_or_create(
-        #     username=f"dummy_user_{tournament.tournament_id}"
-        # )
-
-        # # Create or get the dummy player and associate it with the dummy user
-        # dummy_player, _ = Player.objects.get_or_create(user=dummy_user)
-        # dummy_player.alias = f"dummy-{tournament.tournament_id}"
-        # dummy_player.has_active_tournament = True
-        # dummy_player.current_tournament_id = tournament.tournament_id
-        # dummy_player.save()
-
-        # # Add the dummy player to the tournament
-        # tournament.players.add(dummy_player)
-        # tournament.save()
-
         return JsonResponse(
             {
                 "success": True,
@@ -260,13 +242,6 @@ def create_solo_game(request):
             },
             status=201,
         )
-        # else:
-        #     return JsonResponse({
-        #         'success': False,
-        #         'errors': {
-        #             'non_field_errors': ['User not authenticated']
-        #         }
-        #     }, status=401)
     return JsonResponse(
         {"success": False, "errors": {"non_field_errors": ["Invalid request method"]}},
         status=405,
