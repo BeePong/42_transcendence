@@ -217,12 +217,14 @@ class PongConsumer(AsyncWebsocketConsumer):
         try:
             matches = Match.objects.filter(tournament=self.tournament)
             num_matches = matches.count()
+            player1, player2 = None, None
             if num_matches == 0:
                 players = self.tournament.players.all()
                 num_players = self.tournament.num_players
                 random_indexes = random.sample(range(num_players), 2)
                 player1 = players[random_indexes[0]]
                 player2 = players[random_indexes[1]]
+                
             elif num_matches == 1:
                 players = self.tournament.players.all()
                 excluded_player1 = matches[0].player1
