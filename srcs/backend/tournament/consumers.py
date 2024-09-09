@@ -218,30 +218,28 @@ class PongConsumer(AsyncWebsocketConsumer):
             matches = Match.objects.filter(tournament=self.tournament)
             num_matches = matches.count()
             player1, player2 = None, None
-            if num_matches == 0:
-                players = self.tournament.players.all()
-                num_players = self.tournament.num_players
-                random_indexes = random.sample(range(num_players), 2)
-                player1 = players[random_indexes[0]]
-                player2 = players[random_indexes[1]]
-                
-            elif num_matches == 1:
-                players = self.tournament.players.all()
-                excluded_player1 = matches[0].player1
-                excluded_player2 = matches[0].player2
-                player1 = (
-                    players.exclude(player_id=excluded_player1.player_id)
-                    .exclude(player_id=excluded_player2.player_id)
-                    .first()
+            players = self.tournament.players.all()
+            num_players_in_tournament = players.count()
+            logger.info(
+                f"{self.consumer_info} get_two_random_players() Number of players in tournament: {num_players_in_tournament}"
+            )
+            if num_players_in_tournament != 4 and num_players_in_tournament != 2:
+                raise Exception(
+                    f"{self.consumer_info} ERROR get_two_random_players(): Number of players in tournament is not 2 or 4, but {num_players_in_tournament}"
                 )
-                player2 = (
-                    players.exclude(player_id=excluded_player1.player_id)
-                    .exclude(player_id=excluded_player2.player_id)
-                    .last()
+            if num_matches == 0:
+                player1 = players[0]
+                player2 = players[1]
+            elif num_matches == 1:
+                player1 = players[2]
+                player2 = players[3]
+            if (player1 is None) or (player2 is None):
+                raise Exception (
+                    f"{self.consumer_info} ERROR get_two_random_players(): One of the players is None: {player1}, {player2}"
                 )
             return player1, player2
         except Exception as e:
-            logger.error(f"{self.consumer_info} Error getting random players: {e}")
+            logger.error(f"{self.consumer_info} ERROR getting random players: {e}")
 
     @database_sync_to_async
     def get_players_for_final_match(self):
@@ -317,7 +315,7 @@ class PongConsumer(AsyncWebsocketConsumer):
             if await self.get_tournament_property("is_started"):
                 logger.info(f"{self.consumer_info} Tournament is already started")
                 return
-            self.set_tournament(is_started=True)
+            await self.set_tournament(is_started=True)
             logger.info(f"{self.consumer_info} Starting tournament")
 
             # num players for debugging only
@@ -448,6 +446,13 @@ class PongConsumer(AsyncWebsocketConsumer):
             await self.channel_layer.group_add(self.pong_group_name, self.channel_name)
             await self.accept()
 
+            # And then reject if user is not authenticated or tournament does not exist
+            if not self.tournament or not self.scope["user"].is_authenticated:
+                await self.disconnect()
+                return
+            self.username = self.scope["user"].username
+            self.consumer_info = await self.form_consumer_info()
+
             tournament_state = await self.get_tournament_property("state")
             logger.info(f"Current tournament state: {tournament_state}")
             tournament_is_started = await self.get_tournament_property("is_started")
@@ -464,15 +469,6 @@ class PongConsumer(AsyncWebsocketConsumer):
                 await self.start_tournament()
             else:
                 logger.info("Tournament is not started")
-
-            # And then reject if user is not authenticated or tournament does not exist
-            if not self.tournament or not self.scope["user"].is_authenticated:
-                await self.disconnect()
-                return
-            self.username = self.scope["user"].username
-            self.consumer_info = await self.form_consumer_info()
-            # Check what's going on with the games dictionary
-            logger.info(f"{self.consumer_info} Games dictionary: {games}")
 
         except Exception as e:
             logger.info(f"{self.consumer_info} Error in connect method: {e}")

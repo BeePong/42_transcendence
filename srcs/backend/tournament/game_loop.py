@@ -67,7 +67,7 @@ class GameLoop:
     def handle_key_press(self, message, player_number):
         try:
 
-            logger.info(f"{self.channel_info} Handling key press from {player_number}")
+            #logger.info(f"{self.channel_info} Handling key press from {player_number}")
             is_pressed = message["keyAction"] == "keydown"
             if message["key"] == "ArrowUp":
                 if player_number == 1:

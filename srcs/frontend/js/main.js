@@ -15,7 +15,10 @@ window.addEventListener("popstate", () => {
   const match = window.location.pathname.match(
     /^\/tournament\/(\d+)\/lobby\/?$/
   );
-  if (match) {
+  const solo_match = window.location.pathname.match(
+    /^\/tournament\/(\d+)\/solo_game\/?$/
+  );
+  if (match || solo_match) {
     const event = new CustomEvent("navigateAwayFromTournamentLobby");
     window.dispatchEvent(event);
   }

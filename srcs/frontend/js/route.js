@@ -28,8 +28,12 @@ function navigate(eventOrPath, redirectUrl = "/") {
     const match = window.location.pathname.match(
       /^\/tournament\/(\d+)\/lobby\/?$/
     );
+    const solo_match = window.location.pathname.match(
+      /^\/tournament\/(\d+)\/solo_game\/?$/
+    );
     console.log("navigate match: ", match);
-    if (match) {
+    console.log("navigate solo_match: ", solo_match);
+    if (match || solo_match) {
       console.log("URL matched websocket");
       const event = new CustomEvent("navigateAwayFromTournamentLobby");
       window.dispatchEvent(event);

@@ -185,22 +185,22 @@ function updateCanvas(context, game_data) {
   drawPaddle(context, game_data.player2.y, "player2");
 }
 
-function openWebSocket(tournament_id, type = 'tournament') {
+function openWebSocket(tournament_id, type = "tournament") {
   if (socket && socket_tournament_id === tournament_id) {
     console.log("Socket already open, returning from openWebSocket");
     return;
   }
   // const canvasContext = getContext();
-  
+
   var url;
-  if (type === 'solo')
+  if (type === "solo")
     url =
-    (window.location.protocol == "https:" ? "wss://" : "ws://") +
-    window.location.host +
-    "/ws/pong/" +
-    tournament_id +
-    "/" +
-    "?is_bot=True";
+      (window.location.protocol == "https:" ? "wss://" : "ws://") +
+      window.location.host +
+      "/ws/pong/" +
+      tournament_id +
+      "/" +
+      "?is_bot=True";
   else
     url =
       (window.location.protocol == "https:" ? "wss://" : "ws://") +
@@ -213,8 +213,7 @@ function openWebSocket(tournament_id, type = 'tournament') {
   console.log("Starting WebSocket on URL: ", url);
   socket = new WebSocket(url);
 
-  if (type === 'solo')
-  {
+  if (type === "solo") {
     const canvasContext = getContext();
     console.log("canvasContext", canvasContext);
     if (canvasContext) drawEmptyCanvas(canvasContext);
@@ -223,8 +222,18 @@ function openWebSocket(tournament_id, type = 'tournament') {
   // TODO: remember to close websocket after the tournament is over
 
   socket.onmessage = function (e) {
-    console.log("WebSocket message received");
-    console.log("window.location.pathname", window.location.pathname);
+    //console.log("WebSocket message received");
+    const match = window.location.pathname.match(
+      /^\/tournament\/(\d+)\/lobby\/?$/
+    );
+    const solo_match = window.location.pathname.match(
+      /^\/tournament\/(\d+)\/solo_game\/?$/
+    );
+    if (!(match || solo_match)) {
+      //console.log("Not in tournament lobby, closing websocket");
+      socket.close();
+      return;
+    }
     let data;
     try {
       data = JSON.parse(e.data);
