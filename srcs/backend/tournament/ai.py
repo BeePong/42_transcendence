@@ -29,7 +29,7 @@ LOWER_LIMIT = FIELD_HEIGHT - PADDING_THICKNESS - PADDLE_HEIGHT / 2
 
 
 # Step 1: Log in to the website
-def login(tournament_id):
+def login(tournament_id, player_alias):
     session = requests.Session()
 
     # Step 1a: Get the CSRF token by visiting the login page
@@ -37,7 +37,7 @@ def login(tournament_id):
     response = session.get(login_page_url, verify=False)
     if response.status_code != 200:
         print("Failed to load login page.")
-        return None
+        return None, None
 
     # Parse the login page to find the CSRF token
     soup = BeautifulSoup(response.text, "html.parser")
@@ -45,8 +45,14 @@ def login(tournament_id):
 
     # Step 1b: Submit the login form with the CSRF token
     login_url = "https://nginx:8443/page/accounts/login/"
+    default_username = "AI_Bot" + str(tournament_id)
+    username = (
+        "AI_Bot" + str(tournament_id) + "butBetter"
+        if player_alias == default_username
+        else default_username
+    )
     payload = {
-        "username": "AI_Bot" + str(tournament_id),  # Replace with your actual username
+        "username": username,
         "password": "test123!",  # Replace with your actual password
         "csrfmiddlewaretoken": csrf_token,  # Include the CSRF token
     }
@@ -59,14 +65,14 @@ def login(tournament_id):
     # Check if login was successful
     if response.status_code == 200:
         print("Login successful.")
-        return session
+        return session, username
     elif response.status_code == 400:
         print("Login failed: User does not exist. Attempting to register...")
 
         # Step 2: Register the user
         register_url = "https://nginx:8443/page/accounts/register/"
         register_payload = {
-            "username": "AI_Bot" + str(tournament_id),  # Same username as above
+            "username": username,  # Same username as above
             "password1": "test123!",  # Same password as above
             "password2": "test123!",  # Password confirmation
             "csrfmiddlewaretoken": csrf_token,  # CSRF token
@@ -76,7 +82,7 @@ def login(tournament_id):
         response = session.get(register_url, verify=False)
         if response.status_code != 200:
             print("Failed to load registration page.")
-            return None
+            return None, None
 
         soup = BeautifulSoup(response.text, "html.parser")
         csrf_token = soup.find("input", {"name": "csrfmiddlewaretoken"}).get("value")
@@ -93,13 +99,13 @@ def login(tournament_id):
         # Check if registration was successful
         if response.status_code == 201:
             print("Registration successful. Logging in...")
-            return session  # Attempt to log in again after registration
+            return session, username  # Attempt to log in again after registration
         else:
             print(f"Registration failed. Status code: {response.status_code}")
-            return None
+            return None, None
     else:
         print(f"Login failed. Status code: {response.status_code}")
-        return None
+        return None, None
 
 
 async def calculate_ai_move(game_state_data):
@@ -189,7 +195,7 @@ async def send_game_data(websocket, key, key_action):
 
 
 # Step 2: Use the session to establish a WebSocket connection
-async def ai_bot(session, tournament_id):
+async def ai_bot(session, tournament_id, username):
     # Step 1: Get CSRF token
     tournament_page_url = "https://nginx:8443/page/tournament/"
     try:
@@ -216,7 +222,7 @@ async def ai_bot(session, tournament_id):
     # tournament_id = tournament_id  # Replace with the actual tournament ID
     join_data = {
         "tournament_id": tournament_id,
-        "alias": f"AI_Bot{tournament_id}",  # Set alias to be the same as username
+        "alias": username,  # Set alias to be the same as username
         "csrfmiddlewaretoken": csrf_token,
     }
 
@@ -304,16 +310,19 @@ async def ai_bot(session, tournament_id):
 
 
 # Main execution
-def run_ai_bot(tournament_id):
-    session = login(tournament_id)
+def run_ai_bot(tournament_id, player_alias):
+    session, username = login(tournament_id, player_alias)
     if session:
-        asyncio.get_event_loop().run_until_complete(ai_bot(session, tournament_id))
+        asyncio.get_event_loop().run_until_complete(
+            ai_bot(session, tournament_id, username)
+        )
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python ai.py <tournament_id>")
+    if len(sys.argv) != 3:
+        print("Usage: python ai.py <tournament_id> <player_alias>")
         sys.exit(1)
 
     tournament_id = int(sys.argv[1])
-    run_ai_bot(tournament_id)
+    player_alias = sys.argv[2]
+    run_ai_bot(tournament_id, player_alias)
