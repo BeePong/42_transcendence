@@ -95,8 +95,8 @@ class GameLoop:
                 #     {"event": "game_started", "countdown": self.tournament_countdown},
                 #     "tournament",
                 # )
-                if not self.is_tournament_countdown:
-                    self.is_tournament_countdown = True
+                # if not self.is_tournament_countdown:
+                #     self.is_tournament_countdown = True
                 self.prev_tournament_countdown = self.tournament_countdown
                 self.tournament_countdown = (
                     settings.COUNTDOWN_TIME
@@ -369,6 +369,7 @@ class GameLoop:
                     await self.send_game_state_to_all()
                 if self.game_state.state == "FINISHED":
                     logger.info("Game finished")
+                    self.tournament.is_countdown = True
                     # should we send tournament message instead? or nothing?
                     await self.send_game_state_to_all()
                 await asyncio.sleep(1 / settings.FPS)
@@ -376,6 +377,7 @@ class GameLoop:
                 logger.error(f"Error in game loop: {e}")
         logger.info(f"{self.channel_info} Game loop finished")
         if self.game_state.state == "FINISHED":
+            self.tournament.is_countdown = True
             game_over_message = {
                 "event": "game_finished",
                 "winner": self.match.winner.alias,
