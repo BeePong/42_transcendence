@@ -30,7 +30,8 @@ export async function loadPage(
   path,
   redirectUrl = "/",
   fromNavigate = false,
-  queryString = ""
+  queryString = "",
+  fromWebsocket = false
 ) {
   // If the path is '/', set page to '/home'.
   // Otherwise, remove the trailing slash from the path and set page to the resulting string.
@@ -60,14 +61,14 @@ export async function loadPage(
       history.pushState(null, null, path);
 
     const data = await response.text();
-    updatePageContent(data, page, redirectUrl); // Handle content updates
+    updatePageContent(data, page, redirectUrl, fromWebsocket); // Handle content updates
   } catch (error) {
     console.error("There was a problem with the fetch operation:", error);
   }
 }
 
 // Update page content and handle specific actions based on the page
-function updatePageContent(data, page, redirectUrl) {
+function updatePageContent(data, page, redirectUrl, fromWebsocket) {
   document.getElementById("content").innerHTML = data;
 
   // Add the redirect URL for login and register pages
@@ -76,18 +77,22 @@ function updatePageContent(data, page, redirectUrl) {
     redirectUrl !== "/"
   )
     changeRedirectUrlandOauthState(redirectUrl);
-  var match = page.match(/^\/tournament\/(\d+)\/lobby$/);
-  if (match) {
-    console.log("URL matched websocket");
-    var tournament_id = match[1];
-    openWebSocket(tournament_id);
+  if (!fromWebsocket) {
+    console.log("open websocket function");
+    var match = page.match(/^\/tournament\/(\d+)\/lobby$/);
+    if (match) {
+      console.log("URL matched websocket");
+      var tournament_id = match[1];
+      openWebSocket(tournament_id);
+    }
+    var solo_match = page.match(/^\/tournament\/(\d+)\/solo_game$/);
+    if (solo_match) {
+      console.log("here open solo game");
+      var tournament_id = solo_match[1];
+      openWebSocket(tournament_id, "solo");
+    }
   }
-  var solo_match = page.match(/^\/tournament\/(\d+)\/solo_game$/);
-  if (solo_match) {
-    console.log("here open solo game");
-    var tournament_id = solo_match[1];
-    openWebSocket(tournament_id, "solo");
-  }
+
   // if (/^\/tournament\/\d+\/lobby$/.test(page)) { // Perform countdown in tournament lobby if the list is full. Otherwise, wait for other players.
   // 	if (document.querySelector('.full')) {
   // 		if (!document.querySelector('.winner')) {

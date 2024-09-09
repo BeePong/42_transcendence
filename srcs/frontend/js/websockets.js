@@ -185,22 +185,21 @@ function updateCanvas(context, game_data) {
   drawPaddle(context, game_data.player2.y, "player2");
 }
 
-function openWebSocket(tournament_id, type = 'tournament') {
+function openWebSocket(tournament_id, type = "tournament") {
   if (socket && socket_tournament_id === tournament_id) {
     console.log("Socket already open, returning from openWebSocket");
     return;
   }
   // const canvasContext = getContext();
-  
   var url;
-  if (type === 'solo')
+  if (type === "solo")
     url =
-    (window.location.protocol == "https:" ? "wss://" : "ws://") +
-    window.location.host +
-    "/ws/pong/" +
-    tournament_id +
-    "/" +
-    "?is_bot=True";
+      (window.location.protocol == "https:" ? "wss://" : "ws://") +
+      window.location.host +
+      "/ws/pong/" +
+      tournament_id +
+      "/" +
+      "?is_bot=True";
   else
     url =
       (window.location.protocol == "https:" ? "wss://" : "ws://") +
@@ -213,8 +212,7 @@ function openWebSocket(tournament_id, type = 'tournament') {
   console.log("Starting WebSocket on URL: ", url);
   socket = new WebSocket(url);
 
-  if (type === 'solo')
-  {
+  if (type === "solo") {
     const canvasContext = getContext();
     console.log("canvasContext", canvasContext);
     if (canvasContext) drawEmptyCanvas(canvasContext);
@@ -271,7 +269,10 @@ function openWebSocket(tournament_id, type = 'tournament') {
               console.log("here handleFullTournamentLobby");
               console.log("player1_alias", tournamentMessage.player1_alias);
               console.log("player2_alias", tournamentMessage.player2_alias);
-              handleFullTournamentLobby(tournamentMessage.player1_alias, tournamentMessage.player2_alias);
+              handleFullTournamentLobby(
+                tournamentMessage.player1_alias,
+                tournamentMessage.player2_alias
+              );
             }
             break;
           case "countdown":
@@ -282,7 +283,8 @@ function openWebSocket(tournament_id, type = 'tournament') {
             }
             insertCountdown(tournamentMessage.countdown);
             if (tournamentMessage.countdown === 1) {
-              loadPage(window.location.pathname);
+              console.log("loadPage for countdown");
+              loadPage(window.location.pathname, "/", false, "", true);
               const canvasContext = getContext();
               if (canvasContext) drawEmptyCanvas(canvasContext);
             }
@@ -299,7 +301,8 @@ function openWebSocket(tournament_id, type = 'tournament') {
             console.log("game_finished");
             console.log("game winner is", tournamentMessage.winner);
             // TODO: maybe handle differently instead of just reloading
-            loadPage(window.location.pathname);
+            console.log("loadPage for game_finished");
+            loadPage(window.location.pathname, "/", false, "", true);
             break;
           case "tournament_finished":
             // TODO: render winner page instead of reloading
@@ -317,9 +320,11 @@ function openWebSocket(tournament_id, type = 'tournament') {
         break;
 
       case "game":
-        const gameState = data.message;
-        const canvasContext = getContext();
-        if (canvasContext) updateCanvas(canvasContext, gameState);
+        if (data.message.countdown <= 3) {
+          const gameState = data.message;
+          const canvasContext = getContext();
+          if (canvasContext) updateCanvas(canvasContext, gameState);
+        }
         break;
     }
 
