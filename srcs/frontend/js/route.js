@@ -1,6 +1,19 @@
 import { openWebSocket } from "./websockets.js";
 import { tournamentLobbyCountdown } from "./tournament.js";
 
+const allowedRoutes = [
+  "/home",
+  "/about",
+  "/accounts/login",
+  "/accounts/register",
+  "/tournament",
+  "/tournament/create",
+  "/accounts/oauth_error",
+];
+
+const tournamentLobbyPattern = /^\/tournament\/\d+\/lobby$/;
+const soloGamePattern = /^\/tournament\/\d+\/solo_game$/;
+
 // Handle navigation based on path or event
 function navigate(eventOrPath, redirectUrl = "/") {
   console.log("navigate");
@@ -15,8 +28,12 @@ function navigate(eventOrPath, redirectUrl = "/") {
     const match = window.location.pathname.match(
       /^\/tournament\/(\d+)\/lobby\/?$/
     );
+    const solo_match = window.location.pathname.match(
+      /^\/tournament\/(\d+)\/solo_game\/?$/
+    );
     console.log("navigate match: ", match);
-    if (match) {
+    console.log("navigate solo_match: ", solo_match);
+    if (match || solo_match) {
       console.log("URL matched websocket");
       const event = new CustomEvent("navigateAwayFromTournamentLobby");
       window.dispatchEvent(event);
@@ -36,8 +53,14 @@ export async function loadPage(
   // If the path is '/', set page to '/home'.
   // Otherwise, remove the trailing slash from the path and set page to the resulting string.
   const page = path === "/" ? "/home" : path.replace(/\/$/, "");
+  const isAllowed =
+    allowedRoutes.includes(page) ||
+    tournamentLobbyPattern.test(page) ||
+    soloGamePattern.test(page);
   try {
-    const response = await fetch(`/page${page}/${queryString}`);
+    let response;
+    if (isAllowed) response = await fetch(`/page${page}/${queryString}`);
+    else response = await fetch("/page/custom_404/");
 
     if (!response.ok && response.status !== 404) {
       if (

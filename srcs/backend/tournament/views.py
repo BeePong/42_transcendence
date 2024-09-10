@@ -32,7 +32,7 @@ def tournament(request):
         "-tournament_id"
     )
     form = AliasForm(user=request.user)
-    tournament_data = prepare_tournament_data(tournaments)
+    tournament_data = prepare_tournament_data(tournaments, player)
 
     logger.debug(f"Number of tournaments: {len(tournament_data)}")
     logger.debug(f"Tournament data: {tournament_data}")
@@ -143,8 +143,6 @@ def join_waiting_lobby(tournament, player, form):
     #     status=400,
     # )
 
-    # TODO: Check state of tournament before adding player!!!!
-
     if player not in tournament.players.all():
         add_player_to_tournament(player, tournament)
         message = form_new_player_message(tournament, player)
@@ -183,19 +181,24 @@ def start_tournament(tournament):
     tournament.save()
 
 
-def prepare_tournament_data(tournaments):
-    return [
-        {
+def prepare_tournament_data(tournaments, player):
+    tournament_data = []
+
+    for tournament in tournaments:
+        players = list(tournament.players.values_list("alias", flat=True))
+        
+        tournament_data.append({
             "tournament_id": tournament.tournament_id,
             "name": tournament.title,
             "description": tournament.description,
             "state": tournament.state,
             "num_players": tournament.num_players,
-            "players": [player.alias for player in tournament.players.all()],
+            "players": players,
             "winner": tournament.winner.alias if tournament.winner else "",
-        }
-        for tournament in tournaments
-    ]
+            "has_joined": player.alias in players,
+        })
+
+    return tournament_data
 
 
 @login_required_json
@@ -348,5 +351,5 @@ def render_winner_page(request, context):
 
 def render_full_lobby(request, context):
     logger.info("Rendering full lobby")
-    context.update({"match_players": context["players_in_lobby"]})
+    # context.update({"match_players": context["players_in_lobby"]})
     return render(request, "tournament/tournament_full_lobby.html", context)

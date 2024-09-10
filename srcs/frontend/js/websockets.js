@@ -221,8 +221,18 @@ function openWebSocket(tournament_id, type = "tournament") {
   // TODO: remember to close websocket after the tournament is over
 
   socket.onmessage = function (e) {
-    console.log("WebSocket message received");
-    console.log("window.location.pathname", window.location.pathname);
+    //console.log("WebSocket message received");
+    const match = window.location.pathname.match(
+      /^\/tournament\/(\d+)\/lobby\/?$/
+    );
+    const solo_match = window.location.pathname.match(
+      /^\/tournament\/(\d+)\/solo_game\/?$/
+    );
+    if (!(match || solo_match)) {
+      //console.log("Not in tournament lobby, closing websocket");
+      socket.close();
+      return;
+    }
     let data;
     try {
       data = JSON.parse(e.data);
