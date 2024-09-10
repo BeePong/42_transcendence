@@ -328,7 +328,9 @@ def prepare_tournament_context(tournament):
     }
 
     matches = Match.objects.filter(tournament=tournament)
-    lose_players = [match.determine_loser().alias for match in matches]
+    
+    # get aliases for all losers that exist. determine_loser returns either a player or none.
+    lose_players = [match.determine_loser().alias  for match in matches if match.determine_loser()]
     context["lose_players"] = lose_players
 
     return context

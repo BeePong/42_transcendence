@@ -68,7 +68,10 @@ class Match(models.Model):
     def determine_loser(self):
         if self.winner == self.player1:
             return self.player2
-        return self.player1
+        elif self.winner == self.player2:
+            return self.player1
+        else:
+            return None
 
 
 class Tournament(models.Model):
