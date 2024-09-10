@@ -610,7 +610,7 @@ class PongConsumer(AsyncWebsocketConsumer):
         try:
             logger.info(f"{self.consumer_info} receive()")
             if not await self.get_tournament_property("current_match"):
-                self.set_current_match()
+                await self.set_current_match()
             user = self.scope["user"]
             # only receive messages from players in the current match, ignore otherwise
             if not user.is_authenticated:
