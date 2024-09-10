@@ -40,15 +40,10 @@ class GameLoop:
         self.channel_info = None
         self.ball_new_x = 100
         self.ball_new_y = 100
-        
-    @database_sync_to_async
-    def set_tournament_is_countdown(self, is_countdown):
-        self.tournament.is_countdown = is_countdown
-        self.tournament.save()
 
     @database_sync_to_async
     def set_tournament_countdown(self, countdown):
-        # self.tournament.is_countdown = True
+        self.tournament.is_countdown = True
         self.tournament.countdown = countdown
         self.tournament.save()
 
@@ -72,7 +67,7 @@ class GameLoop:
     def handle_key_press(self, message, player_number):
         try:
 
-            logger.info(f"{self.channel_info} Handling key press from {player_number}")
+            #logger.info(f"{self.channel_info} Handling key press from {player_number}")
             is_pressed = message["keyAction"] == "keydown"
             if message["key"] == "ArrowUp":
                 if player_number == 1:
@@ -94,15 +89,8 @@ class GameLoop:
                 time.time() - self.game_state.round_start_time
                 <= settings.COUNTDOWN_TIME / 2
             ):
-                await self.set_tournament_is_countdown(False)
-                #self.tournament.is_countdown = False
-
-                # await self.send_message_to_all(
-                #     {"event": "game_started", "countdown": self.tournament_countdown},
-                #     "tournament",
-                # )
-                # if not self.is_tournament_countdown:
-                #     self.is_tournament_countdown = True
+                if not self.is_tournament_countdown:
+                    self.is_tournament_countdown = True
                 self.prev_tournament_countdown = self.tournament_countdown
                 self.tournament_countdown = (
                     settings.COUNTDOWN_TIME
@@ -124,7 +112,6 @@ class GameLoop:
             ):
                 if self.is_tournament_countdown:
                     self.is_tournament_countdown = False
-                    # tournament.is_countdown = False
                 self.game_state.countdown = settings.COUNTDOWN_TIME - int(
                     time.time() - self.game_state.round_start_time
                 )
@@ -375,8 +362,6 @@ class GameLoop:
                     await self.send_game_state_to_all()
                 if self.game_state.state == "FINISHED":
                     logger.info("Game finished")
-                    await self.set_tournament_is_countdown(True)
-                    # self.tournament.is_countdown = True
                     # should we send tournament message instead? or nothing?
                     await self.send_game_state_to_all()
                 await asyncio.sleep(1 / settings.FPS)
@@ -384,8 +369,6 @@ class GameLoop:
                 logger.error(f"Error in game loop: {e}")
         logger.info(f"{self.channel_info} Game loop finished")
         if self.game_state.state == "FINISHED":
-            await self.set_tournament_is_countdown(True)
-            #self.tournament.is_countdown = True
             game_over_message = {
                 "event": "game_finished",
                 "winner": self.match.winner.alias,
