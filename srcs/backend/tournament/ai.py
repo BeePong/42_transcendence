@@ -53,7 +53,7 @@ def login(tournament_id, player_alias):
     )
     payload = {
         "username": username,
-        "password": "test123!",  # Replace with your actual password
+        "password": os.getenv("AIBOT_PW"),  # Replace with your actual password
         "csrfmiddlewaretoken": csrf_token,  # Include the CSRF token
     }
 
