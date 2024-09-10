@@ -427,8 +427,8 @@ class PongConsumer(AsyncWebsocketConsumer):
         return {
             "event": "countdown",
             "countdown": countdown,
-            "player1_alias": "Player1_alias",
-            "player2_alias": "Player2_alias",
+            # "player1_alias": "Player1_alias",
+            # "player2_alias": "Player2_alias",
         }
 
     @database_sync_to_async
@@ -476,19 +476,6 @@ class PongConsumer(AsyncWebsocketConsumer):
         if hasattr(self.tournament, propertyKey):
             return getattr(self.tournament, propertyKey)
         return None
-
-    def spawn_ai_bot(self):
-        try:
-            subprocess.Popen(
-                ["python", "/beePong/tournament/ai.py", str(self.tournament_id)]
-            )
-            logger.info(
-                f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}] AI bot process spawned for tournament {self.tournament_id}"
-            )
-        except Exception as e:
-            logger.error(
-                f"[{self.channel_name[-4:]} {self.tournament_id} {self.username}] Error spawning AI bot: {e}"
-            )
 
     async def connect(self):
         try:
@@ -623,7 +610,7 @@ class PongConsumer(AsyncWebsocketConsumer):
         try:
             logger.info(f"{self.consumer_info} receive()")
             if not await self.get_tournament_property("current_match"):
-                self.set_current_match()
+                await self.set_current_match()
             user = self.scope["user"]
             # only receive messages from players in the current match, ignore otherwise
             if not user.is_authenticated:

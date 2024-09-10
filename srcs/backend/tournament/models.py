@@ -68,7 +68,10 @@ class Match(models.Model):
     def determine_loser(self):
         if self.winner == self.player1:
             return self.player2
-        return self.player1
+        elif self.winner == self.player2:
+            return self.player1
+        else:
+            return None
 
 
 class Tournament(models.Model):
@@ -103,7 +106,7 @@ class Tournament(models.Model):
         null=True,
         blank=True,
     )
-    is_countdown = models.BooleanField(default=False)
+    is_countdown = models.BooleanField(default=True)
     countdown = models.IntegerField(default=0)
 
     def __str__(self):

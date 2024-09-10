@@ -191,7 +191,6 @@ function openWebSocket(tournament_id, type = "tournament") {
     return;
   }
   // const canvasContext = getContext();
-
   var url;
   if (type === "solo")
     url =
@@ -278,34 +277,42 @@ function openWebSocket(tournament_id, type = "tournament") {
               tournamentMessage.num_players
             ) {
               console.log("here handleFullTournamentLobby");
-              handleFullTournamentLobby();
+              console.log("player1_alias", tournamentMessage.player1_alias);
+              console.log("player2_alias", tournamentMessage.player2_alias);
+              handleFullTournamentLobby(
+                tournamentMessage.player1_alias,
+                tournamentMessage.player2_alias
+              );
             }
             break;
           case "countdown":
             const countdown = tournamentMessage.countdown;
             console.log("tournament countdown: ", countdown);
-            // if (tournamentMessage.countdown === COUNTDOWN_TIME / 2) {
-            //   console.log("countdown is ", COUNTDOWN_TIME / 2);
-            //   insertPlayersInMatch(
-            //     tournamentMessage.player1_alias,
-            //     tournamentMessage.player2_alias
-            //   );
-            // }
-            // insertCountdown(tournamentMessage.countdown);
+            if (tournamentMessage.countdown === COUNTDOWN_TIME / 2) {
+              console.log("countdown is ", COUNTDOWN_TIME / 2);
+            }
+            insertCountdown(tournamentMessage.countdown);
+            if (tournamentMessage.countdown === 1) {
+              console.log("loadPage for countdown");
+              loadPage(window.location.pathname, "/", false, "", true);
+              const canvasContext = getContext();
+              if (canvasContext) drawEmptyCanvas(canvasContext);
+            }
             break;
           // maybe not needed? just send game message instead
-          case "game_started":
-            console.log("game_started case");
-            loadPage(window.location.pathname);
-            console.log("game_started case after loadPage");
-            const canvasContext = getContext();
-            if (canvasContext) drawEmptyCanvas(canvasContext);
-            break;
+          // case "game_started":
+          //   console.log("game_started case");
+          //   loadPage(window.location.pathname);
+          //   console.log("game_started case after loadPage");
+          //   const canvasContext = getContext();
+          //   if (canvasContext) drawEmptyCanvas(canvasContext);
+          //   break;
           case "game_finished":
             console.log("game_finished");
             console.log("game winner is", tournamentMessage.winner);
             // TODO: maybe handle differently instead of just reloading
-            loadPage(window.location.pathname);
+            console.log("loadPage for game_finished");
+            loadPage(window.location.pathname, "/", false, "", true);
             break;
           case "tournament_finished":
             // TODO: render winner page instead of reloading
@@ -323,9 +330,11 @@ function openWebSocket(tournament_id, type = "tournament") {
         break;
 
       case "game":
-        const gameState = data.message;
-        const canvasContext = getContext();
-        if (canvasContext) updateCanvas(canvasContext, gameState);
+        if (data.message.countdown <= 3) {
+          const gameState = data.message;
+          const canvasContext = getContext();
+          if (canvasContext) updateCanvas(canvasContext, gameState);
+        }
         break;
     }
 
