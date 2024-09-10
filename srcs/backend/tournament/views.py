@@ -136,12 +136,11 @@ def join_waiting_lobby(tournament, player, form):
     )
     form.save()
 
-    # Commented out for debugging purposes
-    # if player.has_active_tournament:
-    #   return JsonResponse(
-    #      {"success": False, "error": "Player already has an active tournament"},
-    #     status=400,
-    # )
+    if player.has_active_tournament:
+        return JsonResponse(
+            {"success": False, "error": "Player already has an active tournament"},
+            status=400,
+        )
 
     if player not in tournament.players.all():
         add_player_to_tournament(player, tournament)
