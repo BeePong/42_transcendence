@@ -92,9 +92,9 @@ function handleFullTournamentLobby(player1_alias, player2_alias) {
   document.getElementById("tournament-lobby-section").classList.add("full");
   document.querySelector(".tournament_lobby__header").innerHTML =
     'BEEPONG CUP IS STARTING IN <span id="countdown">3</span>...';
-  document.querySelector(
-    ".tournament_lobby__description"
-  ).innerHTML = `<span id="player1">${player1_alias}</span> vs <span id="player2">${player2_alias}</span>`;
+  //document.querySelector(
+  //  ".tournament_lobby__description"
+  //).innerHTML = `<span id="player1">${player1_alias}</span> vs <span id="player2">${player2_alias}</span>`;
   const playerCount = document.querySelector(".tournament_lobby__player-count");
   if (playerCount) {
     playerCount.remove();
