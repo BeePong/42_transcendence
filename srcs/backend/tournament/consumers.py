@@ -270,45 +270,24 @@ class PongConsumer(AsyncWebsocketConsumer):
             logger.error(f"{self.consumer_info} Error ending final game: {e}")
 
     @database_sync_to_async
-    def get_two_random_players(self):
+    def get_two_first_players(self):
         try:
-            matches = Match.objects.filter(tournament=self.tournament)
-            num_matches = matches.count()
-            player1, player2 = None, None
             players = self.tournament.players.all()
-            # TODO: remove the below, debug only
-            if not players:
-                logger.error(
-                    f"{self.consumer_info} get_two_random_players() players is None"
-                )
-                raise Exception(
-                    f"{self.consumer_info} ERROR get_two_random_players(): players is None"
-                )
-            num_players_in_tournament = players.count()
-            logger.info(
-                f"{self.consumer_info} get_two_random_players() Number of players in tournament: {num_players_in_tournament}"
-            )
-            if num_players_in_tournament != 4 and num_players_in_tournament != 2:
-                raise Exception(
-                    f"{self.consumer_info} ERROR get_two_random_players(): Number of players in tournament is not 2 or 4, but {num_players_in_tournament}"
-                )
-            if num_matches == 0 or num_players_in_tournament == 2:
-                player1 = players[0]
-                player2 = players[1]
-            elif num_matches == 1:
-                if num_players_in_tournament != 4:
-                    raise Exception(
-                        f"{self.consumer_info} ERROR get_two_random_players(): Number of players should be 4 because match already exists, but it's {num_players_in_tournament}"
-                    )
-                player1 = players[2]
-                player2 = players[3]
-            if (player1 is None) or (player2 is None):
-                raise Exception(
-                    f"{self.consumer_info} ERROR get_two_random_players(): One of the players is None: {player1}, {player2}"
-                )
+            player1 = players[0]
+            player2 = players[1]
             return player1, player2
         except Exception as e:
-            logger.error(f"{self.consumer_info} ERROR getting random players: {e}")
+            logger.error(f"{self.consumer_info} Error getting two first players: {e}")
+        
+    @database_sync_to_async
+    def get_two_last_players(self):
+        try:
+            players = self.tournament.players.all()
+            player1 = players[2]
+            player2 = players[3]
+            return player1, player2
+        except Exception as e:
+            logger.error(f"{self.consumer_info} Error getting two last players: {e}")
 
     @database_sync_to_async
     def get_players_for_final_match(self):
@@ -364,7 +343,7 @@ class PongConsumer(AsyncWebsocketConsumer):
                 # finalise first game
                 await self.destroy_game()
                 # create second game
-                player1, player2 = await self.get_two_random_players()
+                player1, player2 = await self.get_two_last_players()
                 await self.create_match(player1, player2)
                 # run second game
                 is_loop_running = await self.is_loop_running()
@@ -409,8 +388,8 @@ class PongConsumer(AsyncWebsocketConsumer):
             logger.info(
                 f"{self.consumer_info} Number of players expected in starting tournament: {num_players_expected}"
             )
-            # create first match with 2 random players
-            player1, player2 = await self.get_two_random_players()
+            # create first match
+            player1, player2 = await self.get_two_first_players()
             await self.create_match(player1, player2)
             # start game loop for first match
             is_loop_running = await self.is_loop_running()
