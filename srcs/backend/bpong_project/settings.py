@@ -29,6 +29,7 @@ ALLOWED_HOSTS = [
     "beepong-backendDummy",
     "nginx",
     "c1r3p3.hive.fi",
+    "172.50.70.189",
 ]
 
 # Application definition
@@ -161,6 +162,7 @@ CSRF_TRUSTED_ORIGINS = [
     "https://nginx",
     "https://localhost:8443",
     "https://c1r3p3.hive.fi:8443",
+    "https://172.50.70.189:8443",
 ]
 
 # Game settings TODO: use them in front-end and back-end

@@ -278,7 +278,7 @@ class PongConsumer(AsyncWebsocketConsumer):
             return player1, player2
         except Exception as e:
             logger.error(f"{self.consumer_info} Error getting two first players: {e}")
-        
+
     @database_sync_to_async
     def get_two_last_players(self):
         try:
@@ -316,13 +316,25 @@ class PongConsumer(AsyncWebsocketConsumer):
 
     def end_game_callback(self, future):
         asyncio.ensure_future(self.end_game(future))
+        
+    #@database_sync_to_async
+    #def unset_players_active_tournament(self):
+    #    try:
+    #        players = instance.players.all()
+    #        for player in players:
+    #            player.current_tournament_id = -1
+    #            player.has_active_tournament = False
+    #            player.save()
+    #    except
 
     async def finish_tournament(self):
         try:
             await self.send_message_to_all(
                 await self.form_tournament_finished_message(), "tournament"
             )
-            await self.set_tournament(state="FINISHED", is_started=False)
+            await self.set_tournament(state="FINISHED")
+            await self.set_tournament(is_started=False)
+            await self.set_tournament(is_final=True)
             logger.info(f"{self.consumer_info} Tournament finished")
         except Exception as e:
             logger.error(f"{self.consumer_info} Error finishing tournament: {e}")
@@ -609,8 +621,8 @@ class PongConsumer(AsyncWebsocketConsumer):
 
         try:
             logger.info(f"{self.consumer_info} receive()")
-            if not await self.get_tournament_property("current_match"):
-                await self.set_current_match()
+            #if await self.get_tournament_property("current_match") == None:
+            await self.set_current_match()
             user = self.scope["user"]
             # only receive messages from players in the current match, ignore otherwise
             if not user.is_authenticated:
