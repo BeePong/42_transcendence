@@ -186,17 +186,19 @@ def prepare_tournament_data(tournaments, player):
 
     for tournament in tournaments:
         players = list(tournament.players.values_list("alias", flat=True))
-        
-        tournament_data.append({
-            "tournament_id": tournament.tournament_id,
-            "name": tournament.title,
-            "description": tournament.description,
-            "state": tournament.state,
-            "num_players": tournament.num_players,
-            "players": players,
-            "winner": tournament.winner.alias if tournament.winner else "",
-            "has_joined": player.alias in players,
-        })
+
+        tournament_data.append(
+            {
+                "tournament_id": tournament.tournament_id,
+                "name": tournament.title,
+                "description": tournament.description,
+                "state": tournament.state,
+                "num_players": tournament.num_players,
+                "players": players,
+                "winner": tournament.winner.alias if tournament.winner else "",
+                "has_joined": player.alias in players,
+            }
+        )
 
     return tournament_data
 
@@ -221,7 +223,7 @@ def create_solo_game(request):
 
         try:
             logger.info(f"Starting AI bot for tournament {tournament.tournament_id}")
-            spawn_ai_bot(tournament.tournament_id)
+            spawn_ai_bot(tournament.tournament_id, player.alias)
         except Exception as e:
             logger.error(
                 f"Error starting AI bot for tournament {tournament.tournament_id}: {e}"
@@ -246,10 +248,10 @@ def create_solo_game(request):
     )
 
 
-def spawn_ai_bot(tournament_id):
+def spawn_ai_bot(tournament_id, player_alias):
     ai_script_path = os.path.join(settings.BASE_DIR, "tournament", "ai.py")
     logger.info(f"AI script path: {ai_script_path}")
-    subprocess.Popen(["python", ai_script_path, str(tournament_id)])
+    subprocess.Popen(["python", ai_script_path, str(tournament_id), player_alias])
 
 
 @login_required_json
@@ -302,7 +304,9 @@ def tournament_lobby(request, tournament_id):
             return render_waiting_lobby(request, context)
 
         if tournament.winner:
-            context['redirect_text'], context['redirect_url'] = get_winner_page_redirect_info(tournament)
+            context["redirect_text"], context["redirect_url"] = (
+                get_winner_page_redirect_info(tournament)
+            )
             return render_winner_page(request, context)
 
         if tournament.is_countdown:
@@ -329,9 +333,11 @@ def prepare_tournament_context(tournament):
     }
 
     matches = Match.objects.filter(tournament=tournament)
-    
+
     # get aliases for all losers that exist. determine_loser returns either a player or none.
-    lose_players = [match.determine_loser().alias  for match in matches if match.determine_loser()]
+    lose_players = [
+        match.determine_loser().alias for match in matches if match.determine_loser()
+    ]
     context["lose_players"] = lose_players
 
     return context
